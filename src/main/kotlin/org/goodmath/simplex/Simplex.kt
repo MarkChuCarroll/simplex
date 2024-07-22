@@ -22,6 +22,7 @@ import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.options.split
 import org.antlr.v4.runtime.CharStreams
 import org.goodmath.simplex.parser.SimplexParseListener
+import org.goodmath.simplex.runtime.SimplexError
 import kotlin.io.path.Path
 import kotlin.io.path.exists
 import kotlin.system.exitProcess
@@ -38,13 +39,22 @@ class Simplex: CliktCommand(help="Evaluate a Simplex model") {
         }
         val inputPath = Path(input)
         if (!inputPath.exists()) {
-            echo("input file $input doesn't exist")
+            echo("input file $input doesn't exist", err=true)
         }
 
         val pre = prefix ?: "${input.toString().dropLast(6)}-out"
         val stream = CharStreams.fromFileName(input)
-        val result = SimplexParseListener().parse(stream)
-        result.execute(renders?.toSet(), pre)
-    }
+        val captiveEcho = { s: String, err: Boolean -> echo(s, err=err) }
+        try {
+            echo("Loading model from $inputPath")
+            val result = SimplexParseListener().parse(stream, captiveEcho)
+            result.execute(renders?.toSet(), pre, captiveEcho)
+        } catch (e: SimplexError) {
+            echo(e.toString(), err=true)
+        }
 
+    }
 }
+
+fun main(args: Array<String>) = Simplex().main(args)
+

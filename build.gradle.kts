@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 val antlrVersion: String by project
 val cliktVersion: String by project
 val guavaVersion: String by project
@@ -24,6 +26,9 @@ plugins {
     kotlin("jvm")  version "2.0.0"
     antlr
     application
+    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("org.openjfx.javafxplugin") version "0.1.0"
+    kotlin("plugin.serialization") version "2.0.0"
 }
 
 group = "org.goodmath"
@@ -34,6 +39,7 @@ repositories {
 }
 
 dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     antlr("org.antlr:antlr4:$antlrVersion") // use ANTLR version 4
     implementation("org.jcommander:jcommander:1.83")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
@@ -49,7 +55,7 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClass.set("org.goodmath.simplex.Simplex")
+    mainClass.set("org.goodmath.simplex.SimplexKt")
 }
 
 tasks.compileKotlin {
@@ -65,5 +71,23 @@ tasks.test {
 kotlin {
     jvmToolchain {
         languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+// Needed by jcsg
+javafx {
+    modules("javafx.controls", "javafx.fxml")
+
+}
+
+tasks {
+    named<ShadowJar>("shadowJar") {
+        archiveBaseName.set("simplex")
+        archiveClassifier.set("")
+        archiveVersion.set("0.0.1")
+        mergeServiceFiles()
+        manifest {
+            attributes(mapOf("Main-Class" to "org.goodmath.simplex.SimplexKt"))
+        }
     }
 }

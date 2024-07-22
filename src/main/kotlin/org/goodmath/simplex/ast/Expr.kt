@@ -15,20 +15,19 @@
  */
 package org.goodmath.simplex.ast
 
-import org.goodmath.simplex.runtime.AbstractFunctionValue
-import org.goodmath.simplex.runtime.ArrayValue
-import org.goodmath.simplex.runtime.ArrayValueType
-import org.goodmath.simplex.runtime.BooleanValue
+import org.goodmath.simplex.runtime.values.primitives.AbstractFunctionValue
+import org.goodmath.simplex.runtime.values.primitives.ArrayValue
+import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
 import org.goodmath.simplex.runtime.Env
-import org.goodmath.simplex.runtime.FloatValue
-import org.goodmath.simplex.runtime.FunctionValue
-import org.goodmath.simplex.runtime.IntegerValue
 import org.goodmath.simplex.runtime.SimplexEvaluationError
 import org.goodmath.simplex.runtime.SimplexTypeError
-import org.goodmath.simplex.runtime.StringValue
-import org.goodmath.simplex.runtime.TupleValue
-import org.goodmath.simplex.runtime.TupleValueType
-import org.goodmath.simplex.runtime.Value
+import org.goodmath.simplex.runtime.values.primitives.TupleValue
+import org.goodmath.simplex.runtime.values.primitives.TupleValueType
+import org.goodmath.simplex.runtime.values.Value
+import org.goodmath.simplex.runtime.values.primitives.BooleanValue
+import org.goodmath.simplex.runtime.values.primitives.FloatValue
+import org.goodmath.simplex.runtime.values.primitives.IntegerValue
+import org.goodmath.simplex.runtime.values.primitives.StringValue
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
 
@@ -159,7 +158,7 @@ class LiteralExpr<T>(val v: T, loc: Location): Expr(loc) {
         } else if (v is Boolean) {
             BooleanValue(v)
         } else {
-            throw SimplexEvaluationError("Invalid literal value ${v}")
+            throw SimplexEvaluationError("Invalid literal value $v")
         }
     }
 }
@@ -212,9 +211,9 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location): Expr(
 
     fun l(args: List<Expr>, env: Env): Value = args.first().evaluateIn(env)
     fun r(args: List<Expr>, env: Env): Value = if (args.size > 1) {
-        args[2].evaluateIn(env)
+        args[1].evaluateIn(env)
     } else {
-        throw SimplexEvaluationError("Incorrect number of args for operator ${op}")
+        throw SimplexEvaluationError("Incorrect number of args for operator $op")
     }
 
     override fun evaluateIn(env: Env): Value {
@@ -232,10 +231,10 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location): Expr(
             Operator.Pow -> left.valueType.pow(left, r(args, env))
             Operator.Eq -> BooleanValue(left.valueType.equals(left, r(args, env)))
             Operator.Neq -> BooleanValue(!left.valueType.equals(left, r(args, env)))
-            Operator.Gt -> BooleanValue(left.valueType.compare(left,  r(args, env)) > 0)
-            Operator.Ge -> BooleanValue(left.valueType.compare(left,  r(args, env)) >= 0)
-            Operator.Lt -> BooleanValue(left.valueType.compare(left,  r(args, env)) < 0)
-            Operator.Le -> BooleanValue(left.valueType.compare(left,  r(args, env)) <= 0)
+            Operator.Gt -> BooleanValue(left.valueType.compare(left, r(args, env)) > 0)
+            Operator.Ge -> BooleanValue(left.valueType.compare(left, r(args, env)) >= 0)
+            Operator.Lt -> BooleanValue(left.valueType.compare(left, r(args, env)) < 0)
+            Operator.Le -> BooleanValue(left.valueType.compare(left, r(args, env)) <= 0)
             Operator.Not -> BooleanValue(left.valueType.isTruthy(left))
             Operator.And -> if (left.valueType.isTruthy(left)) {
                 val right = r(args, env)
@@ -291,7 +290,7 @@ class UpdateExpr(val tupleExpr: Expr, val updates: List<Update>, loc: Location):
     override fun evaluateIn(env: Env): Value {
         val target = tupleExpr.evaluateIn(env)
         if (target !is TupleValue) {
-            throw SimplexTypeError("Cannot use a non-tuple value like ${target.valueType.name} in a tuple update expression")
+            throw SimplexTypeError("Tuple", target.valueType.name)
         }
         val def = target.tupleDef
         val fields = ArrayList(target.fields)
@@ -337,7 +336,7 @@ class ArrayExpr(val elements: List<Expr>, loc: Location): Expr(loc) {
         )
 
     override fun evaluateIn(env: Env): Value {
-        return ArrayValue(elements.map { it.evaluateIn(env)})
+        return ArrayValue(elements.map { it.evaluateIn(env) })
     }
 
 }
@@ -351,7 +350,7 @@ class WithExpr(val focus: Expr, val body: List<Expr>, loc: Location): Expr(loc) 
     override fun evaluateIn(env: Env): Value {
         val focusVal = focus.evaluateIn(env)
         if (focusVal !is TupleValue) {
-            throw SimplexTypeError("Cannot use a non-tuple value like ${focusVal.valueType.name} as the focus of a with expression")
+            throw SimplexTypeError("Tuple", focusVal.valueType.name)
         }
         val def = focusVal.tupleDef
         val localEnv = Env(emptyList(), env)

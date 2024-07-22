@@ -17,19 +17,38 @@ package org.goodmath.simplex.runtime
 
 import org.goodmath.simplex.ast.Definition
 import org.goodmath.simplex.ast.Model
+import org.goodmath.simplex.runtime.values.csg.CsgValueType
+import org.goodmath.simplex.runtime.csg.Point2DValueType
+import org.goodmath.simplex.runtime.values.Value
+import org.goodmath.simplex.runtime.values.ValueType
+import org.goodmath.simplex.runtime.values.csg.ThreeDPointValueType
+import org.goodmath.simplex.runtime.values.csg.PolygonValueType
+import org.goodmath.simplex.runtime.values.primitives.FloatValueType
+import org.goodmath.simplex.runtime.values.primitives.IntegerValueType
+import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
+import org.goodmath.simplex.runtime.values.primitives.BooleanValueType
+import org.goodmath.simplex.runtime.values.primitives.FunctionValueType
+import org.goodmath.simplex.runtime.values.primitives.StringValueType
+import org.goodmath.simplex.runtime.values.primitives.TupleValueType
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
 import java.util.UUID
 
 class Env(defList: List<Definition>,
     val parentEnv: Env?): Twistable {
-        val defs = defList.associateBy { it.name }
+    val defs = defList.associateBy { it.name }
     val vars = HashMap<String, Value>()
 
     val id: String = UUID.randomUUID().toString()
 
     fun getValue(name: String): Value {
-        return vars[name] ?: throw SimplexUndefinedError(name, "variable")
+        return if (vars.containsKey(name)) {
+            vars[name]!!
+        } else if (parentEnv != null) {
+            parentEnv.getValue(name)
+        } else {
+            throw SimplexUndefinedError(name, "variable")
+        }
     }
 
     fun getDef(name: String): Definition {
@@ -64,10 +83,18 @@ class Env(defList: List<Definition>,
             ))
 
     companion object {
-        val valueTypes = listOf(
-            IntegerValueType, TupleValueType, FunctionValueType,
-            FloatValueType, StringValueType, BooleanValueType,
-            ArrayValueType
+        val valueTypes: List<ValueType<*>> = listOf(
+            IntegerValueType,
+            TupleValueType,
+            FunctionValueType,
+            FloatValueType,
+            StringValueType,
+            BooleanValueType,
+            ArrayValueType,
+            ThreeDPointValueType,
+            Point2DValueType,
+            PolygonValueType,
+            CsgValueType
         )
 
         fun createRootEnv(model: Model): Env {

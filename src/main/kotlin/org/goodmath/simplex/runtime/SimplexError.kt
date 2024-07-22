@@ -15,17 +15,64 @@
  */
 package org.goodmath.simplex.runtime
 
+import com.sun.org.apache.xalan.internal.xsltc.compiler.sym
 import org.goodmath.simplex.ast.Expr
+import org.goodmath.simplex.ast.Location
 
-open class SimplexError(val msg: String, cause: Throwable? = null): Throwable(msg, cause)
+open class SimplexError(
+    val kind: Kind,
+    val detail: String,
+    val location: Location? = null,
+    cause: Throwable? = null): Exception(cause) {
+    enum class Kind {
+        UndefinedSymbol, UnsupportedOperation,
+        InvalidParameter, InvalidIndex,
+        IncorrectType, ParameterCount,
+        InvalidValue, Internal, Parser;
 
-class SimplexIndexError(val expr: Expr, msg: String) : SimplexError(msg)
+        override fun toString(): String {
+            return when (this) {
+                Kind.UndefinedSymbol -> "Undefined symbol"
+                Kind.UnsupportedOperation -> "Operation not supported by type"
+                Kind.InvalidParameter -> "Invalid parameter"
+                Kind.InvalidIndex -> "Invalid index"
+                Kind.IncorrectType -> "Incorrect type"
+                Kind.ParameterCount -> "Incorrect number of parameters"
+                Kind.InvalidValue -> "Invalid value"
+                Kind.Internal -> "Internal execution error"
+                Kind.Parser -> "Parsing errors"
+            }
+        }
+    }
 
-class SimplexUndefinedError(val name: String, val kind: String) : SimplexError("$kind with name $name not found")
+    override val message: String
+        get() {
+            val prefix = if (location != null) {
+                "@(${location.line}, ${location.col}): "
+            } else {
+                "@?: "
+            }
+            return "$prefix $kind: $detail"
+        }
+}
+
+class SimplexIndexError(val expr: Expr, msg: String) : SimplexError(Kind.InvalidIndex, msg, expr.loc)
+
+class SimplexParameterCountError(val expected: Int, val actual: Int,
+                                 location: Location?=null):
+        SimplexError(SimplexError.Kind.ParameterCount, "Expected $expected, but received $actual",
+            location)
+
+class SimplexUndefinedError(val name: String, val symbolKind: String) : SimplexError(Kind.UndefinedSymbol,
+    "$name: $symbolKind")
+
 
 class SimplexUnsupportedOperation(val type: String, val op: String) :
-    SimplexError("Type $type does not support $op")
+    SimplexError(Kind.UnsupportedOperation, "$op in type $type")
 
-class SimplexEvaluationError(msg: String) : SimplexError(msg)
+class SimplexEvaluationError(msg: String) : SimplexError(Kind.Internal,
+    msg)
 
-class SimplexTypeError(msg: String): SimplexError(msg)
+class SimplexTypeError(expected: String, actual: String,
+    location: Location? = null): SimplexError(Kind.IncorrectType, "expected a $expected, but received a $actual")
+

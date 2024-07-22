@@ -59,7 +59,7 @@ class TwistObj(val name: String, val children: List<Twist>): Twist() {
     override fun render(b: StringBuilder, indent: Int) {
         b * indent + "obj(${name})\n"
         for (c in children) {
-            render(b, indent+1)
+            c.render(b, indent+1)
         }
     }
 }

@@ -47,7 +47,7 @@ funDef:
  ;
 
 defs:
-    def+
+    def*
 ;
 
 param:

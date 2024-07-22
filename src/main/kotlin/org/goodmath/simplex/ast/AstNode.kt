@@ -19,5 +19,4 @@ import org.goodmath.simplex.twist.Twistable
 
 data class Location(val line: Int, val col: Int)
 
-abstract class AstNode(open val loc: Location): Twistable {
-}
+abstract class AstNode(open val loc: Location): Twistable

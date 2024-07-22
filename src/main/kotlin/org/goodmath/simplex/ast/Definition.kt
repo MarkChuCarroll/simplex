@@ -16,15 +16,23 @@
 package org.goodmath.simplex.ast
 
 import org.goodmath.simplex.runtime.Env
-import org.goodmath.simplex.runtime.FunctionValue
-import org.goodmath.simplex.runtime.SimplexEvaluationError
 import org.goodmath.simplex.runtime.SimplexUndefinedError
+import org.goodmath.simplex.runtime.values.primitives.FunctionValue
 import org.goodmath.simplex.twist.Twist
 
+/**
+ * The supertype of all declarations.
+ * @param name the name of the declarations.
+ * @param loc the source location
+ */
 abstract class Definition(val name: String, loc: Location): AstNode(loc) {
     abstract fun installInEnv(env: Env)
 }
 
+/**
+ * A name with an optional type declaration, used in several places
+ * in the code.
+ */
 class TypedName(val name: String, val type: Type?, loc: Location): AstNode(loc) {
     override fun twist(): Twist =
         Twist.obj("TypedName",
@@ -32,6 +40,14 @@ class TypedName(val name: String, val type: Type?, loc: Location): AstNode(loc) 
             Twist.value("type", type))
 }
 
+/**
+ * A function definition.
+ * @param name
+ * @param params a list of the function's parameters, with optional types.
+ * @param localDefs a list of local definitions declared within the function.
+ * @param body the function body.
+ * @param loc the source location.
+ */
 class FunctionDefinition(name: String, val params: List<TypedName>,
     val localDefs: List<Definition>,
     val body: List<Expr>,
@@ -46,11 +62,13 @@ class FunctionDefinition(name: String, val params: List<TypedName>,
         )
 
     override fun installInEnv(env: Env) {
-        val funValue = FunctionValue(params.map { it.name }.toList(),
+        val funValue = FunctionValue(
+            params.map { it.name }.toList(),
             localDefs,
             body,
             env,
-            this)
+            this
+        )
         env.addVariable(name, funValue)
     }
 }
@@ -70,7 +88,7 @@ class TupleDefinition(name: String, val fields: List<TypedName>,
     fun indexOf(fieldName: String): Int {
         val idx = fields.indexOfFirst { it.name == fieldName }
         if (idx < 0) {
-            throw SimplexUndefinedError(fieldName, "tuple field of ${name}")
+            throw SimplexUndefinedError(fieldName, "tuple field of $name")
         } else {
             return idx
         }

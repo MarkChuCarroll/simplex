@@ -58,7 +58,7 @@ import org.goodmath.simplex.runtime.SimplexError
 @Suppress("UNCHECKED_CAST")
 class SimplexParseListener: SimplexListener {
 
-    fun parse(input: CharStream): Model {
+    fun parse(input: CharStream, echo: (String, Boolean) -> Unit): Model {
         val lexer = SimplexLexer(input)
         val tokenStream = CommonTokenStream(lexer)
         val walker = ParseTreeWalker()
@@ -68,11 +68,11 @@ class SimplexParseListener: SimplexListener {
         parser.addErrorListener(errorListener)
         val tree = parser.model()
         if (errorListener.errorCount > 0) {
-            System.err.println("Errors were detected during compilation")
             for (e in errorListener.getLoggedErrors()) {
-                System.err.println(e)
+                echo(e, true)
             }
-
+            throw SimplexError(SimplexError.Kind.Parser,
+                "See error log above for details")
         }
         walker.walk(this, tree)
         return getValueFor(tree) as Model
@@ -138,7 +138,7 @@ class SimplexParseListener: SimplexListener {
 
     override fun exitVarDef(ctx: SimplexParser.VarDefContext) {
         val name = ctx.ID().text
-        val type = ctx.type().let { getValueFor(it) as Type}
+        val type = ctx.type()?.let { getValueFor(it) as Type}
         val initValue = getValueFor(ctx.expr()) as Expr
         setValueFor(ctx, VariableDefinition(name, type, initValue, loc(ctx)))
     }
@@ -166,7 +166,7 @@ class SimplexParseListener: SimplexListener {
 
     override fun exitParam(ctx: SimplexParser.ParamContext) {
         val name = ctx.ID().text
-        val type = ctx.type().let { getValueFor(it) as Type }
+        val type = ctx.type()?.let { getValueFor(it) as Type }
         setValueFor(ctx, TypedName(name, type, loc(ctx)))
     }
 
@@ -187,7 +187,6 @@ class SimplexParseListener: SimplexListener {
     }
 
     override fun enterOptVectorType(ctx: SimplexParser.OptVectorTypeContext) {
-        
     }
 
     override fun exitOptVectorType(ctx: SimplexParser.OptVectorTypeContext) {
@@ -196,6 +195,7 @@ class SimplexParseListener: SimplexListener {
     }
 
     override fun enterExpOp(ctx: SimplexParser.ExpOpContext) {
+
     }
 
     override fun exitExpOp(ctx: SimplexParser.ExpOpContext) {
@@ -344,7 +344,6 @@ class SimplexParseListener: SimplexListener {
     }
 
     override fun enterSuffixExpr(ctx: SimplexParser.SuffixExprContext) {
-        
     }
 
     data class CallSuffix(val args: List<Expr>)
@@ -362,7 +361,7 @@ class SimplexParseListener: SimplexListener {
                 is SubscriptSuffix -> OperatorExpr(Operator.Subscript, listOf(result, s.arg), loc(ctx))
                 is FieldSuffix -> FieldRefExpr(result, s.name, loc(ctx))
                 is MethSuffix -> MethodCallExpr(result, s.name, s.args, loc(ctx))
-                else -> throw SimplexError("Invalid suffix expr; should be impossible")
+                else -> throw SimplexError(SimplexError.Kind.Internal, "Invalid suffix expr; should be impossible")
             }
         }
         setValueFor(ctx, result)
@@ -377,7 +376,6 @@ class SimplexParseListener: SimplexListener {
     }
 
     override fun enterSuffixOptSubscript(ctx: SimplexParser.SuffixOptSubscriptContext) {
-        
     }
 
     override fun exitSuffixOptSubscript(ctx: SimplexParser.SuffixOptSubscriptContext) {
@@ -386,7 +384,6 @@ class SimplexParseListener: SimplexListener {
     }
 
     override fun enterSuffixOptField(ctx: SimplexParser.SuffixOptFieldContext) {
-        
     }
 
     override fun exitSuffixOptField(ctx: SimplexParser.SuffixOptFieldContext) {
@@ -395,7 +392,6 @@ class SimplexParseListener: SimplexListener {
     }
 
     override fun enterSuffixOptMeth(ctx: SimplexParser.SuffixOptMethContext) {
-
     }
 
     override fun exitSuffixOptMeth(ctx: SimplexParser.SuffixOptMethContext) {
@@ -594,7 +590,7 @@ class SimplexParseListener: SimplexListener {
     }
 
     override fun enterLetExpr(ctx: SimplexParser.LetExprContext) {
-        
+
     }
 
     override fun exitLetExpr(ctx: SimplexParser.LetExprContext) {
@@ -616,7 +612,7 @@ class SimplexParseListener: SimplexListener {
 
     override fun exitBinding(ctx: SimplexParser.BindingContext) {
         val name = ctx.ID().text
-        val type = ctx.type().let { getValueFor(it) as Type }
+        val type = ctx.type()?.let { getValueFor(it) as Type }
         val value = getValueFor(ctx.expr()) as Expr
         setValueFor(ctx, Binding(name, type, value, loc(ctx)))
     }
