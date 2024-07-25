@@ -27,18 +27,10 @@ import kotlin.collections.all
 import kotlin.collections.zip
 
 object TupleValueType: ValueType<TupleValue>() {
-    fun assertIsTuple(v: Value): TupleValue {
-        if (v !is TupleValue) {
-            throw SimplexTypeError("Tuple", v.valueType.name)
-        } else {
-            return v
-        }
-    }
-
     override val name: String = "Tuple"
 
     override fun isTruthy(v: Value): Boolean {
-        assertIsTuple(v)
+        assertIs(v)
         return true
     }
 
@@ -88,8 +80,8 @@ object TupleValueType: ValueType<TupleValue>() {
         v1: Value,
         v2: Value,
     ): Boolean {
-        val t1 = assertIsTuple(v1)
-        val t2 = assertIsTuple(v2)
+        val t1 = assertIs(v1)
+        val t2 = assertIs(v2)
         if (t1.tupleDef != t2.tupleDef) {
             return false
         }
@@ -105,8 +97,8 @@ object TupleValueType: ValueType<TupleValue>() {
         v1: Value,
         v2: Value,
     ): Int {
-        val t1 = assertIsTuple(v1)
-        val t2 = assertIsTuple(v2)
+        val t1 = assertIs(v1)
+        val t2 = assertIs(v2)
         if (t1.tupleDef != t2.tupleDef) {
             throw SimplexEvaluationError("Cannot compare different tuple types")
         }
@@ -121,7 +113,7 @@ object TupleValueType: ValueType<TupleValue>() {
 
     override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()
 
-    override val providesOperations: List<PrimitiveMethod> = emptyList()
+    override val providesOperations: List<PrimitiveMethod<TupleValue>> = emptyList()
 }
 
 class TupleValue(val tupleDef: TupleDefinition, val fields: List<Value>): Value {

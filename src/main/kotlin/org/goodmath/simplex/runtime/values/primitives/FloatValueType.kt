@@ -15,6 +15,7 @@
  */
 package org.goodmath.simplex.runtime.values.primitives
 
+import org.goodmath.simplex.runtime.values.MethodSignature
 import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
@@ -92,12 +93,22 @@ object FloatValueType: ValueType<FloatValue>() {
 
     override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()
 
-    override val providesOperations: List<PrimitiveMethod>
-        get() = listOf(
-            PrimitiveMethod("isNaN", emptyList(), BooleanValueType) { target: Value, args: List<Value> ->
-                BooleanValue(assertIsFloat(target).isNaN())
+    override val providesOperations: List<PrimitiveMethod<FloatValue>> by lazy {
+        listOf(
+            object : PrimitiveMethod<FloatValue>("isNaN",
+                MethodSignature<FloatValue>(FloatValueType, emptyList(), BooleanValueType)) {
+                override fun execute(target: Value, args: List<Value>): Value {
+                    return BooleanValue(assertIsFloat(target).isNaN())
+                }
+            },
+            object : PrimitiveMethod<FloatValue>("truncate",
+                MethodSignature<FloatValue>(FloatValueType, emptyList(), IntegerValueType)) {
+                override fun execute(target: Value, args: List<Value>): Value {
+                    return IntegerValue(assertIsFloat(target).toInt())
+                }
             }
-    )
+        )
+    }
 }
 
 class FloatValue(val d: Double): Value {

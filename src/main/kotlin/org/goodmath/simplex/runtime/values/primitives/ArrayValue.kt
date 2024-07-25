@@ -18,6 +18,7 @@ package org.goodmath.simplex.runtime.values.primitives
 import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.SimplexEvaluationError
 import org.goodmath.simplex.runtime.SimplexTypeError
+import org.goodmath.simplex.runtime.values.MethodSignature
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.twist.Twist
@@ -153,14 +154,22 @@ object ArrayValueType: ValueType<ArrayValue>() {
 
     override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()
 
-    override val providesOperations: List<PrimitiveMethod>
-        get() = listOf(
-            PrimitiveMethod("length", emptyList(), IntegerValueType) { target: Value, args: List<Value> ->
-                val a = assertIsArray(target)
-                IntegerValue(a.size)
-            })
-
+    override val providesOperations: List<PrimitiveMethod<ArrayValue>> by lazy {
+        listOf(
+            ArrayLength
+        )
+    }
 }
+
+object ArrayLength: PrimitiveMethod<ArrayValue>("length",
+    MethodSignature<ArrayValue>(ArrayValueType, emptyList(), IntegerValueType)) {
+
+    override fun execute(target: Value, args: List<Value>): Value {
+        val a = ArrayValueType.assertIsArray(target)
+        return IntegerValue(a.size)
+    }
+}
+
 
 class ArrayValue(val elements: List<Value>): Value {
     fun isEmpty(): Boolean = elements.isEmpty()

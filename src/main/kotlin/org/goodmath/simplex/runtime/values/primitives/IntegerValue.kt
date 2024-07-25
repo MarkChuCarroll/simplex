@@ -15,6 +15,7 @@
  */
 package org.goodmath.simplex.runtime.values.primitives
 
+import org.goodmath.simplex.runtime.values.MethodSignature
 import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
@@ -23,7 +24,6 @@ import kotlin.math.pow
 
 object IntegerValueType: ValueType<IntegerValue>() {
     override val name: String = "Int"
-
 
     override fun isTruthy(v: Value): Boolean {
         v as IntegerValue
@@ -102,20 +102,33 @@ object IntegerValueType: ValueType<IntegerValue>() {
 
     override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()
 
-    override val providesOperations: List<PrimitiveMethod>
-        get() {
-            return listOf(
-                PrimitiveMethod("toFloat", emptyList(), FloatValueType) { target: Value, args: List<Value> ->
-                    FloatValue(assertIsInt(target).toDouble())
+    override val providesOperations: List<PrimitiveMethod<IntegerValue>> by lazy {
+        listOf(
+            object : PrimitiveMethod<IntegerValue>("toFloat",
+                MethodSignature(
+                    IntegerValueType,
+                    emptyList(), FloatValueType)) {
+                override fun execute(target: Value, args: List<Value>): Value {
+                    return FloatValue(assertIsInt(target).toDouble())
                 }
-            )
-        }
+            }
+        )
+    }
 }
 
 class IntegerValue(val i: Int): Value {
     override fun twist(): Twist =
         Twist.obj("IntegerValue",
             Twist.attr("value", i.toString()))
+
+    override fun equals(other: Any?): Boolean {
+        return other is IntegerValue &&
+                other.i == i
+    }
+
+    override fun hashCode(): Int {
+        return i.hashCode()
+    }
 
     override val valueType: ValueType<IntegerValue> = IntegerValueType
 }

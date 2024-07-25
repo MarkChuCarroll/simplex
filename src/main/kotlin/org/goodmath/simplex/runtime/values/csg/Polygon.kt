@@ -15,16 +15,20 @@
  */
 package org.goodmath.simplex.runtime.values.csg
 
-import org.goodmath.simplex.runtime.SimplexParameterCountError
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.SimplexUnsupportedOperation
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
-import org.goodmath.simplex.runtime.csg.Point2DValueType
+import org.goodmath.simplex.runtime.csg.TwoDPointValueType
 import org.goodmath.simplex.runtime.csg.TwoDPoint
+import org.goodmath.simplex.runtime.values.FunctionSignature
+import org.goodmath.simplex.runtime.values.MethodSignature
+import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
+import org.goodmath.simplex.runtime.values.primitives.FloatValue
 import org.goodmath.simplex.runtime.values.primitives.FloatValueType
+import org.goodmath.simplex.runtime.values.primitives.IntegerValueType
 import org.goodmath.simplex.twist.Twist
 import kotlin.collections.map
 import kotlin.math.PI
@@ -149,7 +153,6 @@ class Polygon(inputs: List<TwoDPoint>): Value {
     fun flipY(): Polygon {
         return Polygon(points.reversed().map { TwoDPoint(it.x, -it.y) })
     }
-
 }
 
 object PolygonValueType: ValueType<Polygon>() {
@@ -334,45 +337,180 @@ object PolygonValueType: ValueType<Polygon>() {
     }
 
 
-    override val providesFunctions: List<PrimitiveFunctionValue> = listOf(
-        PrimitiveFunctionValue("circle", listOf(FloatValueType), PolygonValueType)
-            { args: List<Value> ->
-                if (args.isEmpty()) {
-                    throw SimplexParameterCountError(1, 0)
+    override val providesFunctions: List<PrimitiveFunctionValue> by lazy {
+        listOf(
+            object : PrimitiveFunctionValue("circle",
+                FunctionSignature(listOf(FloatValueType), PolygonValueType),
+                FunctionSignature(listOf(FloatValueType, IntegerValueType),PolygonValueType)) {
+                override fun execute(args: List<Value>): Value {
+                    val radius = assertIsFloat(args[0])
+                    val quality = if (args.size > 1) {
+                        assertIsInt(args[1])
+                    } else {
+                        QUALITY
+                    }
+                    return circle(radius, quality)
                 }
-                val radius = assertIsFloat(args[0])
-                val quality = if (args.size > 1) {
-                    assertIsInt(args[1])
-                } else {
-                    QUALITY
-                }
-                circle(radius, quality)
             },
-        PrimitiveFunctionValue("squared_circle", listOf(FloatValueType,
-            FloatValueType, FloatValueType
-        ), PolygonValueType) { args: List<Value> ->
-            assertArity(args, 3)
-            val diam = assertIsFloat(args[0])
-            val xPad = assertIsFloat(args[1])
-            val yPad = assertIsFloat(args[2])
-            squaredCircle(xPad, yPad, diam)
-        },
-        PrimitiveFunctionValue("rectangle",
-            listOf(Point2DValueType, FloatValueType, FloatValueType),
-            PolygonValueType) { args: List<Value> ->
-            assertArity(args, 3)
-            val center = Point2DValueType.assertIsPoint2D(args[0])
-            val width = assertIsFloat(args[1])
-            val height = assertIsFloat(args[2])
-            val ll = TwoDPoint(center.x - width / 2, center.y - height / 2)
-            val ur = TwoDPoint(center.x + width / 2, center.y + height / 2)
-            rectangle(ll, ur)
-        })
+            object : PrimitiveFunctionValue(
+                "squared_circle",
+                FunctionSignature(
+                listOf(FloatValueType, FloatValueType, FloatValueType),
+                PolygonValueType)
+            ) {
+                override fun execute(args: List<Value>): Value {
+                    val diam = assertIsFloat(args[0])
+                    val xPad = assertIsFloat(args[1])
+                    val yPad = assertIsFloat(args[2])
+                    return squaredCircle(xPad, yPad, diam)
+                }
+            },
+            object : PrimitiveFunctionValue(
+                "rectangle",
+                FunctionSignature(
+                    listOf(TwoDPointValueType, FloatValueType, FloatValueType),
+                    PolygonValueType)) {
+                override fun execute(args: List<Value>): Value {
+                    val center = TwoDPointValueType.assertIs(args[0])
+                    val width = assertIsFloat(args[1])
+                    val height = assertIsFloat(args[2])
+                    val ll = TwoDPoint(center.x - width / 2, center.y - height / 2)
+                    val ur = TwoDPoint(center.x + width / 2, center.y + height / 2)
+                    return rectangle(ll, ur)
+                }
+            })
+    }
 
 
+    override val providesOperations: List<PrimitiveMethod<Polygon>> by lazy {
+        listOf(
+            object : PrimitiveMethod<Polygon>("area",
+                MethodSignature(PolygonValueType,
+                    emptyList(), FloatValueType)) {
+                override fun execute(target: Value, args: List<Value>): Value {
+                    val p = assertIsPolygon(target)
+                    return FloatValue(p.area)
+                }
+            },
+            object : PrimitiveMethod<Polygon>("centroid",
+                MethodSignature(PolygonValueType, emptyList(), TwoDPointValueType)) {
+                override fun execute(target: Value, args: List<Value>): Value {
+                    val p = assertIsPolygon(target)
+                    return p.centroid
+                }
+            },
+            object : PrimitiveMethod<Polygon>("scale",
+                MethodSignature(PolygonValueType, listOf(FloatValueType), PolygonValueType),
+                MethodSignature(PolygonValueType, listOf(FloatValueType, FloatValueType),
+                    PolygonValueType)) {
+                override fun execute(target: Value, args: List<Value>): Value {
+                    val poly = assertIsPolygon(target)
+                    if (args.size == 1) {
+                        val factor = assertIsFloat(args[0])
+                        return poly.scale(factor)
+                    } else {
+                        val xFactor = assertIsFloat(args[0])
+                        val yFactor = assertIsFloat(args[1])
+                        return poly.scale2(xFactor, yFactor)
+                    }
+                }
+            },
+            object : PrimitiveMethod<Polygon>(
+                "with_area",
+                MethodSignature(PolygonValueType,
+                listOf(FloatValueType),
+                PolygonValueType
+            )) {
+                override fun execute(target: Value, args: List<Value>): Value {
+                    val poly = assertIsPolygon(target)
+                    val area = assertIsFloat(args[0])
+                    return poly.withArea(area)
+                }
+            },
+            object : PrimitiveMethod<Polygon>("with_diam",
+                MethodSignature(PolygonValueType, listOf(FloatValueType), PolygonValueType)) {
+                override fun execute(target: Value, args: List<Value>): Value {
+                    val poly = assertIsPolygon(target)
+                    val diam = assertIsFloat(args[0])
+                    return poly.withEffectiveDiameter(diam)
+                }
+            },
+            object : PrimitiveMethod<Polygon>("with_circumference",
+                MethodSignature(
+                    PolygonValueType,
+                    listOf(FloatValueType), PolygonValueType)) {
+                override fun execute(target: Value, args: List<Value>): Value {
+                    val poly = assertIsPolygon(target)
+                    val circ = assertIsFloat(args[0])
+                    return poly.withCircumference(circ)
+                }
+            },
+            object : PrimitiveMethod<Polygon>("move",
+                MethodSignature(
+                    PolygonValueType,
+                    listOf(FloatValueType, FloatValueType),
+                    PolygonValueType)) {
+                override fun execute(target: Value, args: List<Value>): Value {
+                    val poly = assertIsPolygon(target)
+                    val x = assertIsFloat(args[0])
+                    val y = assertIsFloat(args[1])
+                    return poly.offset(x, y)
+                }
+            },
+            object : PrimitiveMethod<Polygon>("flipx",
+                MethodSignature(PolygonValueType, emptyList(), PolygonValueType)) {
+                override fun execute(target: Value, args: List<Value>): Value {
+                    val poly = assertIsPolygon(target)
+                    return poly.flipX()
+                }
+            },
+            object : PrimitiveMethod<Polygon>("flipy",
+                MethodSignature(PolygonValueType, emptyList(), PolygonValueType)) {
+                override fun execute(target: Value, args: List<Value>): Value {
+                                        val poly = assertIsPolygon(target)
+                    return poly.flipY()
+                }
+            },
+            object: PrimitiveMethod<Polygon>("extrude",
+                MethodSignature(PolygonValueType,
+                    listOf(ExtrusionProfileType), CsgValueType)) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>
+                ): Value {
+                    val poly = assertIsPolygon(target)
+                    val profile = ExtrusionProfileType.assertIs(args[0])
+                    return CsgValue(
+                        extrudeProfile(
+                            listOf(profile),
+                            crossSection = { scale -> poly.withEffectiveDiameter(1.0).scale(scale[0]) })
+                    )
+                }
+            },
+            object: PrimitiveMethod<Polygon>("extrude_series",
+                MethodSignature<Polygon>(
+                    PolygonValueType,
+                    listOf(ArrayValueType), CsgValueType)) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>
+                ): Value {
+                    val poly = assertIsPolygon(target)
+                    val profiles = ArrayValueType.assertIsArray(args[0]).map {
+                        ExtrusionProfileType.assertIs(it)
+                    }
+                    return CsgValue(
+                        extrudeProfile(
+                            profiles,
+                            crossSection = { scale -> poly.withEffectiveDiameter(1.0).scale(scale[0]) })
+                    )
+                }
+            })
+    }
 
-
-    override val providesOperations: List<PrimitiveMethod> = emptyList()
+    fun getFunction(name: String): PrimitiveFunctionValue {
+        return providesFunctions.first { it.name == name}
+    }
 
 }
 

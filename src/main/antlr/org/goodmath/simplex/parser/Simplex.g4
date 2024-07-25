@@ -19,10 +19,10 @@ grammar Simplex;
 package org.goodmath.simplex.parser;
 }
 
-model:  'model' ID 'is'
+model:  '(def-model' ID
     d=def+
     r=render+
-    'end'
+  ')'
 ;
 
 def:
@@ -32,30 +32,21 @@ def:
 ;
 
 tupleDef:
-    'tup' ID '{' params '}'
+    '(def-tup' ID '(' param* ')' ')'
 ;
 
 varDef:
-  'var' ID ( ':' type )? '=' expr
+  '(def-var' ID ( '<' type '>' )? expr ')'
 ;
 
 funDef:
-   'fun' ID '(' params ')' 'do'
-    defs
-    exprs
-   'end'
+   '(def-fun' ID '(' param* ')'
+    def*
+    expr*')'
  ;
 
-defs:
-    def*
-;
-
 param:
-    ID ( ':'  type  )?
-;
-
-params:
-   param (',' param )*
+    ID ( '<' type '>' )?
 ;
 
 type:
@@ -63,168 +54,62 @@ type:
 |  '[' type ']' #optVectorType
 ;
 
-expOp: '^';
-multOp: '*' #opOptStar
+expr:
+  '(let' '(' local* ')'
+      expr+ ')' #optLetExpr
+| '(cond' condClause+ ( '(else' expr ')' ) ')' #optCondExpr
+| '(for' ID expr expr+ ')' #optForExpr
+| '(do' expr+ ')'  #optDoExpr
+| '(update' target=expr update+ ')' #optUpdateExpr
+| '(with' focus=expr body=expr+ ')' #optWithExpr
+| '(->' ID expr+ ')' #optMethodExpr
+| '(' op expr+ ')' #optOpExpr
+| '(' expr* ')'  #optFuncallExpr
+| ID #optIdExpr
+| '['  expr+   ']' #optVecExpr
+| '#' ID '(' expr* ')' #optTupleExpr
+| LIT_INT #optLitInt
+| LIT_FLOAT #optLitFloat
+| LIT_STRING #optLitStr
+| 'true' #optTrue
+| 'false' #optFalse
+;
+
+update: '(' ID expr ')';
+
+local:
+    '(' ID ( '<' type '>'  ) expr ')'
+;
+
+op:  '^' #opOptPow
+ | '*' # opOptTimes
 | '/' #opOptSlash
-| '%' #opOptPercent;
-
-addOp: '+' #opOptPlus
-  | '-' #opOptMinus
-  ;
-
-compareOp: '==' #opOptEqEq
+| '%' #opOptPercent
+| '+' #opOptPlus
+| '-' #opOptMinus
+| '==' #opOptEqEq
 | '!=' #opOptBangEq
 | '<'  #opOptLt
 | '<=' #opOptLe
 | '>' #opOptGt
 | '>=' #opOptGe
-;
-
-logicOp: 'and' #opOptAnd
+| 'and' #opOptAnd
 | 'or' #opOptOr
-;
-
-prefixOp: 'not' #opOptNot | '-' #opOptUnaryMinus;
-
-exprs:
-   ( expr ';' )*
-;
-
-expr:
-  '(' expr ')' #exprOptParens
-| suffixExpr #exprOptSuffix
-;
-
-suffixExpr:
-   binaryExpr suffix*
-;
-
-suffix:
-        '(' exprList ')' #suffixOptCall
-   |    '[' expr ']' #suffixOptSubscript
-   |    '.' ID  #suffixOptField
-   |    '->' ID '(' exprList ')' #suffixOptMeth
-;
-
-
-binaryExpr:
-    l=binaryExpr expOp r=multExpr #binOptTwo
-|  multExpr #binOptOne
-;
-
-multExpr:
-   l=multExpr  op=multOp r=addExpr #multOptTwo
-| addExpr #multOptOne
-;
-
-addExpr:
-   l=addExpr op=addOp r=compareExpr #addOptTwo
-| compareExpr #addOptOne
-;
-
-compareExpr:
-   l=compareExpr  op=compareOp r=logicExpr #compOpTwo
-| logicExpr #compOpOne
-;
-
-logicExpr:
-   l=logicExpr op=logicOp r=baseExpr #logOpTwo
-| baseExpr #logOptOne
-;
-
-baseExpr:
-  ID #baseOptId
-|  condExpr #baseOptCond
-|  loopExpr #baseOptLoop
-|  tupleExpr #baseOptTuple
-|  updateExpr #baseOptUpdate
-|  withExpr #baseOptWith
-|  literalExpr #baseOptLiteral
-|  vectorExpr #baseOptVector
-|  doExpr #baseOptDo
-| letExpr #baseOptLet
-;
-
-exprList:
-   e=expr (',' f=expr )*
-;
-
-doExpr: 'do' ( expr ';' )* 'end'
-;
-
-letExpr: 'let' bindings 'in' ( expr ';' )* 'end'
-;
-
-bindings:
-   binding (',' binding)*
-;
-
-binding:
-   ID ( ':' type )? '=' expr
-;
-
-vectorExpr:
-   '['  exprList?   ']'
-;
-
-withExpr:
-   'with' tup=expr 'do' body=exprs 'end'
-;
-
-updateExpr:
-   'update' tup=expr 'set'
-       updates
-;
-
-tupleExpr:
-   '#{' ID ':' exprList '}'
-;
-
-updates:
-   update (',' update)*
-;
-
-update:
-   ID  '=' expr
-;
-
-loopExpr:
-   'for' ID 'in' coll=expr 'do' body=exprs
-;
-
-
-condExpr:
-   'if' condClause
-   ( 'elif' condClause )*
-   'else' e=expr
+| 'not' #opOptNot
 ;
 
 condClause:
-   c=expr 'then' v=expr
+   '{' c=expr v=expr  '}'
 ;
-
-literalExpr:
-    LIT_INT #optInt
-  | LIT_FLOAT #optFloat
-  | LIT_STRING #optString
-  | 'true' #optTrue
-  | 'false' #optFalse
-;
-
 
 render:
-   'render' ID 'do'
-   exprs
-   'end'
+   '(render' ID
+   expr* ')'
 ;
 
-fragment
-IDCHAR : // Characters that are usable as part of both UNAME and LNAME after
-        // the first character.
-   [\p{Ll}\p{Lu}\p{Pd}\p{Sm}\p{Sc}\p{So}/*_#%^&?!]
-;
+fragment IDCHAR :  [A-Za-z_];
 
-ID: IDCHAR+;
+ID: IDCHAR ( [A-Za-z_0-9] )*;
 
 LIT_STRING :  '"' (ESC | ~["\\])* '"' ;
 

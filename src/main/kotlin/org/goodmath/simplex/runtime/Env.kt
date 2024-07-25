@@ -18,7 +18,7 @@ package org.goodmath.simplex.runtime
 import org.goodmath.simplex.ast.Definition
 import org.goodmath.simplex.ast.Model
 import org.goodmath.simplex.runtime.values.csg.CsgValueType
-import org.goodmath.simplex.runtime.csg.Point2DValueType
+import org.goodmath.simplex.runtime.csg.TwoDPointValueType
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.runtime.values.csg.ThreeDPointValueType
@@ -92,7 +92,7 @@ class Env(defList: List<Definition>,
             BooleanValueType,
             ArrayValueType,
             ThreeDPointValueType,
-            Point2DValueType,
+            TwoDPointValueType,
             PolygonValueType,
             CsgValueType
         )

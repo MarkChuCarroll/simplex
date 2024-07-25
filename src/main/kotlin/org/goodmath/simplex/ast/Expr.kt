@@ -20,6 +20,7 @@ import org.goodmath.simplex.runtime.values.primitives.ArrayValue
 import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexEvaluationError
+import org.goodmath.simplex.runtime.SimplexParameterCountError
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.values.primitives.TupleValue
 import org.goodmath.simplex.runtime.values.primitives.TupleValueType
@@ -27,6 +28,7 @@ import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.primitives.BooleanValue
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
 import org.goodmath.simplex.runtime.values.primitives.IntegerValue
+import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.StringValue
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
@@ -96,18 +98,23 @@ class FieldRefExpr(val tupleExpr: Expr, val fieldName: String, loc: Location):
     }
 }
 
-class FunCallExpr(val funExpr: Expr, val args: List<Expr>, loc: Location): Expr(loc) {
+class FunCallExpr(val funExpr: Expr, val argExprs: List<Expr>, loc: Location): Expr(loc) {
     override fun twist(): Twist =
         Twist.obj("FunCallExpr",
             Twist.value("functionExpr", funExpr),
-            Twist.array("args", args))
+            Twist.array("args", argExprs))
 
     override fun evaluateIn(env: Env): Value {
         val funVal = funExpr.evaluateIn(env)
         if (funVal !is AbstractFunctionValue) {
             throw SimplexEvaluationError("Only a function can be invoked, not ${funVal.valueType.name}")
         }
-        val args = args.map { it.evaluateIn(env) }
+        val args = argExprs.map { it.evaluateIn(env) }
+        if (funVal is PrimitiveFunctionValue &&
+                    !funVal.signatures.any { sig -> sig.validateCall(args) }) {
+            throw SimplexParameterCountError(funVal.signatures.map { it.params.size },
+                args.size)
+        }
         return funVal.applyTo(args)
     }
 }
@@ -307,7 +314,17 @@ class MethodCallExpr(val target: Expr, val name: String, val args: List<Expr>,
     override fun evaluateIn(env: Env): Value {
         val targetValue = target.evaluateIn(env)
         val meth = targetValue.valueType.getOperation(name)
-        return meth.execute(targetValue, args.map { it.evaluateIn(env) })
+        val argValues = args.map { it.evaluateIn(env) }
+        val resultType = meth.signatures.firstNotNullOfOrNull { it.validateCall(targetValue, argValues) }
+        if (resultType == null) {
+            val sig = "(${argValues.map { it.valueType.name }.joinToString(",")})"
+            throw SimplexEvaluationError("Could not find function signature variant matching $sig")
+        }
+        val result = meth.execute(targetValue, argValues)
+        if (result.valueType != resultType) {
+            throw SimplexTypeError(resultType.name, result.valueType.name)
+        }
+        return result
     }
 
     override fun twist(): Twist =

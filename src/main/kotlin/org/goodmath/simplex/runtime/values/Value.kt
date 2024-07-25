@@ -15,7 +15,6 @@
  */
 package org.goodmath.simplex.runtime.values
 
-import org.goodmath.simplex.runtime.SimplexParameterCountError
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.SimplexUndefinedError
 import org.goodmath.simplex.runtime.SimplexUnsupportedOperation
@@ -24,6 +23,7 @@ import org.goodmath.simplex.runtime.values.primitives.IntegerValue
 import org.goodmath.simplex.runtime.values.primitives.BooleanValue
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.StringValue
+import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
 import kotlin.collections.associateBy
 
@@ -41,8 +41,12 @@ interface Value: Twistable {
  * the basic arithmetic and comparison operations
  * for the type's values.
  */
-abstract class ValueType<T: Value> {
+abstract class ValueType<T: Value>: Twistable {
     abstract val name: String
+
+    override fun twist(): Twist {
+        return Twist.attr("ValueType", name)
+    }
 
     /**
      * Should a value of the type be considered true for
@@ -63,13 +67,13 @@ abstract class ValueType<T: Value> {
     }
     abstract fun compare(v1: Value, v2: Value): Int
     abstract val providesFunctions: List<PrimitiveFunctionValue>
-    abstract val providesOperations: List<PrimitiveMethod>
+    abstract val providesOperations: List<PrimitiveMethod<T>>
 
     val operations by lazy {
         providesOperations.associateBy { it.name }
     }
 
-    fun getOperation(name: String): PrimitiveMethod {
+    fun getOperation(name: String): PrimitiveMethod<T> {
         return operations[name] ?: throw SimplexUndefinedError(name, "method")
     }
 
@@ -86,12 +90,6 @@ abstract class ValueType<T: Value> {
             throw SimplexTypeError("Int", v.valueType.name)
         } else {
             return v.i
-        }
-    }
-
-    fun assertArity(args: List<Value>, n: Int) {
-        if (args.size != n) {
-            throw SimplexParameterCountError(n, args.size)
         }
     }
 
@@ -112,18 +110,68 @@ abstract class ValueType<T: Value> {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun assertIs(v: Value, t: ValueType<*>): T {
-        if (v.valueType != t) {
-            throw SimplexTypeError(t.name, v.valueType.name)
+    fun assertIs(v: Value): T {
+        if (v.valueType != this) {
+            throw SimplexTypeError(name, v.valueType.name)
         } else {
             return v as T
         }
     }
 }
 
-class PrimitiveMethod(
-    val name: String,
-    val args: List<ValueType<*>>,
-    val result: ValueType<*>,
-    val execute: (target: Value, args: List<Value>) -> Value)
+data class FunctionSignature(
+    val params: List<ValueType<*>>,
+    val returnType: ValueType<*>
+): Twistable {
+    override fun twist(): Twist =
+        Twist.obj("FunctionSignature",
+            Twist.array("params", params),
+            Twist.value("resultType", returnType)
+        )
 
+    fun validateCall(args: List<Value>): Boolean {
+        System.err.println("Validating: ${args}")
+        System.err.println("Expected = ${params.size}, expected = ${args.size}")
+        if (params.size != args.size) {
+            return false
+        }
+        System.err.println("Arity check succeeded; checking types")
+        return params.zip(args).all { (param, arg) ->
+            arg.valueType == param
+        }
+    }
+}
+
+data class MethodSignature<T: Value>(
+    val self: ValueType<T>,
+    val params: List<ValueType<*>>,
+    val returnType: ValueType<*>
+): Twistable {
+    override fun twist(): Twist =
+        Twist.obj("MethodSig",
+            Twist.value("selfType", self),
+            Twist.array("params", params),
+            Twist.value("returnType", returnType))
+
+    fun validateCall(selfValue: Value,
+                     argValues: List<Value>): ValueType<*>? {
+        if (selfValue.valueType != self) {
+            return null
+        }
+        if (argValues.size != params.size) {
+            return null
+        }
+        return if (params.zip(argValues).all { ( paramType, arg ) ->
+                paramType == arg.valueType }) {
+            returnType
+        } else {
+            null
+        }
+    }
+}
+
+abstract class PrimitiveMethod<T: Value>(
+    val name: String,
+    vararg val signatures: MethodSignature<T>) {
+    abstract fun execute(target: Value, args: List<Value>): Value;
+}

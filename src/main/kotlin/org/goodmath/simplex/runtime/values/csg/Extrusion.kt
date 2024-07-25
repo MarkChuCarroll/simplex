@@ -21,7 +21,6 @@ import eu.mihosoft.vvecmath.Transform
 import eu.mihosoft.vvecmath.Vector3d
 import org.goodmath.simplex.runtime.SimplexEvaluationError
 import org.goodmath.simplex.runtime.values.csg.PolygonValueType.circle
-import java.lang.RuntimeException
 import java.util.ArrayList
 import kotlin.collections.flatMap
 import kotlin.collections.forEachIndexed
@@ -130,7 +129,7 @@ fun circleCrossSection(params: List<Double>): Polygon {
 }
 
 fun extrudeProfile(
-    vararg profiles: Profile,
+    profiles: List<ExtrusionProfile>,
     crossSection: (List<Double>) -> Polygon = ::circleCrossSection,
 ): CSG {
     val shapes = ArrayList<Polygon>()
@@ -149,22 +148,27 @@ fun extrudeProfile(
             shapes.add(crossSection(highs))
         }
     }
+    System.err.println("Extrusion: ${zs.toList()}")
+    for (s in shapes) {
+        System.err.println(s.twist().toString())
+    }
 
     return extrusion(zs.toList(), shapes)
 }
 
 fun prism(
     height: Double,
-    diameter: Double,
+    lowerDiameter: Double,
+    upperDiameter: Double,
     crossSection: (List<Double>) -> Polygon = ::circleCrossSection,
 ): CSG {
-    val span = Profile(
+    val span = ExtrusionProfile(
         listOf(
-            ProfileSlice(0.0, diameter, diameter),
-            ProfileSlice(height, diameter, diameter)
+            ProfileSlice(0.0, lowerDiameter, lowerDiameter),
+            ProfileSlice(height, upperDiameter, upperDiameter)
         )
     )
-    return extrudeProfile(span, crossSection = crossSection)
+    return extrudeProfile(listOf(span), crossSection = crossSection)
 }
 
 fun makeSegment(

@@ -17,6 +17,7 @@ package org.goodmath.simplex.runtime.values.primitives
 
 import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.SimplexUnsupportedOperation
+import org.goodmath.simplex.runtime.values.MethodSignature
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.twist.Twist
@@ -95,15 +96,24 @@ object StringValueType: ValueType<StringValue>() {
     }
 
     override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()
-    override val providesOperations: List<PrimitiveMethod>
-        get() = listOf(
-            PrimitiveMethod("length", emptyList(), IntegerValueType) { target, args ->
-                IntegerValue(assertIsString(target).length)
+    override val providesOperations: List<PrimitiveMethod<StringValue>> by lazy {
+        listOf(
+            object : PrimitiveMethod<StringValue>("length",
+                MethodSignature(StringValueType, emptyList(), IntegerValueType)) {
+                override fun execute(target: Value, args: List<Value>): Value {
+                    return IntegerValue(assertIsString(target).length)
+                }
             },
-            PrimitiveMethod("find", listOf(StringValueType), IntegerValueType) { target, args ->
-                val pat = assertIsString(args[0])
-                IntegerValue(assertIsString(target).indexOf(pat))
+            object : PrimitiveMethod<StringValue>("find",
+                MethodSignature(
+                    StringValueType,
+                    listOf(StringValueType), IntegerValueType)) {
+                override fun execute(target: Value, args: List<Value>): Value {
+                    val pat = assertIsString(args[0])
+                    return IntegerValue(assertIsString(target).indexOf(pat))
+                }
             })
+    }
 }
 
 class StringValue(val s: String): Value {

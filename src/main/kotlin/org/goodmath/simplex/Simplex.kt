@@ -18,7 +18,6 @@ package org.goodmath.simplex
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.options.option
-import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.options.split
 import org.antlr.v4.runtime.CharStreams
 import org.goodmath.simplex.parser.SimplexParseListener

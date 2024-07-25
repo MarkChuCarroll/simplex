@@ -90,7 +90,7 @@ object BooleanValueType: ValueType<BooleanValue>() {
 
     override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()
 
-    override val providesOperations: List<PrimitiveMethod> = emptyList()
+    override val providesOperations: List<PrimitiveMethod<BooleanValue>> = emptyList()
 }
 
 class BooleanValue(val b: Boolean): Value {

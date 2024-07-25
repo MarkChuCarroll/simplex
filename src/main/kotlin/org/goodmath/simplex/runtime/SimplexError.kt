@@ -15,7 +15,6 @@
  */
 package org.goodmath.simplex.runtime
 
-import com.sun.org.apache.xalan.internal.xsltc.compiler.sym
 import org.goodmath.simplex.ast.Expr
 import org.goodmath.simplex.ast.Location
 
@@ -58,9 +57,9 @@ open class SimplexError(
 
 class SimplexIndexError(val expr: Expr, msg: String) : SimplexError(Kind.InvalidIndex, msg, expr.loc)
 
-class SimplexParameterCountError(val expected: Int, val actual: Int,
+class SimplexParameterCountError(val expected: List<Int>, val actual: Int,
                                  location: Location?=null):
-        SimplexError(SimplexError.Kind.ParameterCount, "Expected $expected, but received $actual",
+        SimplexError(SimplexError.Kind.ParameterCount, "Expected one of $expected, but received $actual",
             location)
 
 class SimplexUndefinedError(val name: String, val symbolKind: String) : SimplexError(Kind.UndefinedSymbol,

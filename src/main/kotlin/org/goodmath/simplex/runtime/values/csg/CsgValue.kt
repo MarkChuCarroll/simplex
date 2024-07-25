@@ -16,14 +16,12 @@
 package org.goodmath.simplex.runtime.values.csg
 
 import eu.mihosoft.jcsg.CSG
-import eu.mihosoft.jcsg.Cube
-import eu.mihosoft.jcsg.Cylinder
-import eu.mihosoft.jcsg.Sphere
-import org.goodmath.simplex.runtime.values.primitives.FloatValueType
+import eu.mihosoft.vvecmath.Vector3d
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.SimplexUnsupportedOperation
+import org.goodmath.simplex.runtime.values.MethodSignature
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.twist.Twist
@@ -109,45 +107,52 @@ object CsgValueType: ValueType<CsgValue>() {
         throw SimplexTypeError("CSG", "ordering")
     }
 
-    override val providesFunctions: List<PrimitiveFunctionValue> =
+
+    override val providesFunctions: List<PrimitiveFunctionValue> by lazy {
         listOf(
-            PrimitiveFunctionValue(
-                "block",
-                listOf(ThreeDPointValueType, ThreeDPointValueType),
-                CsgValueType
-            ) { args: List<Value> ->
-                val center = ThreeDPointValueType.assertIsPoint(args[0])
-                val size = ThreeDPointValueType.assertIsPoint(args[1])
-                CsgValue(Cube(center, size).toCSG())
-            },
-            PrimitiveFunctionValue(
-                "sphere", listOf(ThreeDPointValueType, FloatValueType),
-                CsgValueType
-            ) { args: List<Value> ->
-                val center = ThreeDPointValueType.assertIsPoint(args[0])
-                val radius = assertIsFloat(args[1])
-                CsgValue(Sphere(center, radius, 16, 8).toCSG())
-            },
-            PrimitiveFunctionValue(
-                "cylinder", listOf(ThreeDPointValueType, ThreeDPointValueType, FloatValueType, FloatValueType),
-                CsgValueType
-            ) { args: List<Value> ->
-                assertArity(args, 4)
-                val start = ThreeDPointValueType.assertIsPoint(args[0])
-                val end = ThreeDPointValueType.assertIsPoint(args[1])
-                val r1 = assertIsFloat(args[2])
-                val r2 = assertIsFloat(args[3])
-                CsgValue(Cylinder(start, end, r1, r2, 10).toCSG())
+            CsgSphereFunction,
+            CsgBlockFunction,
+            CsgCylinderFunction
+        )
+    }
+
+
+    override val providesOperations: List<PrimitiveMethod<CsgValue>> by lazy {
+        listOf(
+            CsgScaleMethod, CsgMoveMethod, CsgRotateMethod,
+            object: PrimitiveMethod<CsgValue>("centroid",
+                MethodSignature(CsgValueType,
+                emptyList(),
+                ThreeDPointValueType)) {
+
+                override fun execute(
+                    target: Value,
+                    args: List<Value>
+                ): Value {
+                    target as CsgValue
+                    return ThreeDPoint(target.centroid)
+                }
             }
         )
-
-
-    override val providesOperations: List<PrimitiveMethod> = emptyList()
-
+    }
 }
 
 class CsgValue(val csgValue: CSG): Value {
     override val valueType: ValueType<CsgValue> = CsgValueType
+
+    val centroid: Vector3d by lazy {
+        val faceCenters = csgValue.polygons.map { it.centroid() }
+        var xSum = 0.0
+        var ySum = 0.0
+        var zSum = 0.0
+        for (p in faceCenters) {
+            xSum += p.x
+            ySum += p.y
+            zSum += p.z
+        }
+        Vector3d.xyz(xSum/faceCenters.size.toDouble(), ySum/faceCenters.size.toDouble(),
+            zSum/faceCenters.size.toDouble())
+    }
 
     override fun twist(): Twist =
         Twist.obj(

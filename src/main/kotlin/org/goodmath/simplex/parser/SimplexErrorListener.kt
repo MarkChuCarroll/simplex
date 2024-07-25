@@ -18,7 +18,6 @@ package org.goodmath.simplex.parser
 import org.antlr.v4.runtime.BaseErrorListener
 import org.antlr.v4.runtime.RecognitionException
 import org.antlr.v4.runtime.Recognizer
-import javax.xml.transform.ErrorListener
 
 class SimplexErrorListener: BaseErrorListener() {
     override fun syntaxError(
