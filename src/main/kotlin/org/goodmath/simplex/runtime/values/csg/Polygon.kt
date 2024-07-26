@@ -25,6 +25,7 @@ import org.goodmath.simplex.runtime.csg.TwoDPointValueType
 import org.goodmath.simplex.runtime.csg.TwoDPoint
 import org.goodmath.simplex.runtime.values.FunctionSignature
 import org.goodmath.simplex.runtime.values.MethodSignature
+import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
 import org.goodmath.simplex.runtime.values.primitives.FloatValueType
@@ -340,8 +341,9 @@ object PolygonValueType: ValueType<Polygon>() {
     override val providesFunctions: List<PrimitiveFunctionValue> by lazy {
         listOf(
             object : PrimitiveFunctionValue("circle",
-                FunctionSignature(listOf(FloatValueType), PolygonValueType),
-                FunctionSignature(listOf(FloatValueType, IntegerValueType),PolygonValueType)) {
+                FunctionSignature(listOf(Param("radius", FloatValueType)), PolygonValueType),
+                FunctionSignature(listOf(Param("radius", FloatValueType),
+                    Param("quality", IntegerValueType)),PolygonValueType)) {
                 override fun execute(args: List<Value>): Value {
                     val radius = assertIsFloat(args[0])
                     val quality = if (args.size > 1) {
@@ -355,7 +357,9 @@ object PolygonValueType: ValueType<Polygon>() {
             object : PrimitiveFunctionValue(
                 "squared_circle",
                 FunctionSignature(
-                listOf(FloatValueType, FloatValueType, FloatValueType),
+                listOf(Param("diameter", FloatValueType),
+                    Param("xPad", FloatValueType),
+                    Param("yPad", FloatValueType)),
                 PolygonValueType)
             ) {
                 override fun execute(args: List<Value>): Value {
@@ -368,7 +372,9 @@ object PolygonValueType: ValueType<Polygon>() {
             object : PrimitiveFunctionValue(
                 "rectangle",
                 FunctionSignature(
-                    listOf(TwoDPointValueType, FloatValueType, FloatValueType),
+                    listOf(Param("center", TwoDPointValueType),
+                        Param("width", FloatValueType),
+                        Param("height", FloatValueType)),
                     PolygonValueType)) {
                 override fun execute(args: List<Value>): Value {
                     val center = TwoDPointValueType.assertIs(args[0])
@@ -400,8 +406,11 @@ object PolygonValueType: ValueType<Polygon>() {
                 }
             },
             object : PrimitiveMethod<Polygon>("scale",
-                MethodSignature(PolygonValueType, listOf(FloatValueType), PolygonValueType),
-                MethodSignature(PolygonValueType, listOf(FloatValueType, FloatValueType),
+                MethodSignature(PolygonValueType,
+                    listOf(Param("factor", FloatValueType)), PolygonValueType),
+                MethodSignature(PolygonValueType,
+                    listOf(Param("xFactor", FloatValueType),
+                        Param("yFactor", FloatValueType)),
                     PolygonValueType)) {
                 override fun execute(target: Value, args: List<Value>): Value {
                     val poly = assertIsPolygon(target)
@@ -418,7 +427,7 @@ object PolygonValueType: ValueType<Polygon>() {
             object : PrimitiveMethod<Polygon>(
                 "with_area",
                 MethodSignature(PolygonValueType,
-                listOf(FloatValueType),
+                listOf(Param("area", FloatValueType)),
                 PolygonValueType
             )) {
                 override fun execute(target: Value, args: List<Value>): Value {
@@ -428,7 +437,8 @@ object PolygonValueType: ValueType<Polygon>() {
                 }
             },
             object : PrimitiveMethod<Polygon>("with_diam",
-                MethodSignature(PolygonValueType, listOf(FloatValueType), PolygonValueType)) {
+                MethodSignature(PolygonValueType,
+                    listOf(Param("diam", FloatValueType)), PolygonValueType)) {
                 override fun execute(target: Value, args: List<Value>): Value {
                     val poly = assertIsPolygon(target)
                     val diam = assertIsFloat(args[0])
@@ -438,7 +448,8 @@ object PolygonValueType: ValueType<Polygon>() {
             object : PrimitiveMethod<Polygon>("with_circumference",
                 MethodSignature(
                     PolygonValueType,
-                    listOf(FloatValueType), PolygonValueType)) {
+                    listOf(Param("circ", FloatValueType)),
+                    PolygonValueType)) {
                 override fun execute(target: Value, args: List<Value>): Value {
                     val poly = assertIsPolygon(target)
                     val circ = assertIsFloat(args[0])
@@ -448,7 +459,7 @@ object PolygonValueType: ValueType<Polygon>() {
             object : PrimitiveMethod<Polygon>("move",
                 MethodSignature(
                     PolygonValueType,
-                    listOf(FloatValueType, FloatValueType),
+                    listOf(Param("x", FloatValueType), Param("y", FloatValueType)),
                     PolygonValueType)) {
                 override fun execute(target: Value, args: List<Value>): Value {
                     val poly = assertIsPolygon(target)
@@ -473,7 +484,7 @@ object PolygonValueType: ValueType<Polygon>() {
             },
             object: PrimitiveMethod<Polygon>("extrude",
                 MethodSignature(PolygonValueType,
-                    listOf(ExtrusionProfileType), CsgValueType)) {
+                    listOf(Param("profile", ExtrusionProfileType)), CsgValueType)) {
                 override fun execute(
                     target: Value,
                     args: List<Value>
@@ -490,7 +501,7 @@ object PolygonValueType: ValueType<Polygon>() {
             object: PrimitiveMethod<Polygon>("extrude_series",
                 MethodSignature<Polygon>(
                     PolygonValueType,
-                    listOf(ArrayValueType), CsgValueType)) {
+                    listOf(Param("profiles", ArrayValueType)), CsgValueType)) {
                 override fun execute(
                     target: Value,
                     args: List<Value>

@@ -148,11 +148,6 @@ fun extrudeProfile(
             shapes.add(crossSection(highs))
         }
     }
-    System.err.println("Extrusion: ${zs.toList()}")
-    for (s in shapes) {
-        System.err.println(s.twist().toString())
-    }
-
     return extrusion(zs.toList(), shapes)
 }
 

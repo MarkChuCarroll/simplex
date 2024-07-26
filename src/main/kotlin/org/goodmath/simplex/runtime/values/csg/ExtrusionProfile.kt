@@ -18,6 +18,7 @@ package org.goodmath.simplex.runtime.values.csg
 import org.goodmath.simplex.runtime.SimplexUnsupportedOperation
 import org.goodmath.simplex.runtime.values.FunctionSignature
 import org.goodmath.simplex.runtime.values.MethodSignature
+import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
@@ -150,7 +151,11 @@ object ProfileSliceType: ValueType<ProfileSlice>() {
         listOf(
             object : PrimitiveFunctionValue(
                 "slice",
-                FunctionSignature(listOf(FloatValueType, FloatValueType, FloatValueType),
+                FunctionSignature(
+                    listOf(
+                        Param("pos", FloatValueType),
+                        Param("lowDiam", FloatValueType),
+                        Param("highDiam", FloatValueType)),
                     ProfileSliceType)
             ) {
                 override fun execute(args: List<Value>): Value {
@@ -380,7 +385,9 @@ object ExtrusionProfileType: ValueType<ExtrusionProfile>() {
     override val providesFunctions: List<PrimitiveFunctionValue> by lazy {
         listOf(
             object: PrimitiveFunctionValue("profile",
-                FunctionSignature(listOf(ArrayValueType), ExtrusionProfileType)) {
+                FunctionSignature(listOf(
+                    Param("slices", ArrayValueType)),
+                    ExtrusionProfileType)) {
                 override fun execute(args: List<Value>): Value {
                     val arr = ArrayValueType.assertIsArray(args[0]).map {
                         ProfileSliceType.assertIs(it)
@@ -396,7 +403,7 @@ object ExtrusionProfileType: ValueType<ExtrusionProfile>() {
             object: PrimitiveMethod<ExtrusionProfile>("clipped",
                 MethodSignature<ExtrusionProfile>(
                     ExtrusionProfileType,
-                    listOf(FloatValueType, FloatValueType), ExtrusionProfileType)) {
+                    listOf(Param("low", FloatValueType), Param("high", FloatValueType)), ExtrusionProfileType)) {
                 override fun execute(
                     target: Value,
                     args: List<Value>
@@ -409,7 +416,8 @@ object ExtrusionProfileType: ValueType<ExtrusionProfile>() {
             },
             object: PrimitiveMethod<ExtrusionProfile>("move",
                 MethodSignature(ExtrusionProfileType,
-                    listOf(FloatValueType), ExtrusionProfileType)) {
+                    listOf(Param("distance", FloatValueType)),
+                    ExtrusionProfileType)) {
                 override fun execute(
                     target: Value,
                     args: List<Value>
@@ -421,7 +429,8 @@ object ExtrusionProfileType: ValueType<ExtrusionProfile>() {
             },
             object: PrimitiveMethod<ExtrusionProfile>("append",
                 MethodSignature(ExtrusionProfileType,
-                    listOf(ExtrusionProfileType), ExtrusionProfileType)) {
+                    listOf(Param("other", ExtrusionProfileType)),
+                    ExtrusionProfileType)) {
                 override fun execute(
                     target: Value,
                     args: List<Value>
@@ -434,7 +443,8 @@ object ExtrusionProfileType: ValueType<ExtrusionProfile>() {
             object: PrimitiveMethod<ExtrusionProfile>("stepped",
                 MethodSignature<ExtrusionProfile>(
                     ExtrusionProfileType,
-                    listOf(FloatValueType), ExtrusionProfileType)) {
+                    listOf(Param("stepSize", FloatValueType)),
+                    ExtrusionProfileType)) {
                 override fun execute(
                     target: Value,
                     args: List<Value>

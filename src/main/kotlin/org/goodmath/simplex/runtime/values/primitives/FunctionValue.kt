@@ -21,6 +21,8 @@ import org.goodmath.simplex.ast.FunctionDefinition
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.SimplexEvaluationError
+import org.goodmath.simplex.runtime.SimplexInvalidParameterError
+import org.goodmath.simplex.runtime.SimplexParameterCountError
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.SimplexUnsupportedOperation
 import org.goodmath.simplex.runtime.values.FunctionSignature
@@ -212,6 +214,29 @@ abstract class PrimitiveFunctionValue(
     abstract fun execute(args: List<Value>): Value
 
     override val valueType = PrimitiveFunctionValueType
+
+    fun validateCall(args: List<Value>): ValueType<*> {
+        for (sig in signatures) {
+            if (sig.params.size != args.size) {
+                continue
+            } else {
+                for ((param, arg) in sig.params.zip(args)) {
+                    if (param.type != arg.valueType) {
+                        throw SimplexInvalidParameterError(
+                            "function $name", param.name, param.type,
+                            arg.valueType
+                        )
+                    }
+                }
+                return sig.returnType
+            }
+        }
+        throw SimplexParameterCountError(
+            "function $name",
+            signatures.map { it.params.size },
+            args.size
+        )
+    }
 
     override fun twist(): Twist =
         Twist.obj("PrimitiveFunctionValue",

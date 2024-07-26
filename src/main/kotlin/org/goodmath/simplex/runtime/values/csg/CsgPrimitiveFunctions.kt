@@ -6,6 +6,7 @@ import eu.mihosoft.vvecmath.Transform
 import eu.mihosoft.vvecmath.Vector3d
 import org.goodmath.simplex.runtime.values.FunctionSignature
 import org.goodmath.simplex.runtime.values.MethodSignature
+import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.primitives.FloatValueType
@@ -13,7 +14,8 @@ import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 
 object CsgBlockFunction: PrimitiveFunctionValue("block",
     FunctionSignature(
-        listOf(FloatValueType, FloatValueType, FloatValueType),
+        listOf(Param("x", FloatValueType), Param("y", FloatValueType),
+            Param("z", FloatValueType)),
         CsgValueType)) {
     override fun execute(args: List<Value>): Value {
         val width = CsgValueType.assertIsFloat(args[0])
@@ -29,7 +31,7 @@ object CsgBlockFunction: PrimitiveFunctionValue("block",
 object CsgSphereFunction: PrimitiveFunctionValue(
     "sphere",
     FunctionSignature(
-        listOf(FloatValueType),
+        listOf(Param("radius", FloatValueType)),
         CsgValueType)) {
     override fun execute(args: List<Value>): Value {
         val radius = CsgValueType.assertIsFloat(args[0])
@@ -48,9 +50,9 @@ object CsgSphereFunction: PrimitiveFunctionValue(
 object CsgCylinderFunction: PrimitiveFunctionValue(
     "cylinder",
     FunctionSignature(
-    listOf(FloatValueType,
-        FloatValueType,
-        FloatValueType
+    listOf(Param("height", FloatValueType),
+        Param("lowerRadius", FloatValueType),
+        Param("upperRadius", FloatValueType)
     ),
     CsgValueType)) {
     override fun execute(args: List<Value>): Value {
@@ -68,7 +70,7 @@ object CsgCylinderFunction: PrimitiveFunctionValue(
 
 object CsgScaleMethod: PrimitiveMethod<CsgValue>(
     "scale",
-    MethodSignature(CsgValueType, listOf(FloatValueType), CsgValueType)) {
+    MethodSignature(CsgValueType, listOf(Param("factor", FloatValueType)), CsgValueType)) {
     override fun execute(
         target: Value,
         args: List<Value>
@@ -89,7 +91,9 @@ object CsgScaleMethod: PrimitiveMethod<CsgValue>(
 object CsgMoveMethod: PrimitiveMethod<CsgValue>("move",
     MethodSignature<CsgValue>(
         CsgValueType,
-        listOf(FloatValueType, FloatValueType, FloatValueType),
+        listOf(Param("xFactor", FloatValueType),
+            Param("yFactor", FloatValueType),
+            Param("zFactor", FloatValueType)),
         CsgValueType)) {
     override fun execute(
         target: Value,
@@ -104,8 +108,10 @@ object CsgMoveMethod: PrimitiveMethod<CsgValue>("move",
 }
 
 object CsgRotateMethod: PrimitiveMethod<CsgValue>("rot",
-    MethodSignature<CsgValue>(CsgValueType, listOf(FloatValueType,
-    FloatValueType, FloatValueType), CsgValueType)) {
+    MethodSignature<CsgValue>(CsgValueType,
+        listOf(Param("xAngle", FloatValueType),
+            Param("yAngle", FloatValueType),
+            Param("zAngle", FloatValueType)), CsgValueType)) {
     override fun execute(
         target: Value,
         args: List<Value>

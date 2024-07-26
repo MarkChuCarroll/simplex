@@ -22,6 +22,7 @@ import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.SimplexUnsupportedOperation
 import org.goodmath.simplex.runtime.values.FunctionSignature
 import org.goodmath.simplex.runtime.values.MethodSignature
+import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
@@ -143,7 +144,9 @@ object TwoDPointValueType: ValueType<TwoDPoint>() {
         listOf(
             object : PrimitiveFunctionValue(
                 "p2d",
-                FunctionSignature(listOf(FloatValueType, FloatValueType),
+                FunctionSignature(listOf(
+                    Param("x", FloatValueType),
+                    Param("y", FloatValueType)),
                     TwoDPointValueType)
             ) {
                 override fun execute(args: List<Value>): Value {

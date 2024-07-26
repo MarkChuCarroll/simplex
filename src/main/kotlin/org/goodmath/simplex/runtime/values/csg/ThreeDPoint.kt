@@ -27,6 +27,7 @@ import org.goodmath.simplex.runtime.values.MethodSignature
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.twist.Twist
+import org.goodmath.simplex.runtime.values.Param
 
 
 object ThreeDPointValueType: ValueType<ThreeDPoint>() {
@@ -109,8 +110,9 @@ object ThreeDPointValueType: ValueType<ThreeDPoint>() {
             object: PrimitiveFunctionValue(
                 "point",
                 FunctionSignature(listOf(
-                    FloatValueType,
-                    FloatValueType, FloatValueType
+                    Param("x", FloatValueType),
+                    Param("y", FloatValueType),
+                    Param("z", FloatValueType)
                 ), ThreeDPointValueType
             )) {
                 override fun execute(args: List<Value>): Value {
@@ -126,9 +128,12 @@ object ThreeDPointValueType: ValueType<ThreeDPoint>() {
         listOf(
             object: PrimitiveMethod<ThreeDPoint>("scale",
                 MethodSignature(ThreeDPointValueType,
-                    listOf(FloatValueType), ThreeDPointValueType),
+                    listOf(Param("factor", FloatValueType)), ThreeDPointValueType),
                 MethodSignature(
-                    ThreeDPointValueType, listOf(FloatValueType, FloatValueType, FloatValueType),
+                    ThreeDPointValueType,
+                    listOf(Param("xFactor", FloatValueType),
+                        Param("yFactor", FloatValueType),
+                        Param("zFactor", FloatValueType)),
                     ThreeDPointValueType)) {
                 override fun execute(target: Value, args: List<Value>): Value {
                     val point = assertIs(target).xyz
@@ -146,7 +151,10 @@ object ThreeDPointValueType: ValueType<ThreeDPoint>() {
             object: PrimitiveMethod<ThreeDPoint>("rot",
                 MethodSignature<ThreeDPoint>(
                     ThreeDPointValueType,
-                    listOf(FloatValueType, FloatValueType, FloatValueType),
+                    listOf(
+                        Param("xAngle", FloatValueType),
+                        Param("yAngle", FloatValueType),
+                        Param("zAngle", FloatValueType)),
                 ThreeDPointValueType)) {
                 override fun execute(
                     target: Value,

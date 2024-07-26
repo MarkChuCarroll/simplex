@@ -18,6 +18,7 @@ package org.goodmath.simplex.runtime.values.primitives
 import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.SimplexUnsupportedOperation
 import org.goodmath.simplex.runtime.values.MethodSignature
+import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.twist.Twist
@@ -107,7 +108,7 @@ object StringValueType: ValueType<StringValue>() {
             object : PrimitiveMethod<StringValue>("find",
                 MethodSignature(
                     StringValueType,
-                    listOf(StringValueType), IntegerValueType)) {
+                    listOf(Param("s", StringValueType)), IntegerValueType)) {
                 override fun execute(target: Value, args: List<Value>): Value {
                     val pat = assertIsString(args[0])
                     return IntegerValue(assertIsString(target).indexOf(pat))

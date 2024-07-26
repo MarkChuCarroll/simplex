@@ -17,6 +17,7 @@ package org.goodmath.simplex.runtime
 
 import org.goodmath.simplex.ast.Expr
 import org.goodmath.simplex.ast.Location
+import org.goodmath.simplex.runtime.values.ValueType
 
 open class SimplexError(
     val kind: Kind,
@@ -57,10 +58,22 @@ open class SimplexError(
 
 class SimplexIndexError(val expr: Expr, msg: String) : SimplexError(Kind.InvalidIndex, msg, expr.loc)
 
-class SimplexParameterCountError(val expected: List<Int>, val actual: Int,
-                                 location: Location?=null):
-        SimplexError(SimplexError.Kind.ParameterCount, "Expected one of $expected, but received $actual",
+class SimplexParameterCountError(
+    val callable: String,
+    val expected: List<Int>,
+    val actual: Int,
+    location: Location?=null):
+        SimplexError(SimplexError.Kind.ParameterCount, "$callable expected one of $expected, but received $actual",
             location)
+
+class SimplexInvalidParameterError(val callable: String,
+                                   val name: String,
+                                   val expected: ValueType<*>,
+                                   val actual: ValueType<*>):
+        SimplexError(SimplexError.Kind.InvalidParameter,
+            "Parameter $name of $callable expects a value of type ${expected.name}, but received a ${actual.name}"
+        )
+
 
 class SimplexUndefinedError(val name: String, val symbolKind: String) : SimplexError(Kind.UndefinedSymbol,
     "$name: $symbolKind")
