@@ -111,7 +111,7 @@ object IntegerValueType: ValueType<IntegerValue>() {
 
     override val providesOperations: List<PrimitiveMethod<IntegerValue>> by lazy {
         listOf(
-            object : PrimitiveMethod<IntegerValue>("toFloat",
+            object : PrimitiveMethod<IntegerValue>("float",
                 MethodSignature(
                     IntegerValueType,
                     emptyList(), FloatValueType)) {

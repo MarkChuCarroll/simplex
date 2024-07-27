@@ -38,7 +38,7 @@ class Model(val defs: List<Definition>,
 
     fun execute(renderNames: Set<String>?,
                 outputPrefix: String,
-                echo: (Any?, Boolean) -> Unit) {
+                echo: (Int, Any?, Boolean) -> Unit) {
         val rootEnv = Env.createRootEnv(this)
         val executionEnv = Env(defs, rootEnv)
         executionEnv.installDefinitionValues()
@@ -49,12 +49,12 @@ class Model(val defs: List<Definition>,
         }
 
         for (product in toRender) {
-            echo(cyan("Rendering ${product.name}"), false)
+            echo(1, cyan("Rendering ${product.name}"), false)
             product.execute(executionEnv, echo, outputPrefix)
         }
     }
     companion object {
-        var output: (Any?, Boolean) -> Unit = { s: Any?, err: Boolean ->
+        var output: (Int, Any?, Boolean) -> Unit = { i: Int, s: Any?, err: Boolean ->
             System.out.println(s)
         }
     }
@@ -74,7 +74,7 @@ class Product(val name: String?, val body: List<Expr>, loc: Location): AstNode(l
             Twist.attr("name", name),
             Twist.array("body", body))
 
-    fun execute(env: Env, echo: (Any?, Boolean) -> Unit,
+    fun execute(env: Env, echo: (Int, Any?, Boolean) -> Unit,
                 prefix: String) {
         val results = body.map { it.evaluateIn(env) }
         val bodies = results.filter { it is CsgValue }.map { it as CsgValue }
@@ -84,7 +84,7 @@ class Product(val name: String?, val body: List<Expr>, loc: Location): AstNode(l
             for (body in bodies.drop(0)) {
                 combined = combined.union(body)
             }
-            echo(cyan("Rendering 3d model of ${bodies.size} bodies to $prefix-$name.stl"), false)
+            echo(1, cyan("Rendering 3d model of ${bodies.size} bodies to $prefix-$name.stl"), false)
             Path("$prefix-$name.stl").writeText(combined.toStlString())
         }
         val others = results.filter { it.valueType != CsgValueType }
@@ -100,12 +100,12 @@ class Product(val name: String?, val body: List<Expr>, loc: Location): AstNode(l
             }
             val textOut = text.toString()
             if (textOut.isNotEmpty()) {
-                echo(cyan("Writing text products to $prefix-$name.txt"), false)
+                echo(1, cyan("Writing text products to $prefix-$name.txt"), false)
                 Path("$prefix-$name.txt").writeText(textOut)
             }
             val twistOut = twists.toString()
             if (twistOut.isNotEmpty()) {
-                echo(cyan("Writing twisted products to $prefix-$name.twist"), false)
+                echo(1, cyan("Writing twisted products to $prefix-$name.twist"), false)
                 Path("$prefix-$name.twist").writeText(twistOut)
             }
         }

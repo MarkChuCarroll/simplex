@@ -58,7 +58,7 @@ import org.goodmath.simplex.runtime.SimplexError
 @Suppress("UNCHECKED_CAST")
 class SimplexParseListener: SimplexListener {
 
-    fun parse(input: CharStream, echo: (Any?, Boolean) -> Unit): Model {
+    fun parse(input: CharStream, echo: (Int, Any?, Boolean) -> Unit): Model {
         val lexer = SimplexLexer(input)
         val tokenStream = CommonTokenStream(lexer)
         val walker = ParseTreeWalker()
@@ -69,7 +69,7 @@ class SimplexParseListener: SimplexListener {
         val tree = parser.model()
         if (errorListener.errorCount > 0) {
             for (e in errorListener.getLoggedErrors()) {
-                echo(e, true)
+                echo(0, e, true)
             }
             throw SimplexError(SimplexError.Kind.Parser,
                 "See error log above for details")
@@ -136,8 +136,16 @@ class SimplexParseListener: SimplexListener {
 
     override fun exitTupleDef(ctx: SimplexParser.TupleDefContext) {
         val name = ctx.ID().text
-        val fields = ctx.param().map { getValueFor(it) as TypedName }
+        val fields = getValueFor(ctx.params()) as List<TypedName>
         setValueFor(ctx, TupleDefinition(name, fields, loc(ctx)))
+    }
+
+    override fun enterParams(ctx: SimplexParser.ParamsContext) {
+    }
+
+    override fun exitParams(ctx: SimplexParser.ParamsContext) {
+        val params = ctx.param().map { getValueFor(it) as TypedName }
+        setValueFor(ctx, params)
     }
 
     override fun enterVarDef(ctx: SimplexParser.VarDefContext) {
@@ -157,9 +165,9 @@ class SimplexParseListener: SimplexListener {
         val name = ctx.ID().text
         val type = ctx.type()?.let { getValueFor(it) as Type}
         val localDefs = ctx.def().map { getValueFor(it) as Definition }
-        val params = ctx.param().map { getValueFor(it) as TypedName }
+        val params = ctx.params()?.let { getValueFor(it) as List<TypedName>}
         val body = ctx.expr().map { getValueFor(it) as Expr }
-        setValueFor(ctx, FunctionDefinition(name, type, params, localDefs, body, loc(ctx)))
+        setValueFor(ctx, FunctionDefinition(name, type, params ?: emptyList(), localDefs, body, loc(ctx)))
     }
 
 
@@ -189,94 +197,203 @@ class SimplexParseListener: SimplexListener {
         setValueFor(ctx, ArrayType(elementType))
     }
 
-    override fun enterOptLetExpr(ctx: SimplexParser.OptLetExprContext) {
+    override fun enterBindings(ctx: SimplexParser.BindingsContext) {
     }
 
-    override fun exitOptLetExpr(ctx: SimplexParser.OptLetExprContext) {
-        val bindings = ctx.local().map { getValueFor(it) as Binding }
+    override fun exitBindings(ctx: SimplexParser.BindingsContext) {
+        val bindings = ctx.binding().map { getValueFor(it) as Binding }
+        setValueFor(ctx, bindings)
+    }
+
+    override fun enterUpdates(ctx: SimplexParser.UpdatesContext) {
+    }
+
+    override fun exitUpdates(ctx: SimplexParser.UpdatesContext) {
+        val ups = ctx.update().map { getValueFor(it) as Update }
+        setValueFor(ctx, ups)
+    }
+
+    override fun enterExprs(ctx: SimplexParser.ExprsContext) {
+    }
+
+    override fun exitExprs(ctx: SimplexParser.ExprsContext) {
+        val exprs = ctx.expr().map { getValueFor(it) as Expr}
+        setValueFor(ctx, exprs)
+    }
+
+    override fun enterExprParen(ctx: SimplexParser.ExprParenContext) {
+
+    }
+
+    override fun exitExprParen(ctx: SimplexParser.ExprParenContext) {
+        val e = getValueFor(ctx.expr())
+        setValueFor(ctx, e)
+    }
+
+    override fun enterExprMethod(ctx: SimplexParser.ExprMethodContext) {
+    }
+
+    override fun exitExprMethod(ctx: SimplexParser.ExprMethodContext) {
+        val lhs = getValueFor(ctx.expr()) as Expr
+        val meth = ctx.ID().text
+        val args = ctx.exprs()?.let { getValueFor(it) as List<Expr> } ?: emptyList()
+        setValueFor(ctx, MethodCallExpr(lhs, meth, args, loc(ctx)))
+    }
+
+    override fun enterExprCall(ctx: SimplexParser.ExprCallContext) {
+    }
+
+    override fun exitExprCall(ctx: SimplexParser.ExprCallContext) {
+        val funExpr = getValueFor(ctx.expr()) as Expr
+        val args = ctx.exprs()?.let { getValueFor(it) as List<Expr>} ?: emptyList()
+        setValueFor(ctx, FunCallExpr(funExpr, args, loc(ctx)))
+    }
+
+    override fun enterExprComplex(ctx: SimplexParser.ExprComplexContext) {
+    }
+
+    override fun exitExprComplex(ctx: SimplexParser.ExprComplexContext) {
+        val expr = getValueFor(ctx.complex()) as Expr
+        setValueFor(ctx, expr)
+    }
+
+    override fun enterExprAdd(ctx: SimplexParser.ExprAddContext) {
+    }
+
+    override fun exitExprAdd(ctx: SimplexParser.ExprAddContext) {
+        val l = getValueFor(ctx.l) as Expr
+        val op = getValueFor(ctx.addOp()) as Operator
+        val r = getValueFor(ctx.r) as Expr
+        setValueFor(ctx, OperatorExpr(op, listOf(l, r), loc(ctx)))
+    }
+
+    override fun enterExprPow(ctx: SimplexParser.ExprPowContext) {
+    }
+
+    override fun exitExprPow(ctx: SimplexParser.ExprPowContext) {
+        val l = getValueFor(ctx.l) as Expr
+        val op = getValueFor(ctx.expOp()) as Operator
+        val r = getValueFor(ctx.r) as Expr
+        setValueFor(ctx, OperatorExpr(op, listOf(l, r), loc(ctx)))
+    }
+
+    override fun enterExprMult(ctx: SimplexParser.ExprMultContext) {
+    }
+
+    override fun exitExprMult(ctx: SimplexParser.ExprMultContext) {
+        val l = getValueFor(ctx.l) as Expr
+        val op = getValueFor(ctx.multOp()) as Operator
+        val r = getValueFor(ctx.r) as Expr
+        setValueFor(ctx, OperatorExpr(op, listOf(l, r), loc(ctx)))
+    }
+
+    override fun enterExprUnary(ctx: SimplexParser.ExprUnaryContext) {
+    }
+
+    override fun exitExprUnary(ctx: SimplexParser.ExprUnaryContext) {
+        val op = getValueFor(ctx.unaryOp()) as Operator
+        setValueFor(ctx, op)
+    }
+
+    override fun enterExprLogic(ctx: SimplexParser.ExprLogicContext) {
+    }
+
+    override fun exitExprLogic(ctx: SimplexParser.ExprLogicContext) {
+        val l = getValueFor(ctx.l) as Expr
+        val op = getValueFor(ctx.logicOp()) as Operator
+        val r = getValueFor(ctx.r) as Expr
+        setValueFor(ctx, OperatorExpr(op, listOf(l, r), loc(ctx)))
+    }
+
+    override fun enterExprCompare(ctx: SimplexParser.ExprCompareContext) {
+    }
+
+    override fun exitExprCompare(ctx: SimplexParser.ExprCompareContext) {
+        val l = getValueFor(ctx.l) as Expr
+        val op = getValueFor(ctx.compareOp()) as Operator
+        val r = getValueFor(ctx.r) as Expr
+        setValueFor(ctx, OperatorExpr(op, listOf(l, r), loc(ctx)))
+    }
+
+    override fun enterExprSubscript(ctx: SimplexParser.ExprSubscriptContext) {
+    }
+
+    override fun exitExprSubscript(ctx: SimplexParser.ExprSubscriptContext) {
+        val target = getValueFor(ctx.expr()[0]) as Expr
+        val sub = getValueFor(ctx.expr()[1]) as Expr
+        setValueFor(ctx, OperatorExpr(Operator.Subscript, listOf(target, sub), loc(ctx)))
+    }
+
+    override fun enterExprPrimary(ctx: SimplexParser.ExprPrimaryContext) {
+    }
+
+    override fun exitExprPrimary(ctx: SimplexParser.ExprPrimaryContext) {
+        val e = getValueFor(ctx.primary())
+        setValueFor(ctx, e)
+    }
+
+    override fun enterComplexLetExpr(ctx: SimplexParser.ComplexLetExprContext) {
+    }
+
+    override fun exitComplexLetExpr(ctx: SimplexParser.ComplexLetExprContext) {
+        val bindings = getValueFor(ctx.bindings()) as List<Binding>
         val body = ctx.expr().map { getValueFor(it) as Expr }
         setValueFor(ctx, LetExpr(bindings, body, loc(ctx)))
     }
 
-    override fun enterOptCondExpr(ctx: SimplexParser.OptCondExprContext) {
+    override fun enterComplexCondExpr(ctx: SimplexParser.ComplexCondExprContext) {
     }
 
-    override fun exitOptCondExpr(ctx: SimplexParser.OptCondExprContext) {
-        val clauses = ctx.condClause().map { getValueFor(it) as Condition }
+    override fun exitComplexCondExpr(ctx: SimplexParser.ComplexCondExprContext) {
+        val conds = ctx.condClause().map { getValueFor(it) as Condition }
         val elseClause = getValueFor(ctx.expr()) as Expr
-        setValueFor(ctx, CondExpr(clauses, elseClause, loc(ctx)))
+        setValueFor(ctx, CondExpr(conds, elseClause, loc(ctx)))
     }
 
-    override fun enterOptForExpr(ctx: SimplexParser.OptForExprContext) {
+    override fun enterComplexForExpr(ctx: SimplexParser.ComplexForExprContext) {
     }
 
-    override fun exitOptForExpr(ctx: SimplexParser.OptForExprContext) {
+    override fun exitComplexForExpr(ctx: SimplexParser.ComplexForExprContext) {
         val idx = ctx.ID().text
-        val exprs = ctx.expr().map { getValueFor(it) as Expr }
-        val collection = exprs[0]
-        val body = exprs.drop(1)
-        setValueFor(ctx, LoopExpr(idx, collection, body, loc(ctx)))
+        val coll = getValueFor(ctx.expr().first()) as Expr
+        val body = ctx.expr().drop(1).map { getValueFor(it) as Expr }
+        setValueFor(ctx, LoopExpr(idx, coll,body, loc(ctx)))
     }
 
-    override fun enterOptDoExpr(ctx: SimplexParser.OptDoExprContext) {
+    override fun enterComplexDoExpr(ctx: SimplexParser.ComplexDoExprContext) {
     }
 
-    override fun exitOptDoExpr(ctx: SimplexParser.OptDoExprContext) {
+    override fun exitComplexDoExpr(ctx: SimplexParser.ComplexDoExprContext) {
         val body = ctx.expr().map { getValueFor(it) as Expr }
         setValueFor(ctx, BlockExpr(body, loc(ctx)))
     }
 
-    override fun enterOptUpdateExpr(ctx: SimplexParser.OptUpdateExprContext) {
+    override fun enterComplexUpdateExpr(ctx: SimplexParser.ComplexUpdateExprContext) {
     }
 
-    override fun exitOptUpdateExpr(ctx: SimplexParser.OptUpdateExprContext) {
+    override fun exitComplexUpdateExpr(ctx: SimplexParser.ComplexUpdateExprContext) {
         val target = getValueFor(ctx.expr()) as Expr
-        val updates = ctx.update().map { getValueFor(it) as Update }
+        val updates = getValueFor(ctx.updates()) as List<Update>
         setValueFor(ctx, UpdateExpr(target, updates, loc(ctx)))
     }
 
-    override fun enterOptLambdaExpr(ctx: SimplexParser.OptLambdaExprContext) {
+    override fun enterComplexLambdaExpr(ctx: SimplexParser.ComplexLambdaExprContext) {
     }
 
-    override fun exitOptLambdaExpr(ctx: SimplexParser.OptLambdaExprContext) {
+    override fun exitComplexLambdaExpr(ctx: SimplexParser.ComplexLambdaExprContext) {
         val resultType = ctx.type()?.let { getValueFor(it) as Type }
-        val params = ctx.param().map { getValueFor(it) as TypedName }
+        val args = getValueFor(ctx.params()) as List<TypedName>
         val body = ctx.expr().map { getValueFor(it) as Expr }
-        setValueFor(ctx, LambdaExpr(resultType, params, body, loc(ctx)))
+        setValueFor(ctx, LambdaExpr(resultType, args, body, loc(ctx)))
     }
 
-    override fun enterOptWithExpr(ctx: SimplexParser.OptWithExprContext) {
+    override fun enterComplexWithExpr(ctx: SimplexParser.ComplexWithExprContext) {
     }
 
-    override fun exitOptWithExpr(ctx: SimplexParser.OptWithExprContext) {
-        val exprs = ctx.expr().map { getValueFor(it) as Expr }
-        setValueFor(ctx, WithExpr(exprs.first(), exprs.drop(1), loc(ctx)))
-    }
-
-    override fun enterOptMethodExpr(ctx: SimplexParser.OptMethodExprContext) {
-    }
-
-    override fun exitOptMethodExpr(ctx: SimplexParser.OptMethodExprContext) {
-        val method = ctx.ID().text
-        val exprs = ctx.expr().map { getValueFor(it) as Expr }
-        setValueFor(ctx, MethodCallExpr(exprs.first(), method, exprs.drop(1), loc(ctx)))
-    }
-
-    override fun enterOptOpExpr(ctx: SimplexParser.OptOpExprContext) {
-    }
-
-    override fun exitOptOpExpr(ctx: SimplexParser.OptOpExprContext) {
-        val op = getValueFor(ctx.op()) as Operator
-        val args = ctx.expr().map { getValueFor(it) as Expr }
-        setValueFor(ctx, OperatorExpr(op, args, loc(ctx)))
-    }
-
-    override fun enterOptFuncallExpr(ctx: SimplexParser.OptFuncallExprContext) {
-    }
-
-    override fun exitOptFuncallExpr(ctx: SimplexParser.OptFuncallExprContext) {
-        val exprs = ctx.expr().map { getValueFor(it) as Expr }
-        setValueFor(ctx, FunCallExpr(exprs.first(), exprs.drop(1), loc(ctx)))
+    override fun exitComplexWithExpr(ctx: SimplexParser.ComplexWithExprContext) {
+        val focus = getValueFor(ctx.expr()[0]) as Expr
+        val body = ctx.expr().drop(1).map { getValueFor(it) as Expr }
+        setValueFor(ctx, WithExpr(focus, body, loc(ctx)))
     }
 
     override fun enterOptIdExpr(ctx: SimplexParser.OptIdExprContext) {
@@ -291,17 +408,17 @@ class SimplexParseListener: SimplexListener {
     }
 
     override fun exitOptVecExpr(ctx: SimplexParser.OptVecExprContext) {
-        val elements = ctx.expr().map { getValueFor(it) as Expr }
-        setValueFor(ctx, ArrayExpr(elements, loc(ctx)))
+        val es = getValueFor(ctx.exprs()) as List<Expr>
+        setValueFor(ctx, ArrayExpr(es, loc(ctx)))
     }
 
     override fun enterOptTupleExpr(ctx: SimplexParser.OptTupleExprContext) {
     }
 
     override fun exitOptTupleExpr(ctx: SimplexParser.OptTupleExprContext) {
-        val type = ctx.ID().text
-        val args = ctx.expr().map { getValueFor(it) as Expr }
-        setValueFor(ctx, TupleExpr(type, args, loc(ctx)))
+        val id = ctx.ID().text
+        val args = getValueFor(ctx.exprs()) as List<Expr>
+        setValueFor(ctx, TupleExpr(id, args, loc(ctx)))
     }
 
     override fun enterOptLitInt(ctx: SimplexParser.OptLitIntContext) {
@@ -350,10 +467,10 @@ class SimplexParseListener: SimplexListener {
         setValueFor(ctx, Update(field, value))
     }
 
-    override fun enterLocal(ctx: SimplexParser.LocalContext) {
+    override fun enterBinding(ctx: SimplexParser.BindingContext) {
     }
 
-    override fun exitLocal(ctx: SimplexParser.LocalContext) {
+    override fun exitBinding(ctx: SimplexParser.BindingContext) {
         val name = ctx.ID().text
         val type = ctx.type()?.let { getValueFor(it) as Type }
         val value = getValueFor(ctx.expr()) as Expr
@@ -407,12 +524,6 @@ class SimplexParseListener: SimplexListener {
         setValueFor(ctx, Operator.Minus)
     }
 
-    override fun enterOpOptSubscript(ctx: SimplexParser.OpOptSubscriptContext) {
-    }
-
-    override fun exitOpOptSubscript(ctx: SimplexParser.OpOptSubscriptContext) {
-        setValueFor(ctx, Operator.Subscript)
-    }
 
     override fun enterOpOptEqEq(ctx: SimplexParser.OpOptEqEqContext) {
         
@@ -462,13 +573,6 @@ class SimplexParseListener: SimplexListener {
         setValueFor(ctx, Operator.Ge)
     }
 
-    override fun enterOpOptPrint(ctx: SimplexParser.OpOptPrintContext) {
-    }
-
-    override fun exitOpOptPrint(ctx: SimplexParser.OpOptPrintContext) {
-        setValueFor(ctx, Operator.Out)
-    }
-
     override fun enterOpOptAnd(ctx: SimplexParser.OpOptAndContext) {
 
     }
@@ -493,6 +597,13 @@ class SimplexParseListener: SimplexListener {
         setValueFor(ctx, Operator.Not)
     }
 
+    override fun enterOpUnaryNeg(ctx: SimplexParser.OpUnaryNegContext) {
+    }
+
+    override fun exitOpUnaryNeg(ctx: SimplexParser.OpUnaryNegContext) {
+        setValueFor(ctx, Operator.Minus)
+    }
+
     override fun enterCondClause(ctx: SimplexParser.CondClauseContext) {
     }
 
@@ -500,15 +611,6 @@ class SimplexParseListener: SimplexListener {
         val cond = getValueFor(ctx.c) as Expr
         val value = getValueFor(ctx.v) as Expr
         setValueFor(ctx, Condition(cond, value))
-    }
-
-    override fun enterRender(ctx: SimplexParser.RenderContext) {
-    }
-
-    override fun exitRender(ctx: SimplexParser.RenderContext) {
-        val name = ctx.ID().text
-        val body = ctx.expr().map { getValueFor(it) as Expr }
-        setValueFor(ctx, Product(name, body, loc(ctx)))
     }
 
     override fun visitTerminal(node: TerminalNode) {

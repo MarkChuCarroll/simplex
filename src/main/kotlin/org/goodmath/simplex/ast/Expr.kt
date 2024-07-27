@@ -208,7 +208,7 @@ enum class Operator {
     Plus, Minus, Times, Div, Mod, Pow,
     Eq, Neq, Gt, Ge, Lt, Le,
     Not, And, Or,
-    Subscript, Out
+    Subscript
 }
 
 class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location): Expr(loc) {
@@ -354,17 +354,6 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location): Expr(
                     result = result.valueType.subscript(result, a.evaluateIn(env))
                 }
                 result
-            }
-            Operator.Out -> {
-                val sb = StringBuilder()
-                sb.append(left.valueType.print(left))
-                for (a in args.drop(1)) {
-                    val e = a.evaluateIn(env)
-                    sb.append(e.valueType.print(e))
-                }
-                val result = sb.toString()
-                Model.output(brightWhite(result), false)
-                StringValue(result)
             }
         }
     }

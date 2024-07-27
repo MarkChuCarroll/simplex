@@ -17,8 +17,10 @@ package org.goodmath.simplex
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.split
+import com.github.ajalt.clikt.parameters.types.int
 import org.antlr.v4.runtime.CharStreams
 import org.goodmath.simplex.parser.SimplexParseListener
 import org.goodmath.simplex.runtime.SimplexError
@@ -31,7 +33,8 @@ import kotlin.system.exitProcess
 class Simplex: CliktCommand(help="Evaluate a Simplex model") {
     val input: String by argument(help="The path to the input file. The pathname must end in .smp3d")
     val prefix: String? by option("--prefix", help="Prefix for all output files")
-    val renders: List<String>? by option("--render", help="The names of render blocks to evaluate").split(Regex(","))
+    val renders: List<String>? by option("--render", help="The names of product blocks to render").split(Regex(","))
+    val verbosity: Int by option("--verbosity", help="How chatty the execution of the model should be.").int().default(1)
 
     override fun run() {
         if (!input.endsWith(".smp3d")) {
@@ -46,10 +49,15 @@ class Simplex: CliktCommand(help="Evaluate a Simplex model") {
         val pre = prefix ?: "${input.toString().dropLast(6)}-out"
         val stream = CharStreams.fromFileName(input)
 
-        val captiveEcho: (Any?, Boolean) -> Unit = { msg, err ->
-                currentContext.terminal.println(msg, stderr=err)}
+        val captiveEcho: (level: Int, msg: Any?, err: Boolean) -> Unit = { level, msg, err ->
+            if (verbosity <= level) {
+                currentContext.terminal.println(msg, stderr = err)
+            }
+        }
         try {
-            echo(cyan("Loading model from $inputPath"))
+            if (verbosity >= 1) {
+                echo(cyan("Loading model from $inputPath"))
+            }
             val result = SimplexParseListener().parse(stream, captiveEcho)
             Model.output = captiveEcho
             result.execute(renders?.toSet(), pre, captiveEcho)

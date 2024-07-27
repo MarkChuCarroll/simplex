@@ -19,6 +19,8 @@ import org.goodmath.simplex.ast.Definition
 import org.goodmath.simplex.ast.Model
 import org.goodmath.simplex.runtime.values.csg.CsgValueType
 import org.goodmath.simplex.runtime.csg.TwoDPointValueType
+import org.goodmath.simplex.runtime.values.FunctionSignature
+import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.runtime.values.csg.ThreeDPointValueType
@@ -28,11 +30,16 @@ import org.goodmath.simplex.runtime.values.primitives.IntegerValueType
 import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
 import org.goodmath.simplex.runtime.values.primitives.BooleanValueType
 import org.goodmath.simplex.runtime.values.primitives.FunctionValueType
+import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.StringValueType
 import org.goodmath.simplex.runtime.values.primitives.TupleValueType
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
 import java.util.UUID
+import com.github.ajalt.mordant.rendering.TextColors.*
+import org.goodmath.simplex.runtime.values.primitives.ArrayValue
+import org.goodmath.simplex.runtime.values.primitives.IntegerValue
+import org.goodmath.simplex.runtime.values.primitives.StringValue
 
 class Env(defList: List<Definition>,
     val parentEnv: Env?): Twistable {
@@ -97,7 +104,42 @@ class Env(defList: List<Definition>,
             CsgValueType
         )
 
+        val functions: List<PrimitiveFunctionValue> = listOf(
+            object: PrimitiveFunctionValue("print",
+                FunctionSignature(listOf(Param("values", ArrayValueType)), StringValueType)) {
+                override fun execute(args: List<Value>): Value {
+                    val arr = ArrayValueType.assertIs(args[0]).elements
+                    val result = arr.map {
+                        if (it.valueType.supportsText) {
+                            it.valueType.toText(it)
+                        } else {
+                            it.valueType.name
+                        }
+                    }.joinToString("")
+                    Model.output(0, brightWhite(result), false)
+                    return StringValue(result)
+                }
+            },
+            object: PrimitiveFunctionValue("range",
+                FunctionSignature(
+                    listOf(
+                        Param("from", IntegerValueType),
+                        Param("to", IntegerValueType)),
+                    ArrayValueType),
+                FunctionSignature(
+                    listOf(Param("to", IntegerValueType)),
+                    ArrayValueType)) {
+                override fun execute(args: List<Value>): Value {
+                    val l = IntegerValueType.assertIs(args[0]).i
+                    if (args.size == 1) {
+                        return ArrayValue((0..<l).map { IntegerValue(it) }.toList())
+                    } else {
+                        val r = IntegerValueType.assertIs(args[1]).i
+                        return ArrayValue((l..<r).map { IntegerValue(it) }.toList())
+                    }
+                }
 
+            })
 
         fun createRootEnv(model: Model): Env {
             val env = Env(model.defs, null)
@@ -105,6 +147,9 @@ class Env(defList: List<Definition>,
                 for (t in t.providesFunctions) {
                     env.addVariable(t.name, t)
                 }
+            }
+            for (f in functions) {
+                env.addVariable(f.name, f)
             }
             return env
         }
