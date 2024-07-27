@@ -89,7 +89,7 @@ class SimplexParseListener: SimplexListener {
     }
 
     private fun loc(ctx: ParserRuleContext): Location {
-        return Location(ctx.start.line, ctx.start.charPositionInLine)
+        return Location(ctx.start.line, ctx.start.charPositionInLine + 1)
     }
 
     override fun enterModel(ctx: SimplexParser.ModelContext) {

@@ -16,15 +16,15 @@ language. One of my simplest test cases for Simplex is:
 make a cone, and union it with itself turned upside down.
 
 ```
- (def-fun cone <CSG> (radius <Float> height <Float>)
-      (cylinder (+ height 2.0) radius 0.1))
+fun cone(radius: Float, height: Float): CSG do
+   cylinder(height + 2.0, radius, 0.1)
+end      
 
-  (def-fun dbl <CSG> (radius <Float> height <Float>)
-    (let ((c (cone height radius)))
-     (+ c
-       (-> move
-         (-> rot c 0.0 180.0 0.0)
-         0.0 0.0 25.0))))
+fun dbl(radius <Float> height <Float>): CSG do
+    let c = cone(height, radius) in
+       c + c->rot(0.0, 180.0, 0.0)->move(0.0, 020, 25.0)
+     end
+end
 ```
 
 But you can't do that in OpenSCAD. Because in OpenSCAD, a
@@ -48,7 +48,7 @@ from simplexes!
 
 ## The Language
 
-Simplex is basically a simple language from the Lisp family.
+Simplex is basically a simple functional language.
 
 ### Definitions 
 
@@ -59,18 +59,18 @@ A function is something that takes parameters, does something
 with them, and returns a result. In Simplex, they look like:
 
 ```
-(def-fun _name_  < return_type > ( param1 < type1 >  ) 
-    expr...)
+fun fact(n: Int): Int do
+  cond 
+     n == 0 then 1
+     else n * fact(n-1)
+  end
+end  
 ```
-This defines a function named "name", which returns a value of type "type1".
-It takes a parameter named "param1", which has type "type1". When
-you call it, it evaluates the expressions in its body, returning
-the value of the last one.
 
-Variable definitions look similar:
+Value definitions are simple:
 
 ```
-(def-var name < type > expr)
+val name :type = expr
 ```
 
 Variables give a name to a value. But they're not mutable:
@@ -81,7 +81,7 @@ type. They're probably not going to get used much, but I
 couldn't resist adding them.
 
 ```
-(def-tup name {  })
+tup name { a: Int, b: Float, c: CSG }
 ```
 
 ### Expressions
@@ -89,37 +89,40 @@ couldn't resist adding them.
 #### Function Calls and Operators
 
 ```
-(f 1 2.0 "abc")
-(+ f 3)
+f(1, 2.0, "abc")
+f + 3
 ```
 
 
 #### Let Expressions
 
 ```
-(let ((x (f a)) (y (g b x)))
-   (something x y))    
+let x = f(a), y = g(b, x) in
+   something(x, y)
+end       
 ```
 
 #### Conditionals
 
 ```
-(cond
-   ((== x y)  "true")
-   (else "false"))
+cond
+   x == y then  "true"
+   else "false"
+end   
 ```
 
 ### With
 
 ```
-(with tuple 
-   (+ field1 field2))
+with tuple do 
+   field1 + field2
+end   
 ```
 
 ### Update
 
 ```
-(update tuple set (field1 3))
+update tuple set field1=3, field2=4
 ```
 
 ### Method
@@ -130,5 +133,5 @@ a CSG, you can change its position by calling
 its "move" method.
 
 ```
-(-> move cyl 10 10 5)
+cyl->move(10, 10, 5)
 ```

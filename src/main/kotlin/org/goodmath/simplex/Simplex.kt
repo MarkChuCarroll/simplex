@@ -50,7 +50,7 @@ class Simplex: CliktCommand(help="Evaluate a Simplex model") {
         val stream = CharStreams.fromFileName(input)
 
         val captiveEcho: (level: Int, msg: Any?, err: Boolean) -> Unit = { level, msg, err ->
-            if (verbosity <= level) {
+            if (level <= verbosity) {
                 currentContext.terminal.println(msg, stderr = err)
             }
         }
@@ -62,7 +62,7 @@ class Simplex: CliktCommand(help="Evaluate a Simplex model") {
             Model.output = captiveEcho
             result.execute(renders?.toSet(), pre, captiveEcho)
         } catch (e: SimplexError) {
-            echo(e.toString(), err=true)
+            echo(e.message, err=true)
         }
 
     }

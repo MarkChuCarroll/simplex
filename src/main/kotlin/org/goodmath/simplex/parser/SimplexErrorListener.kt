@@ -28,7 +28,7 @@ class SimplexErrorListener: BaseErrorListener() {
         msg: String?,
         e: RecognitionException?
     ) {
-        val error = "Line $line, col $charPositionInLine: $msg"
+        val error = "Line $line, col ${charPositionInLine+1}: $msg"
         errors.add(error)
     }
 

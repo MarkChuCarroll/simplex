@@ -1,20 +1,25 @@
 
-(def-fun test_lambda (a)
-  (let (
-     (x (lambda (a b) (+ a b)))
-     )
-     (x a 6)))
+// Make sure lambda works correctly.
+fun test_lambda(a) do
+  let x = lambda(a, b) do a+b end in
+     x(a, 8)
+   end
+end
 
-(def-var t (test_lambda 3))
+val t = test_lambda(3)
 
-(def-fun fact (n)
-  (cond
-    {(== n 0) 1}
-    (else (*  n (fact (- n 1))))))
+// And check that recursion in functions works.
+fun fact(n) do
+  if n == 0 then 1
+  else n * fact(n - 1)
+  end
+end
+
+produce(n) do
+  print(["Factorial of 5 = ", fact(5)])
+end
 
 
----> n
-(fact 5)
-
----> t
-t
+produce(t) do
+   t
+end
