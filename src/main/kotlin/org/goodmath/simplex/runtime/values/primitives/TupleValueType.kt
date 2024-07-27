@@ -29,6 +29,25 @@ import kotlin.collections.zip
 object TupleValueType: ValueType<TupleValue>() {
     override val name: String = "Tuple"
 
+    override val supportsText: Boolean = true
+
+    override fun toText(v: Value): String {
+        val tup = assertIs(v)
+        val sb = StringBuilder()
+        sb.append("#${tup.tupleDef.name}(")
+
+        sb.append(tup.tupleDef.fields.map { field ->
+            val fieldValue = tup.fields[tup.tupleDef.indexOf(field.name)]
+            if (fieldValue.valueType.supportsText) {
+                "${field.name}=${fieldValue.valueType.toText(fieldValue)}"
+            } else {
+                "${field.name}:${fieldValue.valueType.name}"
+            }
+        }.joinToString(", "))
+        sb.append(")")
+        return sb.toString()
+    }
+
     override fun isTruthy(v: Value): Boolean {
         assertIs(v)
         return true

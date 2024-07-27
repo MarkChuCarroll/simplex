@@ -47,6 +47,21 @@ interface Value: Twistable {
 abstract class ValueType<T: Value>: Twistable {
     abstract val name: String
 
+    open val supportsText: Boolean = false
+
+    open fun toText(v: Value): String {
+        throw SimplexUnsupportedOperation(name, "render_pretty")
+    }
+
+    open fun print(v: Value): String {
+        return if (supportsText) {
+            toText(v)
+        } else {
+            v.toString()
+        }
+    }
+
+
     override fun twist(): Twist {
         return Twist.attr("ValueType", name)
     }

@@ -22,7 +22,7 @@ import org.goodmath.simplex.runtime.values.ValueType
 open class SimplexError(
     val kind: Kind,
     val detail: String,
-    val location: Location? = null,
+    var location: Location? = null,
     cause: Throwable? = null): Exception(cause) {
     enum class Kind {
         UndefinedSymbol, UnsupportedOperation,
@@ -32,7 +32,7 @@ open class SimplexError(
 
         override fun toString(): String {
             return when (this) {
-                Kind.UndefinedSymbol -> "Undefined symbol"
+                Kind.UndefinedSymbol -> "Undefined "
                 Kind.UnsupportedOperation -> "Operation not supported by type"
                 Kind.InvalidParameter -> "Invalid parameter"
                 Kind.InvalidIndex -> "Invalid index"
@@ -48,7 +48,7 @@ open class SimplexError(
     override val message: String
         get() {
             val prefix = if (location != null) {
-                "@(${location.line}, ${location.col}): "
+                "@(${location!!.line}, ${location!!.col}): "
             } else {
                 "@?: "
             }
@@ -76,7 +76,7 @@ class SimplexInvalidParameterError(val callable: String,
 
 
 class SimplexUndefinedError(val name: String, val symbolKind: String) : SimplexError(Kind.UndefinedSymbol,
-    "$name: $symbolKind")
+    "$symbolKind '$name'")
 
 
 class SimplexUnsupportedOperation(val type: String, val op: String) :

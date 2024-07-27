@@ -57,35 +57,38 @@ abstract class Twist: Twistable {
 
 class TwistObj(val name: String, val children: List<Twist>): Twist() {
     override fun render(b: StringBuilder, indent: Int) {
-        b * indent + "obj(${name})\n"
+        b * indent + "=== $name === {\n"
         for (c in children) {
             c.render(b, indent+1)
         }
+        b * indent + "}\n"
     }
 }
 
 class TwistAttr(val name: String, val v: String?): Twist() {
     override fun render(b: StringBuilder, indent: Int) {
         if (v != null) {
-            b * indent + "attr($name)='${v}'\n"
+            b * indent + "$name='${v}'\n"
         }
     }
 }
 
 class TwistArray(val name: String, val children: List<Twist>): Twist() {
     override fun render(b: StringBuilder, indent: Int) {
-        b * indent + "array[$name]:\n"
+        b * indent + "array $name [\n"
         for (c in children) {
             c.render(b, indent+1)
         }
+        b * indent + "]\n"
     }
 }
 
 class TwistVal(val name: String, val value: Twist?): Twist() {
     override fun render(b: StringBuilder, indent: Int) {
         if (value != null) {
-            b * indent + "$name=\n"
+            b * indent + "$name=(\n"
             value.render(b, indent + 1)
+            b * indent + ")\n"
         }
     }
 }

@@ -1,4 +1,4 @@
-package org.goodmath.simplex.runtime.values.csg
+ package org.goodmath.simplex.runtime.values.csg
 
 import javafx.geometry.Point2D
 import org.goodmath.simplex.runtime.csg.TwoDPoint
@@ -14,20 +14,26 @@ class PolygonTest {
         val r = rect.execute(listOf(TwoDPoint(20.0, 20.0),
             FloatValue(10.0), FloatValue(16.0)))
         r as Polygon
-        assertEquals("""obj(PolygonValue)
-  array[points]:
-    obj(Point2D)
-      attr(x)='15.0'
-      attr(y)='12.0'
-    obj(Point2D)
-      attr(x)='25.0'
-      attr(y)='12.0'
-    obj(Point2D)
-      attr(x)='25.0'
-      attr(y)='28.0'
-    obj(Point2D)
-      attr(x)='15.0'
-      attr(y)='28.0'
+        assertEquals("""=== PolygonValue === {
+  array points [
+    === Point2D === {
+      x='15.0'
+      y='12.0'
+    }
+    === Point2D === {
+      x='25.0'
+      y='12.0'
+    }
+    === Point2D === {
+      x='25.0'
+      y='28.0'
+    }
+    === Point2D === {
+      x='15.0'
+      y='28.0'
+    }
+  ]
+}
 """, r.twist().toString())
     }
 

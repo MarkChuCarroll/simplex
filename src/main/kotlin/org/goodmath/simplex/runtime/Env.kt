@@ -79,7 +79,7 @@ class Env(defList: List<Definition>,
             Twist.attr("parent", parentEnv?.id),
             Twist.array("definitions", defs.values.toList()),
             Twist.array("variables",
-                vars.map { (k, v) -> Twist.value(k, v) }
+                vars.map { (k, _) -> Twist.attr("name", k) }
             ))
 
     companion object {
@@ -96,6 +96,8 @@ class Env(defList: List<Definition>,
             PolygonValueType,
             CsgValueType
         )
+
+
 
         fun createRootEnv(model: Model): Env {
             val env = Env(model.defs, null)

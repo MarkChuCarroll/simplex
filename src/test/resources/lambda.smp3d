@@ -1,0 +1,20 @@
+
+(def-fun test_lambda (a)
+  (let (
+     (x (lambda (a b) (+ a b)))
+     )
+     (x a 6)))
+
+(def-var t (test_lambda 3))
+
+(def-fun fact (n)
+  (cond
+    {(== n 0) 1}
+    (else (*  n (fact (- n 1))))))
+
+
+---> n
+(fact 5)
+
+---> t
+t

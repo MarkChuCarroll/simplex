@@ -22,53 +22,59 @@ import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.plus
 import kotlin.io.path.Path
 import kotlin.io.path.writeText
+import com.github.ajalt.mordant.rendering.TextColors.*
 
 /**
  * A 3d model for execution in simplex.
- * @param name the name of the model.
  * @param defs the list of all top-level definitions in the model.
- * @param renders a list of the render declarations in the model.
- * @param loc the location of the model declaration in the source file.a
+ * @param loc the location of the model declaration in the source file.
  */
-class Model(val name: String, val defs: List<Definition>, val renders: List<Render>,
+class Model(val defs: List<Definition>,
+            val products: List<Product>,
             loc: Location): AstNode(loc) {
     override fun twist(): Twist =
         Twist.obj("Model",
-            Twist.attr("name", name),
-            Twist.array("defs", defs),
-            Twist.array("renders", renders))
-
-    val renderMap = renders.associateBy { it.name }
+            Twist.array("defs", defs))
 
     fun execute(renderNames: Set<String>?,
                 outputPrefix: String,
-                echo: (String, Boolean) -> Unit) {
+                echo: (Any?, Boolean) -> Unit) {
         val rootEnv = Env.createRootEnv(this)
         val executionEnv = Env(defs, rootEnv)
         executionEnv.installDefinitionValues()
-        val toRender = renderNames ?: renders.map { it.name }.toSet()
-        for (renderName in toRender) {
-            echo("Rendering $renderName", false)
-            val render = renderMap[renderName]!!
-            render.execute(executionEnv, echo, outputPrefix)
+        val toRender = if (renderNames == null) {
+            products
+        } else {
+            products.filter { renderNames.contains(it.name) }
+        }
+
+        for (product in toRender) {
+            echo(cyan("Rendering ${product.name}"), false)
+            product.execute(executionEnv, echo, outputPrefix)
         }
     }
+    companion object {
+        var output: (Any?, Boolean) -> Unit = { s: Any?, err: Boolean ->
+            System.out.println(s)
+        }
+    }
+
 }
 
 /**
- * A render block, which specifies a list of expressions to evaluate,
+ * A product block, which specifies a list of expressions to evaluate,
  * and then render the outputs.
- * @param name the name of the render block
+ * @param name the name of the product block
  * @param body a list of the expressions to evaluate and render.
  * @param loc the source location of the render block.
  */
-class Render(val name: String, val body: List<Expr>, loc: Location): AstNode(loc) {
+class Product(val name: String?, val body: List<Expr>, loc: Location): AstNode(loc) {
     override fun twist(): Twist =
-        Twist.obj("Render",
+        Twist.obj("Product",
             Twist.attr("name", name),
             Twist.array("body", body))
 
-    fun execute(env: Env, echo: (String, Boolean) -> Unit,
+    fun execute(env: Env, echo: (Any?, Boolean) -> Unit,
                 prefix: String) {
         val results = body.map { it.evaluateIn(env) }
         val bodies = results.filter { it is CsgValue }.map { it as CsgValue }
@@ -78,17 +84,30 @@ class Render(val name: String, val body: List<Expr>, loc: Location): AstNode(loc
             for (body in bodies.drop(0)) {
                 combined = combined.union(body)
             }
-            echo("Rendering 3d model of ${bodies.size} bodies to $prefix-$name.stl", false)
+            echo(cyan("Rendering 3d model of ${bodies.size} bodies to $prefix-$name.stl"), false)
             Path("$prefix-$name.stl").writeText(combined.toStlString())
         }
         val others = results.filter { it.valueType != CsgValueType }
         if (others.isNotEmpty()) {
-            val sb = StringBuilder()
+            val text = StringBuilder()
+            val twists = StringBuilder()
             for (other in others) {
-                sb + other.twist().toString() + "\n\n"
+                if (other.valueType.supportsText) {
+                    text + other.valueType.toText(other) + "\n"
+                } else {
+                    twists + other.twist().toString() + "\n\n"
+                }
             }
-            echo("Writing ${others.size} other products to $prefix-$name.txt", false)
-            Path("$prefix-$name.txt").writeText(sb.toString())
+            val textOut = text.toString()
+            if (textOut.isNotEmpty()) {
+                echo(cyan("Writing text products to $prefix-$name.txt"), false)
+                Path("$prefix-$name.txt").writeText(textOut)
+            }
+            val twistOut = twists.toString()
+            if (twistOut.isNotEmpty()) {
+                echo(cyan("Writing twisted products to $prefix-$name.twist"), false)
+                Path("$prefix-$name.twist").writeText(twistOut)
+            }
         }
     }
 

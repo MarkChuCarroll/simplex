@@ -22,9 +22,10 @@ object CsgBlockFunction: PrimitiveFunctionValue("block",
         val height = CsgValueType.assertIsFloat(args[1])
         val depth = CsgValueType.assertIsFloat(args[2])
 
-        val lowerLeft = Vector3d.xyz(-width/2.0, -height/2.0, -depth/2.0)
-        val upperRight = Vector3d.xyz(width/2.0, height/2.0, depth/2.0)
-        return CsgValue(Cube(lowerLeft, upperRight).toCSG())
+        val lowerLeft = Vector3d.xyz(0.0, 0.0, 0.0)
+        val upperRight = Vector3d.xyz(width, height, depth)
+        return CsgValue(Cube(lowerLeft, upperRight)
+            .toCSG())
     }
 }
 

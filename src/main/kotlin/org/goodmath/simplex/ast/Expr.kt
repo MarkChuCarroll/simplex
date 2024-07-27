@@ -19,18 +19,22 @@ import org.goodmath.simplex.runtime.values.primitives.AbstractFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.ArrayValue
 import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
 import org.goodmath.simplex.runtime.Env
+import org.goodmath.simplex.runtime.SimplexError
 import org.goodmath.simplex.runtime.SimplexEvaluationError
+import org.goodmath.simplex.runtime.SimplexParameterCountError
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.values.primitives.TupleValue
 import org.goodmath.simplex.runtime.values.primitives.TupleValueType
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.primitives.BooleanValue
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
+import org.goodmath.simplex.runtime.values.primitives.FunctionValue
 import org.goodmath.simplex.runtime.values.primitives.IntegerValue
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.StringValue
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
+import com.github.ajalt.mordant.rendering.TextColors.*
 
 abstract class Expr(loc: Location): AstNode(loc) {
     abstract fun evaluateIn(env: Env): Value
@@ -204,7 +208,7 @@ enum class Operator {
     Plus, Minus, Times, Div, Mod, Pow,
     Eq, Neq, Gt, Ge, Lt, Le,
     Not, And, Or,
-    Subscript
+    Subscript, Out
 }
 
 class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location): Expr(loc) {
@@ -216,7 +220,14 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location): Expr(
 
     fun l(args: List<Expr>, env: Env): Value = args.first().evaluateIn(env)
     fun r(args: List<Expr>, env: Env): Value = if (args.size > 1) {
-        args[1].evaluateIn(env)
+        try {
+            args[1].evaluateIn(env)
+        } catch (e: SimplexError) {
+            if (e.location == null) {
+                e.location = loc
+            }
+            throw e
+        }
     } else {
         throw SimplexEvaluationError("Incorrect number of args for operator $op")
     }
@@ -224,35 +235,137 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location): Expr(
     override fun evaluateIn(env: Env): Value {
         val left = l(args, env)
         return when(op) {
-            Operator.Plus -> left.valueType.add(left, r(args, env))
+            Operator.Plus -> {
+                var sum = left
+                for (r in args.drop(1)) {
+                    val next = r.evaluateIn(env)
+                    sum = sum.valueType.add(sum, next)
+                }
+                sum
+            }
             Operator.Minus -> if (args.size == 1) {
                 left.valueType.neg(left)
             } else {
-                left.valueType.subtract(left, r(args, env))
+                var result = left
+                for (r in args.drop(1)) {
+                    result = result.valueType.subtract(result, r.evaluateIn(env))
+                }
+                 result
             }
-            Operator.Times ->  left.valueType.mult(left, r(args, env))
-            Operator.Div -> left.valueType.div(left, r(args, env))
-            Operator.Mod -> left.valueType.mod(left, r(args, env))
-            Operator.Pow -> left.valueType.pow(left, r(args, env))
-            Operator.Eq -> BooleanValue(left.valueType.equals(left, r(args, env)))
-            Operator.Neq -> BooleanValue(!left.valueType.equals(left, r(args, env)))
-            Operator.Gt -> BooleanValue(left.valueType.compare(left, r(args, env)) > 0)
-            Operator.Ge -> BooleanValue(left.valueType.compare(left, r(args, env)) >= 0)
-            Operator.Lt -> BooleanValue(left.valueType.compare(left, r(args, env)) < 0)
-            Operator.Le -> BooleanValue(left.valueType.compare(left, r(args, env)) <= 0)
+            Operator.Times ->  {
+                var product = left
+                for (r in args.drop(1)) {
+                    product = product.valueType.mult(product, r.evaluateIn(env))
+                }
+                product
+            }
+            Operator.Div -> {
+                if (args.size != 2) {
+                    throw SimplexParameterCountError("Division operation", listOf(2),
+                        args.size)
+                }
+                left.valueType.div(left, r(args, env))
+            }
+            Operator.Mod -> {
+                if (args.size != 2) {
+                    throw SimplexParameterCountError("Modulo operation", listOf(2),
+                        args.size)
+                }
+                left.valueType.mod(left, r(args, env))
+            }
+            Operator.Pow -> {
+                if (args.size != 2) {
+                    throw SimplexParameterCountError("Exponentiation operation", listOf(2),
+                        args.size)
+                }
+                left.valueType.pow(left, r(args, env))
+            }
+            Operator.Eq -> {
+                if (args.size != 2) {
+                    throw SimplexParameterCountError("Equality operation", listOf(2),
+                        args.size)
+                }
+                BooleanValue(left.valueType.equals(left, r(args, env)))
+            }
+            Operator.Neq -> {
+                if (args.size != 2) {
+                    throw SimplexParameterCountError("Inequality operation", listOf(2),
+                        args.size)
+                }
+                BooleanValue(!left.valueType.equals(left, r(args, env)))
+            }
+            Operator.Gt -> {
+                if (args.size != 2) {
+                    throw SimplexParameterCountError("Greater than operation", listOf(2),
+                        args.size)
+                }
+                BooleanValue(left.valueType.compare(left, r(args, env)) > 0)
+            }
+            Operator.Ge -> {
+                if (args.size != 2) {
+                    throw SimplexParameterCountError("Greater than or equal operation", listOf(2),
+                        args.size)
+                }
+
+                BooleanValue(left.valueType.compare(left, r(args, env)) >= 0)
+            }
+            Operator.Lt -> {
+                if (args.size != 2) {
+                    throw SimplexParameterCountError("Less than operation", listOf(2),
+                        args.size)
+                }
+                BooleanValue(left.valueType.compare(left, r(args, env)) < 0)
+            }
+            Operator.Le -> {
+                if (args.size != 2) {
+                    throw SimplexParameterCountError("Less than or equal operation", listOf(2),
+                        args.size)
+                }
+                BooleanValue(left.valueType.compare(left, r(args, env)) <= 0)
+            }
             Operator.Not -> BooleanValue(left.valueType.isTruthy(left))
-            Operator.And -> if (left.valueType.isTruthy(left)) {
-                val right = r(args, env)
-                right
-            } else {
-                left
+            Operator.And -> {
+                if (left.valueType.isTruthy(left)) {
+                    var result = true
+                    for (r in args.drop(1)) {
+                        val next = r.evaluateIn(env)
+                        if (!next.valueType.isTruthy(next)) {
+                            result = false
+                            break
+                        }
+                    }
+                    BooleanValue(result)
+                } else {
+                    BooleanValue(false)
+                }
             }
-            Operator.Or -> if (left.valueType.isTruthy(left)) {
+            Operator.Or ->
+                if (left.valueType.isTruthy(left)) {
                     left
                 } else {
-                r(args, env)
+                    BooleanValue(args.drop(1).any {
+                        val e = it.evaluateIn(env)
+                        e.valueType.isTruthy(e)
+                    })
+                }
+            Operator.Subscript -> {
+                var result = left
+                for (a in args.drop(1)) {
+                    result = result.valueType.subscript(result, a.evaluateIn(env))
+                }
+                result
             }
-            Operator.Subscript -> left.valueType.subscript(left, r(args, env))
+            Operator.Out -> {
+                val sb = StringBuilder()
+                sb.append(left.valueType.print(left))
+                for (a in args.drop(1)) {
+                    val e = a.evaluateIn(env)
+                    sb.append(e.valueType.print(e))
+                }
+                val result = sb.toString()
+                Model.output(brightWhite(result), false)
+                StringValue(result)
+            }
         }
     }
 }
@@ -336,7 +449,12 @@ class VarRefExpr(val name: String, loc: Location): Expr(loc) {
             Twist.attr("name", name))
 
     override fun evaluateIn(env: Env): Value {
-        return env.getValue(name)
+        try {
+            return env.getValue(name)
+        } catch (e: SimplexError) {
+            e.location = loc
+            throw e
+        }
     }
 }
 
@@ -375,4 +493,23 @@ class WithExpr(val focus: Expr, val body: List<Expr>, loc: Location): Expr(loc) 
         }
         return result
     }
+}
+
+class LambdaExpr(
+    val resultType: Type?,
+    val params: List<TypedName>,
+    val body: List<Expr>,
+    loc: Location): Expr(loc) {
+    override fun evaluateIn(env: Env): Value {
+        return FunctionValue(resultType, params, emptyList(),
+            body, env)
+    }
+
+    override fun twist(): Twist =
+        Twist.obj("LambdaExpr",
+            Twist.value("resultType", resultType),
+            Twist.array("params", params),
+            Twist.array("body", body)
+            )
+
 }

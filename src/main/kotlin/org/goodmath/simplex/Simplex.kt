@@ -22,6 +22,8 @@ import com.github.ajalt.clikt.parameters.options.split
 import org.antlr.v4.runtime.CharStreams
 import org.goodmath.simplex.parser.SimplexParseListener
 import org.goodmath.simplex.runtime.SimplexError
+import com.github.ajalt.mordant.rendering.TextColors.*
+import org.goodmath.simplex.ast.Model
 import kotlin.io.path.Path
 import kotlin.io.path.exists
 import kotlin.system.exitProcess
@@ -43,10 +45,13 @@ class Simplex: CliktCommand(help="Evaluate a Simplex model") {
 
         val pre = prefix ?: "${input.toString().dropLast(6)}-out"
         val stream = CharStreams.fromFileName(input)
-        val captiveEcho = { s: String, err: Boolean -> echo(s, err=err) }
+
+        val captiveEcho: (Any?, Boolean) -> Unit = { msg, err ->
+                currentContext.terminal.println(msg, stderr=err)}
         try {
-            echo("Loading model from $inputPath")
+            echo(cyan("Loading model from $inputPath"))
             val result = SimplexParseListener().parse(stream, captiveEcho)
+            Model.output = captiveEcho
             result.execute(renders?.toSet(), pre, captiveEcho)
         } catch (e: SimplexError) {
             echo(e.toString(), err=true)

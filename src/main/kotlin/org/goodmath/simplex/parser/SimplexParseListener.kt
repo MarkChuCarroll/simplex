@@ -31,9 +31,9 @@ import org.goodmath.simplex.ast.CondExpr
 import org.goodmath.simplex.ast.Condition
 import org.goodmath.simplex.ast.Definition
 import org.goodmath.simplex.ast.Expr
-import org.goodmath.simplex.ast.FieldRefExpr
 import org.goodmath.simplex.ast.FunCallExpr
 import org.goodmath.simplex.ast.FunctionDefinition
+import org.goodmath.simplex.ast.LambdaExpr
 import org.goodmath.simplex.ast.LetExpr
 import org.goodmath.simplex.ast.LiteralExpr
 import org.goodmath.simplex.ast.Location
@@ -42,7 +42,7 @@ import org.goodmath.simplex.ast.MethodCallExpr
 import org.goodmath.simplex.ast.Model
 import org.goodmath.simplex.ast.Operator
 import org.goodmath.simplex.ast.OperatorExpr
-import org.goodmath.simplex.ast.Render
+import org.goodmath.simplex.ast.Product
 import org.goodmath.simplex.ast.SimpleType
 import org.goodmath.simplex.ast.TupleDefinition
 import org.goodmath.simplex.ast.TupleExpr
@@ -54,12 +54,11 @@ import org.goodmath.simplex.ast.VarRefExpr
 import org.goodmath.simplex.ast.VariableDefinition
 import org.goodmath.simplex.ast.WithExpr
 import org.goodmath.simplex.runtime.SimplexError
-import org.goodmath.simplex.runtime.values.primitives.BooleanValue
 
 @Suppress("UNCHECKED_CAST")
 class SimplexParseListener: SimplexListener {
 
-    fun parse(input: CharStream, echo: (String, Boolean) -> Unit): Model {
+    fun parse(input: CharStream, echo: (Any?, Boolean) -> Unit): Model {
         val lexer = SimplexLexer(input)
         val tokenStream = CommonTokenStream(lexer)
         val walker = ParseTreeWalker()
@@ -97,12 +96,19 @@ class SimplexParseListener: SimplexListener {
     }
 
     override fun exitModel(ctx: SimplexParser.ModelContext) {
-        val name = ctx.ID().text
         val defs = ctx.def().map { getValueFor(it) as Definition }
-        val renders = ctx.render().map { getValueFor(it) as Render }
-        setValueFor(ctx, Model(name, defs, renders, loc(ctx)))
+        val products = ctx.product().map { getValueFor(it) as Product }
+        setValueFor(ctx, Model(defs, products, loc(ctx)))
     }
 
+    override fun enterProduct(ctx: SimplexParser.ProductContext) {
+    }
+
+    override fun exitProduct(ctx: SimplexParser.ProductContext) {
+        val name = ctx.ID()?.let { it.text }
+        val exprs = ctx.expr().map { getValueFor(it) as Expr }
+        setValueFor(ctx, Product(name, exprs, loc(ctx)))
+    }
     override fun enterOptVarDef(ctx: SimplexParser.OptVarDefContext) {
     }
 
@@ -149,10 +155,11 @@ class SimplexParseListener: SimplexListener {
 
     override fun exitFunDef(ctx: SimplexParser.FunDefContext) {
         val name = ctx.ID().text
+        val type = ctx.type()?.let { getValueFor(it) as Type}
         val localDefs = ctx.def().map { getValueFor(it) as Definition }
         val params = ctx.param().map { getValueFor(it) as TypedName }
         val body = ctx.expr().map { getValueFor(it) as Expr }
-        setValueFor(ctx, FunctionDefinition(name, params, localDefs, body, loc(ctx)))
+        setValueFor(ctx, FunctionDefinition(name, type, params, localDefs, body, loc(ctx)))
     }
 
 
@@ -226,6 +233,16 @@ class SimplexParseListener: SimplexListener {
         val target = getValueFor(ctx.expr()) as Expr
         val updates = ctx.update().map { getValueFor(it) as Update }
         setValueFor(ctx, UpdateExpr(target, updates, loc(ctx)))
+    }
+
+    override fun enterOptLambdaExpr(ctx: SimplexParser.OptLambdaExprContext) {
+    }
+
+    override fun exitOptLambdaExpr(ctx: SimplexParser.OptLambdaExprContext) {
+        val resultType = ctx.type()?.let { getValueFor(it) as Type }
+        val params = ctx.param().map { getValueFor(it) as TypedName }
+        val body = ctx.expr().map { getValueFor(it) as Expr }
+        setValueFor(ctx, LambdaExpr(resultType, params, body, loc(ctx)))
     }
 
     override fun enterOptWithExpr(ctx: SimplexParser.OptWithExprContext) {
@@ -305,7 +322,9 @@ class SimplexParseListener: SimplexListener {
     }
 
     override fun exitOptLitStr(ctx: SimplexParser.OptLitStrContext) {
-        setValueFor(ctx, ctx.LIT_STRING().text)
+        val litStr = ctx.LIT_STRING().text.drop(1).dropLast(1)
+
+        setValueFor(ctx, LiteralExpr(litStr, loc(ctx)))
     }
 
     override fun enterOptTrue(ctx: SimplexParser.OptTrueContext) {
@@ -388,6 +407,13 @@ class SimplexParseListener: SimplexListener {
         setValueFor(ctx, Operator.Minus)
     }
 
+    override fun enterOpOptSubscript(ctx: SimplexParser.OpOptSubscriptContext) {
+    }
+
+    override fun exitOpOptSubscript(ctx: SimplexParser.OpOptSubscriptContext) {
+        setValueFor(ctx, Operator.Subscript)
+    }
+
     override fun enterOpOptEqEq(ctx: SimplexParser.OpOptEqEqContext) {
         
     }
@@ -436,6 +462,13 @@ class SimplexParseListener: SimplexListener {
         setValueFor(ctx, Operator.Ge)
     }
 
+    override fun enterOpOptPrint(ctx: SimplexParser.OpOptPrintContext) {
+    }
+
+    override fun exitOpOptPrint(ctx: SimplexParser.OpOptPrintContext) {
+        setValueFor(ctx, Operator.Out)
+    }
+
     override fun enterOpOptAnd(ctx: SimplexParser.OpOptAndContext) {
 
     }
@@ -475,7 +508,7 @@ class SimplexParseListener: SimplexListener {
     override fun exitRender(ctx: SimplexParser.RenderContext) {
         val name = ctx.ID().text
         val body = ctx.expr().map { getValueFor(it) as Expr }
-        setValueFor(ctx, Render(name, body, loc(ctx)))
+        setValueFor(ctx, Product(name, body, loc(ctx)))
     }
 
     override fun visitTerminal(node: TerminalNode) {

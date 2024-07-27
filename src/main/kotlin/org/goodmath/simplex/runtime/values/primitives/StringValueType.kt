@@ -33,6 +33,12 @@ object StringValueType: ValueType<StringValue>() {
         return assertIsString(v).isNotEmpty()
     }
 
+    override val supportsText: Boolean = true
+
+    override fun toText(v: Value): String {
+        return assertIs(v).s
+    }
+
     override fun add(
         v1: Value,
         v2: Value,

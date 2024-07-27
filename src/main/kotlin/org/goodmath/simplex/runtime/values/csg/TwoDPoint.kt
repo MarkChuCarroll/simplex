@@ -59,12 +59,18 @@ data class TwoDPoint(val x: Double, val y: Double): Value {
         }
         return 1
     }
-
 }
 
 
 object TwoDPointValueType: ValueType<TwoDPoint>() {
     override val name: String = "Point2D"
+
+    override val supportsText: Boolean = true
+
+    override fun toText(v: Value): String {
+        val point = assertIs(v)
+        return "(x=${point.x}, y=${point.y})"
+    }
 
     override fun isTruthy(v: Value): Boolean {
         return true

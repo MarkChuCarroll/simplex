@@ -39,6 +39,21 @@ object ArrayValueType: ValueType<ArrayValue>() {
         }
     }
 
+    override val supportsText: Boolean = true
+
+    override fun toText(v: Value): String {
+        val array = assertIs(v).elements
+        val rendered = array.map {
+            if (it.valueType.supportsText) {
+                it.valueType.toText(it)
+            } else {
+                "<<${it.valueType.name}>>"
+            }
+        }.joinToString(", ")
+        return "[$rendered]"
+    }
+
+
     override fun subscript(v1: Value, v2: Value): Value {
         val arr = assertIsArray(v1)
         val idx = assertIsInt(v2)

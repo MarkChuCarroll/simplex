@@ -18,12 +18,13 @@ package org.goodmath.simplex.runtime.values.primitives
 import org.goodmath.simplex.ast.Definition
 import org.goodmath.simplex.ast.Expr
 import org.goodmath.simplex.ast.FunctionDefinition
+import org.goodmath.simplex.ast.Type
+import org.goodmath.simplex.ast.TypedName
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.SimplexEvaluationError
 import org.goodmath.simplex.runtime.SimplexInvalidParameterError
 import org.goodmath.simplex.runtime.SimplexParameterCountError
-import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.SimplexUnsupportedOperation
 import org.goodmath.simplex.runtime.values.FunctionSignature
 import org.goodmath.simplex.runtime.values.Value
@@ -37,7 +38,8 @@ abstract class AbstractFunctionValue: Value {
 }
 
 class FunctionValue(
-    val argNames: List<String>,
+    val returnType: Type?,
+    val params: List<TypedName>,
     val localDefs: List<Definition>,
     val body: List<Expr>,
     val staticScope: Env,
@@ -47,11 +49,11 @@ class FunctionValue(
 
     override fun applyTo(args: List<Value>): Value {
         val localEnv = Env(localDefs, staticScope)
-        if (argNames.size != args.size) {
-            throw SimplexEvaluationError("Incorrect number of args: expected ${argNames.size}, but found ${args.size}")
+        if (params.size != args.size) {
+            throw SimplexEvaluationError("Incorrect number of args: expected ${params.size}, but found ${args.size}")
         }
-        argNames.zip(args).forEach { (name, value) ->
-            localEnv.addVariable(name, value)
+        params.zip(args).forEach { (param, value) ->
+            localEnv.addVariable(param.name, value)
         }
         var result: Value = IntegerValue(0)
         for (b in body) {

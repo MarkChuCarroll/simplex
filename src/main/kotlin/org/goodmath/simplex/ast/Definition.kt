@@ -38,6 +38,10 @@ class TypedName(val name: String, val type: Type?, loc: Location): AstNode(loc) 
         Twist.obj("TypedName",
             Twist.attr("name", name),
             Twist.value("type", type))
+
+    override fun toString(): String {
+        return "TypedName(${name}:${type})"
+    }
 }
 
 /**
@@ -48,7 +52,9 @@ class TypedName(val name: String, val type: Type?, loc: Location): AstNode(loc) 
  * @param body the function body.
  * @param loc the source location.
  */
-class FunctionDefinition(name: String, val params: List<TypedName>,
+class FunctionDefinition(name: String,
+                         val returnType: Type?,
+                         val params: List<TypedName>,
     val localDefs: List<Definition>,
     val body: List<Expr>,
     loc: Location): Definition(name, loc) {
@@ -63,7 +69,8 @@ class FunctionDefinition(name: String, val params: List<TypedName>,
 
     override fun installInEnv(env: Env) {
         val funValue = FunctionValue(
-            params.map { it.name }.toList(),
+            returnType,
+            params,
             localDefs,
             body,
             env,

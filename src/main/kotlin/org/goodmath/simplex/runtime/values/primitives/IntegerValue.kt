@@ -25,6 +25,13 @@ import kotlin.math.pow
 object IntegerValueType: ValueType<IntegerValue>() {
     override val name: String = "Int"
 
+    override val supportsText: Boolean = true
+
+    override fun toText(v: Value): String {
+        val i = assertIsInt(v)
+        return i.toString()
+    }
+
     override fun isTruthy(v: Value): Boolean {
         v as IntegerValue
         return v.i != 0

@@ -33,6 +33,13 @@ import org.goodmath.simplex.runtime.values.Param
 object ThreeDPointValueType: ValueType<ThreeDPoint>() {
     override val name: String = "ThreeDPoint"
 
+    override val supportsText: Boolean = true
+
+    override fun toText(v: Value): String {
+        val point = assertIs(v).xyz
+        return "(x=${point.x}, y=${point.y}, z=${point.z})"
+    }
+
     override fun isTruthy(v: Value): Boolean {
         return true
     }
