@@ -34,7 +34,6 @@ import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.StringValue
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
-import com.github.ajalt.mordant.rendering.TextColors.*
 
 abstract class Expr(loc: Location): AstNode(loc) {
     abstract fun evaluateIn(env: Env): Value
@@ -413,15 +412,20 @@ class MethodCallExpr(val target: Expr, val name: String, val args: List<Expr>,
     loc: Location): Expr(loc) {
     override fun evaluateIn(env: Env): Value {
         val targetValue = target.evaluateIn(env)
-        val meth = targetValue.valueType.getOperation(name)
         val argValues = args.map { it.evaluateIn(env) }
-
-        val resultType = meth.validateCall(targetValue, argValues)
-        val result = meth.execute(targetValue, argValues)
-        if (result.valueType != resultType) {
-            throw SimplexTypeError(resultType.name, result.valueType.name)
+        val result = if (targetValue.valueType.hasPrimitiveMethod(name)) {
+            val meth = targetValue.valueType.getPrimitiveMethod(name)
+            val resultType = meth.validateCall(targetValue, argValues)
+            val result = meth.execute(targetValue, argValues)
+            if (result.valueType != resultType) {
+                throw SimplexTypeError(resultType.name, result.valueType.name)
+            } else {
+                return result
+            }
+        } else {
+            val meth = targetValue.valueType.getMethod(name)
+            return meth.applyTo(targetValue, argValues)
         }
-        return result
     }
 
     override fun twist(): Twist =

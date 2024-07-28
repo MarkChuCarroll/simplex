@@ -16,8 +16,13 @@
 package org.goodmath.simplex.ast
 
 import org.goodmath.simplex.runtime.Env
+import org.goodmath.simplex.runtime.RootEnv
+import org.goodmath.simplex.runtime.SimplexParameterCountError
 import org.goodmath.simplex.runtime.SimplexUndefinedError
+import org.goodmath.simplex.runtime.values.Param
+import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.primitives.FunctionValue
+import org.goodmath.simplex.runtime.values.primitives.IntegerValue
 import org.goodmath.simplex.twist.Twist
 
 /**
@@ -79,6 +84,45 @@ class FunctionDefinition(name: String,
         env.addVariable(name, funValue)
     }
 }
+
+class MethodDefinition(
+    val targetType: Type,
+    val methodName: String,
+    val params: List<TypedName>,
+    val resultType: Type?,
+    val body: List<Expr>,
+    loc: Location): Definition("${targetType}->name", loc) {
+    override fun installInEnv(env: Env) {
+        val type = RootEnv.getType(targetType)
+        type.addMethod(this)
+    }
+
+    override fun twist(): Twist =
+        Twist.obj("MethodDefinition",
+            Twist.value("targetType", targetType),
+            Twist.attr("name", methodName),
+            Twist.array("params", params),
+            Twist.value("resultType", resultType),
+            Twist.array("body", body))
+
+    fun applyTo(target: Value, args: List<Value>): Value {
+        val localEnv = Env(emptyList(), RootEnv)
+        localEnv.addVariable("self", target)
+        if (params.size != args.size) {
+            throw SimplexParameterCountError("method ${targetType}.${methodName}", listOf(params.size), args.size)
+        }
+        params.zip(args).map { (param, arg) ->
+            localEnv.addVariable(param.name, arg)
+        }
+        var result: Value = IntegerValue(0)
+        for (expr in body) {
+            result = expr.evaluateIn(localEnv)
+        }
+        return result
+    }
+
+}
+
 
 class TupleDefinition(name: String, val fields: List<TypedName>,
     loc: Location): Definition(name, loc) {

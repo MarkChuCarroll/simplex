@@ -27,8 +27,14 @@ object FloatValueType: ValueType<FloatValue>() {
     override val name: String = "Float"
 
     override fun isTruthy(v: Value): Boolean {
-
         return assertIsFloat(v) != 0.0
+    }
+
+    override val supportsText: Boolean = true
+
+    override fun toText(v: Value): String {
+        val f = assertIs(v).d
+        return f.toString()
     }
 
     override fun add(

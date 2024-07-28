@@ -1,0 +1,9 @@
+
+
+meth Int->f() do
+   self->float()
+end
+
+produce(result) do
+   print([3->f(), " ", 4->f()])
+end

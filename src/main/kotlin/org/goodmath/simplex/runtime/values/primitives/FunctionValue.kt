@@ -18,9 +18,11 @@ package org.goodmath.simplex.runtime.values.primitives
 import org.goodmath.simplex.ast.Definition
 import org.goodmath.simplex.ast.Expr
 import org.goodmath.simplex.ast.FunctionDefinition
+import org.goodmath.simplex.ast.MethodDefinition
 import org.goodmath.simplex.ast.Type
 import org.goodmath.simplex.ast.TypedName
 import org.goodmath.simplex.runtime.Env
+import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.SimplexEvaluationError
 import org.goodmath.simplex.runtime.SimplexInvalidParameterError
@@ -249,4 +251,21 @@ abstract class PrimitiveFunctionValue(
     override fun applyTo(args: List<Value>): Value {
         return execute(args)
     }
+}
+
+class MethodValue(
+    val targetType: ValueType<*>,
+    val returnType: Type?,
+    val params: List<TypedName>,
+    val body: List<Expr>,
+    val def: MethodDefinition, override val valueType: ValueType<*>
+): Value {
+    override fun twist(): Twist =
+        Twist.obj("MethodValue",
+            Twist.attr("target", targetType.name),
+            Twist.attr("name", def.methodName),
+            Twist.array("params", params),
+            Twist.array("body", body),
+            Twist.value("def", def))
+
 }

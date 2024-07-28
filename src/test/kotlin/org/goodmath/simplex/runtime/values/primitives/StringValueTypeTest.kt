@@ -23,6 +23,6 @@ class StringValueTypeTest {
         assertTrue(StringValueType.compare(s1, s2) > 0)
         assertTrue(StringValueType.compare(s2, s1) < 0)
         assertTrue(StringValueType.compare(s2, s2) == 0)
-        assertEquals(IntegerValue(10), StringValueType.getOperation("length").execute(s1, emptyList()))
+        assertEquals(IntegerValue(10), StringValueType.getPrimitiveMethod("length").execute(s1, emptyList()))
     }
 }

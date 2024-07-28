@@ -39,6 +39,7 @@ import org.goodmath.simplex.ast.LiteralExpr
 import org.goodmath.simplex.ast.Location
 import org.goodmath.simplex.ast.LoopExpr
 import org.goodmath.simplex.ast.MethodCallExpr
+import org.goodmath.simplex.ast.MethodDefinition
 import org.goodmath.simplex.ast.Model
 import org.goodmath.simplex.ast.Operator
 import org.goodmath.simplex.ast.OperatorExpr
@@ -54,6 +55,16 @@ import org.goodmath.simplex.ast.VarRefExpr
 import org.goodmath.simplex.ast.VariableDefinition
 import org.goodmath.simplex.ast.WithExpr
 import org.goodmath.simplex.runtime.SimplexError
+import org.goodmath.simplex.runtime.csg.TwoDPointValueType
+import org.goodmath.simplex.runtime.values.ValueType
+import org.goodmath.simplex.runtime.values.csg.CsgValueType
+import org.goodmath.simplex.runtime.values.csg.PolygonValueType
+import org.goodmath.simplex.runtime.values.csg.ThreeDPointValueType
+import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
+import org.goodmath.simplex.runtime.values.primitives.FloatValueType
+import org.goodmath.simplex.runtime.values.primitives.FunctionValueType
+import org.goodmath.simplex.runtime.values.primitives.IntegerValueType
+import org.goodmath.simplex.runtime.values.primitives.StringValueType
 
 @Suppress("UNCHECKED_CAST")
 class SimplexParseListener: SimplexListener {
@@ -131,6 +142,13 @@ class SimplexParseListener: SimplexListener {
         setValueFor(ctx, getValueFor(ctx.tupleDef()))
     }
 
+    override fun enterOptMethDef(ctx: SimplexParser.OptMethDefContext) {
+    }
+
+    override fun exitOptMethDef(ctx: SimplexParser.OptMethDefContext) {
+        setValueFor(ctx, getValueFor(ctx.methDef()))
+    }
+
     override fun enterTupleDef(ctx: SimplexParser.TupleDefContext) {
     }
 
@@ -168,6 +186,18 @@ class SimplexParseListener: SimplexListener {
         val params = ctx.params()?.let { getValueFor(it) as List<TypedName>}
         val body = ctx.expr().map { getValueFor(it) as Expr }
         setValueFor(ctx, FunctionDefinition(name, type, params ?: emptyList(), localDefs, body, loc(ctx)))
+    }
+
+    override fun enterMethDef(ctx: SimplexParser.MethDefContext) {
+    }
+
+    override fun exitMethDef(ctx: SimplexParser.MethDefContext) {
+        val type = getValueFor(ctx.target) as Type
+        val result = ctx.result?.let { getValueFor(it) as Type }
+        val name = ctx.ID().text
+        val params = ctx.params()?.let { getValueFor(it) as List<TypedName> } ?: emptyList()
+        val body = ctx.expr().map { getValueFor(it) as Expr }
+        setValueFor(ctx, MethodDefinition(type, name, params, result, body, loc(ctx)))
     }
 
 

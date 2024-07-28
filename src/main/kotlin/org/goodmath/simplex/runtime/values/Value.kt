@@ -15,6 +15,7 @@
  */
 package org.goodmath.simplex.runtime.values
 
+import org.goodmath.simplex.ast.MethodDefinition
 import org.goodmath.simplex.runtime.SimplexInvalidParameterError
 import org.goodmath.simplex.runtime.SimplexParameterCountError
 import org.goodmath.simplex.runtime.SimplexTypeError
@@ -28,7 +29,6 @@ import org.goodmath.simplex.runtime.values.primitives.StringValue
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
 import kotlin.collections.associateBy
-import kotlin.math.sign
 
 /**
  * The abstract supertype of all values.
@@ -87,12 +87,26 @@ abstract class ValueType<T: Value>: Twistable {
     abstract val providesFunctions: List<PrimitiveFunctionValue>
     abstract val providesOperations: List<PrimitiveMethod<T>>
 
-    val operations by lazy {
+    protected val methods: HashMap<String, MethodDefinition> = HashMap()
+
+    fun getMethod(name: String): MethodDefinition {
+        return methods[name] ?: throw SimplexUndefinedError(name, "method")
+    }
+
+    fun addMethod(method: MethodDefinition) {
+        methods[method.methodName] = method
+    }
+
+    val primitiveMethods by lazy {
         providesOperations.associateBy { it.name }
     }
 
-    fun getOperation(name: String): PrimitiveMethod<T> {
-        return operations[name] ?: throw SimplexUndefinedError(name, "method")
+    fun hasPrimitiveMethod(name: String): Boolean {
+        return primitiveMethods.containsKey(name)
+    }
+
+    fun getPrimitiveMethod(name: String): PrimitiveMethod<T> {
+        return primitiveMethods[name] ?: throw SimplexUndefinedError(name, "method")
     }
 
     fun assertIsString(v: Value): String {

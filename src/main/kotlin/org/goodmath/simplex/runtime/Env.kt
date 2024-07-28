@@ -37,16 +37,18 @@ import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
 import java.util.UUID
 import com.github.ajalt.mordant.rendering.TextColors.*
+import org.goodmath.simplex.ast.SimpleType
+import org.goodmath.simplex.ast.Type
 import org.goodmath.simplex.runtime.values.primitives.ArrayValue
 import org.goodmath.simplex.runtime.values.primitives.IntegerValue
 import org.goodmath.simplex.runtime.values.primitives.StringValue
 
-class Env(defList: List<Definition>,
+open class Env(defList: List<Definition>,
     val parentEnv: Env?): Twistable {
     val defs = defList.associateBy { it.name }
     val vars = HashMap<String, Value>()
 
-    val id: String = UUID.randomUUID().toString()
+    open val id: String = UUID.randomUUID().toString()
 
     fun getValue(name: String): Value {
         return if (vars.containsKey(name)) {
@@ -142,18 +144,38 @@ class Env(defList: List<Definition>,
             })
 
         fun createRootEnv(model: Model): Env {
-            val env = Env(model.defs, null)
             for (t in valueTypes) {
                 for (t in t.providesFunctions) {
-                    env.addVariable(t.name, t)
+                    RootEnv.addVariable(t.name, t)
                 }
             }
             for (f in functions) {
-                env.addVariable(f.name, f)
+                RootEnv.addVariable(f.name, f)
             }
-            return env
+            return RootEnv
+        }
+    }
+}
+
+object RootEnv: Env(emptyList(), null) {
+    val types = hashMapOf(
+        "Int" to IntegerValueType,
+        "Float" to FloatValueType,
+        "String" to StringValueType,
+        "Array" to ArrayValueType,
+        "CSG" to CsgValueType,
+        "TwoDPoint" to TwoDPointValueType,
+        "ThreeDPoint" to ThreeDPointValueType,
+        "Polygon" to PolygonValueType,
+        "Function" to FunctionValueType)
+
+    fun getType(t: Type): ValueType<*> {
+        return if (t is SimpleType) {
+            types[t.name] ?: throw SimplexUndefinedError(t.name, "type")
+        } else {
+            ArrayValueType
         }
     }
 
-
+    override val id: String = "Root"
 }
