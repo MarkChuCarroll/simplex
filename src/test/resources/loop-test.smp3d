@@ -4,8 +4,8 @@ fun cubish(length, width, height, x) do
 end
 
 fun make_a_bunch(): [Csg] do
-  for m in range(4) do
-      cubish((m+1)->float()*10.0, (m+1)->float()*5.0, (m+1)->float()*2.0, m->float()*10.0)
+  for m in 1->to(4) do
+      cubish(m->float()*10.0, m->float()*5.0, m->float()*2.0, m->float()*10.0)
   end
 end
 
