@@ -23,6 +23,7 @@ import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.primitives.FunctionValue
 import org.goodmath.simplex.runtime.values.primitives.IntegerValue
+import org.goodmath.simplex.runtime.values.primitives.TupleValueType
 import org.goodmath.simplex.twist.Twist
 
 /**
@@ -133,6 +134,8 @@ class TupleDefinition(name: String, val fields: List<TypedName>,
             )
 
     override fun installInEnv(env: Env) {
+        val type = TupleValueType(this)
+
         // No need to do anything
     }
 

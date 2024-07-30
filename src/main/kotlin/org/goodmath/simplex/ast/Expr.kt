@@ -19,10 +19,12 @@ import org.goodmath.simplex.runtime.values.primitives.AbstractFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.ArrayValue
 import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
 import org.goodmath.simplex.runtime.Env
+import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.SimplexError
 import org.goodmath.simplex.runtime.SimplexEvaluationError
 import org.goodmath.simplex.runtime.SimplexParameterCountError
 import org.goodmath.simplex.runtime.SimplexTypeError
+import org.goodmath.simplex.runtime.values.AnyType
 import org.goodmath.simplex.runtime.values.primitives.TupleValue
 import org.goodmath.simplex.runtime.values.primitives.TupleValueType
 import org.goodmath.simplex.runtime.values.Value
@@ -91,11 +93,11 @@ class FieldRefExpr(val tupleExpr: Expr, val fieldName: String, loc: Location):
 
     override fun evaluateIn(env: Env): Value {
         val target = tupleExpr.evaluateIn(env)
-        if (target.valueType != TupleValueType) {
+        if (target.valueType !is TupleValueType) {
             throw SimplexEvaluationError("Expected a tuple value, found ${target.valueType.name}")
         }
         val tupleVal = target as TupleValue
-        val fieldIdx = tupleVal.tupleDef.indexOf(fieldName)
+        val fieldIdx = tupleVal.valueType.tupleDef.indexOf(fieldName)
         return tupleVal.fields[fieldIdx]
     }
 }
@@ -199,7 +201,9 @@ class LoopExpr(val idxVar: String, val collExpr: Expr, val body: List<Expr>, loc
             }
             result.add(iterationResult)
         }
-        return ArrayValue(result)
+        // TODO this should be better.
+        return ArrayValue(
+            ArrayValueType.of(result[0].valueType), result)
     }
 }
 
@@ -373,7 +377,8 @@ class TupleExpr(val tupleType: String, val args: List<Expr>, loc: Location): Exp
             throw SimplexEvaluationError("Invalid expression: tuple takes ${tupleDef.fields.size} fields, but only given ${args.size}")
         }
         val fieldValues = args.map { it.evaluateIn(env) }
-        return TupleValue(tupleDef, fieldValues)
+        val tupleType = RootEnv.getType(SimpleType(tupleType)) as TupleValueType
+        return TupleValue(tupleType, fieldValues)
     }
 }
 
@@ -398,13 +403,13 @@ class UpdateExpr(val tupleExpr: Expr, val updates: List<Update>, loc: Location):
         if (target !is TupleValue) {
             throw SimplexTypeError("Tuple", target.valueType.name)
         }
-        val def = target.tupleDef
+        val def = target.valueType.tupleDef
         val fields = ArrayList(target.fields)
         for ((n, v) in updates) {
             val idx = def.indexOf(n)
             fields[idx] = v.evaluateIn(env)
         }
-        return TupleValue(def, fields)
+        return TupleValue(target.valueType, fields)
     }
 }
 
@@ -459,7 +464,16 @@ class ArrayExpr(val elements: List<Expr>, loc: Location): Expr(loc) {
         )
 
     override fun evaluateIn(env: Env): Value {
-        return ArrayValue(elements.map { it.evaluateIn(env) })
+        val elementValues = elements.map { it.evaluateIn(env) }
+        val elementTypes = elementValues.map { it.valueType }.toSet()
+        val elementType = if (elementTypes.size > 1) {
+            AnyType
+        } else {
+            elementTypes.first()
+        }
+
+
+        return ArrayValue(ArrayValueType.of(elementType), elementValues)
     }
 
 }
@@ -475,7 +489,7 @@ class WithExpr(val focus: Expr, val body: List<Expr>, loc: Location): Expr(loc) 
         if (focusVal !is TupleValue) {
             throw SimplexTypeError("Tuple", focusVal.valueType.name)
         }
-        val def = focusVal.tupleDef
+        val def = focusVal.valueType.tupleDef
         val localEnv = Env(emptyList(), env)
         for ((name, idx) in def.fields.map { Pair(it.name, def.indexOf(it.name)) }) {
             localEnv.addVariable(name, focusVal.fields[idx])

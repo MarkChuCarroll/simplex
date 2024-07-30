@@ -26,18 +26,18 @@ import org.goodmath.simplex.twist.Twist
 import kotlin.collections.all
 import kotlin.collections.zip
 
-object TupleValueType: ValueType<TupleValue>() {
-    override val name: String = "Tuple"
+class TupleValueType(val tupleDef: TupleDefinition) : ValueType<TupleValue>() {
+    override val name: String = tupleDef.name
 
     override val supportsText: Boolean = true
 
     override fun toText(v: Value): String {
         val tup = assertIs(v)
         val sb = StringBuilder()
-        sb.append("#${tup.tupleDef.name}(")
+        sb.append("#${tup.valueType.name}(")
 
-        sb.append(tup.tupleDef.fields.map { field ->
-            val fieldValue = tup.fields[tup.tupleDef.indexOf(field.name)]
+        sb.append(tup.valueType.tupleDef.fields.map { field ->
+            val fieldValue = tup.fields[tup.valueType.tupleDef.indexOf(field.name)]
             if (fieldValue.valueType.supportsText) {
                 "${field.name}=${fieldValue.valueType.toText(fieldValue)}"
             } else {
@@ -101,11 +101,10 @@ object TupleValueType: ValueType<TupleValue>() {
     ): Boolean {
         val t1 = assertIs(v1)
         val t2 = assertIs(v2)
-        if (t1.tupleDef != t2.tupleDef) {
+        if (t1.valueType != t2.valueType) {
             return false
         }
         return t1.fields.zip(t2.fields).all { (l, r) -> l == r }
-
     }
 
     override fun neg(v1: Value): Value {
@@ -118,7 +117,7 @@ object TupleValueType: ValueType<TupleValue>() {
     ): Int {
         val t1 = assertIs(v1)
         val t2 = assertIs(v2)
-        if (t1.tupleDef != t2.tupleDef) {
+        if (t1.valueType.tupleDef != t2.valueType.tupleDef) {
             throw SimplexEvaluationError("Cannot compare different tuple types")
         }
         for ((l, r) in t1.fields.zip(t2.fields)) {
@@ -135,13 +134,11 @@ object TupleValueType: ValueType<TupleValue>() {
     override val providesOperations: List<PrimitiveMethod<TupleValue>> = emptyList()
 }
 
-class TupleValue(val tupleDef: TupleDefinition, val fields: List<Value>): Value {
-    override val valueType: ValueType<*> = TupleValueType
-
+class TupleValue(override val valueType: TupleValueType, val fields: List<Value>): Value {
 
     override fun twist(): Twist =
         Twist.obj("TupleValue",
-            Twist.attr("name", tupleDef.name),
+            Twist.attr("name", valueType.name),
             Twist.array("fields", fields))
 
 }

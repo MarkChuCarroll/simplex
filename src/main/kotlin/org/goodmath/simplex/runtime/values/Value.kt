@@ -15,12 +15,17 @@
  */
 package org.goodmath.simplex.runtime.values
 
+import org.goodmath.simplex.ast.ArrayType
 import org.goodmath.simplex.ast.MethodDefinition
+import org.goodmath.simplex.ast.SimpleType
+import org.goodmath.simplex.ast.Type
+import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.SimplexInvalidParameterError
 import org.goodmath.simplex.runtime.SimplexParameterCountError
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.SimplexUndefinedError
 import org.goodmath.simplex.runtime.SimplexUnsupportedOperation
+import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
 import org.goodmath.simplex.runtime.values.primitives.IntegerValue
 import org.goodmath.simplex.runtime.values.primitives.BooleanValue
@@ -47,20 +52,26 @@ interface Value: Twistable {
 abstract class ValueType<T: Value>: Twistable {
     abstract val name: String
 
+    open val asType: Type by lazy {
+        SimpleType(name)
+    }
+
+    fun satisfiesConstraint(t: Type): Boolean {
+        val vt = RootEnv.getType(t)
+        return if (vt == AnyType) {
+            true
+        } else if (t is ArrayType && this is ArrayValueType) {
+            elementType.satisfiesConstraint(t.elementType)
+        } else {
+            vt == this
+        }
+    }
+
     open val supportsText: Boolean = false
 
     open fun toText(v: Value): String {
         throw SimplexUnsupportedOperation(name, "render_pretty")
     }
-
-    open fun print(v: Value): String {
-        return if (supportsText) {
-            toText(v)
-        } else {
-            v.toString()
-        }
-    }
-
 
     override fun twist(): Twist {
         return Twist.attr("ValueType", name)
@@ -142,7 +153,7 @@ abstract class ValueType<T: Value>: Twistable {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun assertIs(v: Value): T {
+    open fun assertIs(v: Value): T {
         if (v.valueType != this) {
             throw SimplexTypeError(name, v.valueType.name)
         } else {
@@ -186,7 +197,7 @@ data class MethodSignature<T: Value>(
 abstract class PrimitiveMethod<T: Value>(
     val name: String,
     vararg val signatures: MethodSignature<T>) {
-    abstract fun execute(target: Value, args: List<Value>): Value;
+    abstract fun execute(target: Value, args: List<Value>): Value
     fun validateCall(selfValue: Value,
                      argValues: List<Value>): ValueType<*> {
         for (sig in signatures) {
@@ -209,5 +220,80 @@ abstract class PrimitiveMethod<T: Value>(
             signatures.map { it.params.size },
             argValues.size)
     }
+}
+
+object AnyType: ValueType<Value>() {
+    override val name: String = "Any"
+    override fun assertIs(v: Value): Value {
+        return v
+    }
+
+    override fun isTruthy(v: Value): Boolean {
+        return v.valueType.isTruthy(v)
+    }
+
+    override fun add(
+        v1: Value,
+        v2: Value
+    ): Value {
+        throw SimplexUnsupportedOperation("Any", "addition")
+    }
+
+    override fun subtract(
+        v1: Value,
+        v2: Value
+    ): Value {
+        throw SimplexUnsupportedOperation("Any", "subtraction")
+    }
+
+    override fun mult(
+        v1: Value,
+        v2: Value
+    ): Value {
+        throw SimplexUnsupportedOperation("Any", "multiplication")
+    }
+
+    override fun div(
+        v1: Value,
+        v2: Value
+    ): Value {
+        throw SimplexUnsupportedOperation("Any", "division")
+    }
+
+    override fun mod(
+        v1: Value,
+        v2: Value
+    ): Value {
+        throw SimplexUnsupportedOperation("Any", "modulo")
+    }
+
+    override fun pow(
+        v1: Value,
+        v2: Value
+    ): Value {
+        throw SimplexUnsupportedOperation("Any", "exponentiation")
+    }
+
+    override fun equals(
+        v1: Value,
+        v2: Value
+    ): Boolean {
+        return v1 == v2
+    }
+
+    override fun neg(v1: Value): Value {
+        throw SimplexUnsupportedOperation("Any", "negation")
+    }
+
+    override fun compare(
+        v1: Value,
+        v2: Value
+    ): Int {
+        throw SimplexUnsupportedOperation("Any", "ordering")
+    }
+
+    override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()
+
+    override val providesOperations: List<PrimitiveMethod<Value>> = emptyList()
 
 }

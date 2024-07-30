@@ -15,6 +15,8 @@
  */
 package org.goodmath.simplex.runtime.values.primitives
 
+import org.goodmath.simplex.ast.ArrayType
+import org.goodmath.simplex.ast.Type
 import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.SimplexEvaluationError
 import org.goodmath.simplex.runtime.SimplexTypeError
@@ -28,8 +30,12 @@ import kotlin.collections.map
 import kotlin.collections.zip
 import kotlin.math.min
 
-object ArrayValueType: ValueType<ArrayValue>() {
-    override val name: String = "Array"
+class ArrayValueType(
+    val elementType: ValueType<*>
+): ValueType<ArrayValue>() {
+    override val name: String = "[${elementType.name}]"
+
+    override val asType: Type = ArrayType(elementType.asType)
 
     fun assertIsArray(v: Value): List<Value> {
         if (v is ArrayValue) {
@@ -39,7 +45,7 @@ object ArrayValueType: ValueType<ArrayValue>() {
         }
     }
 
-    override val supportsText: Boolean = true
+    override val supportsText: Boolean = elementType.supportsText
 
     override fun toText(v: Value): String {
         val array = assertIs(v).elements
@@ -75,7 +81,7 @@ object ArrayValueType: ValueType<ArrayValue>() {
             throw SimplexEvaluationError("Cannot add arrays of different lengths")
         }
 
-        return ArrayValue(a1.zip(a2).map { (l, r) -> l.valueType.add(l, r) })
+        return ArrayValue(this, a1.zip(a2).map { (l, r) -> l.valueType.add(l, r) })
     }
 
     override fun subtract(
@@ -88,7 +94,7 @@ object ArrayValueType: ValueType<ArrayValue>() {
             throw SimplexEvaluationError("Cannot add arrays of different lengths")
         }
 
-        return ArrayValue(a1.zip(a2).map { (l, r) -> l.valueType.subtract(l, r) })
+        return ArrayValue(this, a1.zip(a2).map { (l, r) -> l.valueType.subtract(l, r) })
     }
 
     override fun mult(
@@ -96,7 +102,7 @@ object ArrayValueType: ValueType<ArrayValue>() {
         v2: Value,
     ): Value {
         val arr = assertIsArray(v1)
-        return ArrayValue(arr.map { it.valueType.mult(it, v2) })
+        return ArrayValue(this, arr.map { it.valueType.mult(it, v2) })
     }
 
     override fun div(
@@ -104,7 +110,7 @@ object ArrayValueType: ValueType<ArrayValue>() {
         v2: Value,
     ): Value {
         val arr = assertIsArray(v1)
-        return ArrayValue(arr.map { it.valueType.div(it, v2) })
+        return ArrayValue(this, arr.map { it.valueType.div(it, v2) })
     }
 
     override fun mod(
@@ -112,7 +118,7 @@ object ArrayValueType: ValueType<ArrayValue>() {
         v2: Value,
     ): Value {
         val arr = assertIsArray(v1)
-        return ArrayValue(arr.map { it.valueType.mod(it, v2) })
+        return ArrayValue(this, arr.map { it.valueType.mod(it, v2) })
     }
 
     override fun pow(
@@ -120,7 +126,7 @@ object ArrayValueType: ValueType<ArrayValue>() {
         v2: Value,
     ): Value {
         val arr = assertIsArray(v1)
-        return ArrayValue(arr.map { it.valueType.pow(it, v2) })
+        return ArrayValue(this, arr.map { it.valueType.pow(it, v2) })
 
     }
 
@@ -133,13 +139,13 @@ object ArrayValueType: ValueType<ArrayValue>() {
         if (a1.size != a2.size) {
             return false
         }
-        return a1.zip(a2).all { (l, r) -> l.valueType.equals(l, r)}
+        return a1.zip(a2).all { (l, r) -> l.valueType.equals(l, r) }
 
     }
 
     override fun neg(v1: Value): Value {
         val a1 = assertIsArray(v1)
-        return ArrayValue(a1.map { it.valueType.neg(it) })
+        return ArrayValue(this, a1.map { it.valueType.neg(it) })
     }
 
     override fun compare(
@@ -170,25 +176,33 @@ object ArrayValueType: ValueType<ArrayValue>() {
     override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()
 
     override val providesOperations: List<PrimitiveMethod<ArrayValue>> by lazy {
-        listOf(
-            ArrayLength
-        )
+         listOf(
+            object : PrimitiveMethod<ArrayValue>(
+                "length",
+                MethodSignature<ArrayValue>(this, emptyList(), IntegerValueType)
+            ) {
+                override fun execute(target: Value, args: List<Value>): Value {
+                    val a = this@ArrayValueType.assertIs(target).elements
+                    return IntegerValue(a.size)
+                }
+            })
+    }
+
+    companion object {
+        val arrayTypes = HashMap<ValueType<*>, ArrayValueType>()
+
+        fun of(t: ValueType<*>): ArrayValueType {
+            return arrayTypes.computeIfAbsent(t) { t ->
+                ArrayValueType(t)
+            }
+        }
     }
 }
 
-object ArrayLength: PrimitiveMethod<ArrayValue>("length",
-    MethodSignature<ArrayValue>(ArrayValueType, emptyList(), IntegerValueType)) {
 
-    override fun execute(target: Value, args: List<Value>): Value {
-        val a = ArrayValueType.assertIsArray(target)
-        return IntegerValue(a.size)
-    }
-}
-
-
-class ArrayValue(val elements: List<Value>): Value {
+class ArrayValue(val type: ArrayValueType, val elements: List<Value>): Value {
     fun isEmpty(): Boolean = elements.isEmpty()
-    override val valueType: ValueType<ArrayValue> = ArrayValueType
+    override val valueType: ValueType<ArrayValue> = type
 
 
     override fun twist(): Twist =

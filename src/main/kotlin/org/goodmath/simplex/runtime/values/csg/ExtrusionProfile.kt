@@ -386,10 +386,10 @@ object ExtrusionProfileType: ValueType<ExtrusionProfile>() {
         listOf(
             object: PrimitiveFunctionValue("profile",
                 FunctionSignature(listOf(
-                    Param("slices", ArrayValueType)),
+                    Param("slices", ArrayValueType.of(ProfileSliceType))),
                     ExtrusionProfileType)) {
                 override fun execute(args: List<Value>): Value {
-                    val arr = ArrayValueType.assertIsArray(args[0]).map {
+                    val arr = ArrayValueType.of(ProfileSliceType).assertIsArray(args[0]).map {
                         ProfileSliceType.assertIs(it)
                     }
                     return ExtrusionProfile(arr)

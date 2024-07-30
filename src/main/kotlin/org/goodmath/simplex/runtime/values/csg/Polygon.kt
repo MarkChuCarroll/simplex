@@ -501,13 +501,13 @@ object PolygonValueType: ValueType<Polygon>() {
             object: PrimitiveMethod<Polygon>("extrude_series",
                 MethodSignature<Polygon>(
                     PolygonValueType,
-                    listOf(Param("profiles", ArrayValueType)), CsgValueType)) {
+                    listOf(Param("profiles", ArrayValueType.of(ExtrusionProfileType))), CsgValueType)) {
                 override fun execute(
                     target: Value,
                     args: List<Value>
                 ): Value {
                     val poly = assertIsPolygon(target)
-                    val profiles = ArrayValueType.assertIsArray(args[0]).map {
+                    val profiles = ArrayValueType.of(ExtrusionProfileType).assertIsArray(args[0]).map {
                         ExtrusionProfileType.assertIs(it)
                     }
                     return CsgValue(
@@ -517,10 +517,6 @@ object PolygonValueType: ValueType<Polygon>() {
                     )
                 }
             })
-    }
-
-    fun getFunction(name: String): PrimitiveFunctionValue {
-        return providesFunctions.first { it.name == name}
     }
 
 }

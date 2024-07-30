@@ -1,16 +1,19 @@
  package org.goodmath.simplex.runtime.values.csg
 
 import javafx.geometry.Point2D
+import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.csg.TwoDPoint
 import org.goodmath.simplex.runtime.csg.TwoDPointValueType
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
+import org.goodmath.simplex.runtime.values.primitives.FunctionValue
+import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 class PolygonTest {
     @Test
     fun testPolygonCreators() {
-        val rect = PolygonValueType.getFunction("rectangle")
+        val rect = PolygonValueType.providesFunctions.first { it.name == "rectangle"}
         val r = rect.execute(listOf(TwoDPoint(20.0, 20.0),
             FloatValue(10.0), FloatValue(16.0)))
         r as Polygon

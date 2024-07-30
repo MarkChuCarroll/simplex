@@ -32,13 +32,14 @@ import org.goodmath.simplex.runtime.values.primitives.BooleanValueType
 import org.goodmath.simplex.runtime.values.primitives.FunctionValueType
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.StringValueType
-import org.goodmath.simplex.runtime.values.primitives.TupleValueType
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
 import java.util.UUID
 import com.github.ajalt.mordant.rendering.TextColors.*
+import org.goodmath.simplex.ast.ArrayType
 import org.goodmath.simplex.ast.SimpleType
 import org.goodmath.simplex.ast.Type
+import org.goodmath.simplex.runtime.values.AnyType
 import org.goodmath.simplex.runtime.values.primitives.ArrayValue
 import org.goodmath.simplex.runtime.values.primitives.IntegerValue
 import org.goodmath.simplex.runtime.values.primitives.StringValue
@@ -94,12 +95,10 @@ open class Env(defList: List<Definition>,
     companion object {
         val valueTypes: List<ValueType<*>> = listOf(
             IntegerValueType,
-            TupleValueType,
             FunctionValueType,
             FloatValueType,
             StringValueType,
             BooleanValueType,
-            ArrayValueType,
             ThreeDPointValueType,
             TwoDPointValueType,
             PolygonValueType,
@@ -108,9 +107,9 @@ open class Env(defList: List<Definition>,
 
         val functions: List<PrimitiveFunctionValue> = listOf(
             object: PrimitiveFunctionValue("print",
-                FunctionSignature(listOf(Param("values", ArrayValueType)), StringValueType)) {
+                FunctionSignature(listOf(Param("values", ArrayValueType.of(AnyType))), StringValueType)) {
                 override fun execute(args: List<Value>): Value {
-                    val arr = ArrayValueType.assertIs(args[0]).elements
+                    val arr = ArrayValueType.of(AnyType).assertIsArray(args[0])
                     val result = arr.map {
                         if (it.valueType.supportsText) {
                             it.valueType.toText(it)
@@ -127,17 +126,18 @@ open class Env(defList: List<Definition>,
                     listOf(
                         Param("from", IntegerValueType),
                         Param("to", IntegerValueType)),
-                    ArrayValueType),
+                    RootEnv.getType(ArrayType(SimpleType("Int")))),
                 FunctionSignature(
                     listOf(Param("to", IntegerValueType)),
-                    ArrayValueType)) {
+                    RootEnv.getType(ArrayType(SimpleType("Int"))))) {
                 override fun execute(args: List<Value>): Value {
+                    val resultType = ArrayValueType.of(IntegerValueType)
                     val l = IntegerValueType.assertIs(args[0]).i
                     if (args.size == 1) {
-                        return ArrayValue((0..<l).map { IntegerValue(it) }.toList())
+                        return ArrayValue(resultType, (0..<l).map { IntegerValue(it) }.toList())
                     } else {
                         val r = IntegerValueType.assertIs(args[1]).i
-                        return ArrayValue((l..<r).map { IntegerValue(it) }.toList())
+                        return ArrayValue(resultType, (l..<r).map { IntegerValue(it) }.toList())
                     }
                 }
 
@@ -162,20 +162,32 @@ object RootEnv: Env(emptyList(), null) {
         "Int" to IntegerValueType,
         "Float" to FloatValueType,
         "String" to StringValueType,
-        "Array" to ArrayValueType,
         "CSG" to CsgValueType,
         "TwoDPoint" to TwoDPointValueType,
         "ThreeDPoint" to ThreeDPointValueType,
         "Polygon" to PolygonValueType,
-        "Function" to FunctionValueType)
+        "Function" to FunctionValueType,
+        "Any" to AnyType,
+    )
 
-    fun getType(t: Type): ValueType<*> {
-        return if (t is SimpleType) {
+
+
+    fun getType(t: Type?): ValueType<out Value> {
+        return if (t == null) {
+            AnyType
+        } else if (t is SimpleType) {
             types[t.name] ?: throw SimplexUndefinedError(t.name, "type")
+        } else if (t is ArrayType) {
+            ArrayValueType.of(getType(t.elementType))
         } else {
-            ArrayValueType
+            throw SimplexError(SimplexError.Kind.Internal, "Undefined type $t")
         }
     }
+
+    fun registerType(v: ValueType<*>) {
+        types[v.name] = v
+    }
+
 
     override val id: String = "Root"
 }

@@ -30,7 +30,13 @@ interface Twistable {
 }
 
 abstract class Twist: Twistable {
-    abstract fun render(b: StringBuilder, indent: Int);
+    abstract fun render(b: StringBuilder, indent: Int)
+
+    abstract fun cons(indent: Int): String?
+
+    fun consStr(): String {
+        return cons(0) + "\n"
+    }
 
     override fun toString(): String {
         val sb = StringBuilder()
@@ -63,12 +69,29 @@ class TwistObj(val name: String, val children: List<Twist>): Twist() {
         }
         b * indent + "}\n"
     }
+
+    override fun cons(indent: Int): String {
+        var result = "   ".repeat(indent)
+        result +=  "(obj $name\n"
+        result += children.map { c -> c.cons(indent+1) }.filterNotNull().joinToString(("\n")) + ")"
+        return result
+    }
 }
 
 class TwistAttr(val name: String, val v: String?): Twist() {
     override fun render(b: StringBuilder, indent: Int) {
         if (v != null) {
             b * indent + "$name='${v}'\n"
+        }
+    }
+
+    override fun cons(indent: Int): String? {
+        if (v != null) {
+            var result = "   ".repeat(indent)
+            result += "($name '$v')"
+            return result
+        } else {
+            return null
         }
     }
 }
@@ -81,6 +104,18 @@ class TwistArray(val name: String, val children: List<Twist>): Twist() {
         }
         b * indent + "]\n"
     }
+
+    override fun cons(indent: Int): String {
+        if (children.size == 0) {
+            return "   ".repeat(indent) + "(array $name)"
+        } else {
+            var result = "   ".repeat(indent)
+            result += "(array $name\n"
+            result += children.map { it.cons(indent + 1) }.filterNotNull().joinToString("\n")
+            result += ")"
+            return result
+        }
+    }
 }
 
 class TwistVal(val name: String, val value: Twist?): Twist() {
@@ -89,6 +124,17 @@ class TwistVal(val name: String, val value: Twist?): Twist() {
             b * indent + "$name=(\n"
             value.render(b, indent + 1)
             b * indent + ")\n"
+        }
+    }
+
+    override fun cons(indent: Int): String? {
+        if (value != null) {
+            var result = "   ".repeat(indent)
+            result += "(val $name\n"
+            result += value.cons(indent + 1)
+            return result + ")"
+        } else {
+            return null
         }
     }
 }

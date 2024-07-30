@@ -114,14 +114,14 @@ object IntegerValueType: ValueType<IntegerValue>() {
         listOf(
             object: PrimitiveMethod<IntegerValue>("to",
                 MethodSignature(IntegerValueType, listOf(Param("max", IntegerValueType)),
-                    ArrayValueType)) {
+                    ArrayValueType.of(IntegerValueType))) {
                 override fun execute(
                     target: Value,
                     args: List<Value>
                 ): Value {
                     val lower = assertIs(target).i
                     val upper = assertIs(args[0]).i
-                    return ArrayValue((lower..upper).map { IntegerValue(it)})
+                    return ArrayValue(ArrayValueType.of(IntegerValueType), (lower..upper).map { IntegerValue(it)})
                 }
             },
             object : PrimitiveMethod<IntegerValue>("float",

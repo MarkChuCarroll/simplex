@@ -52,6 +52,7 @@ class Model(val defs: List<Definition>,
             echo(1, cyan("Rendering ${product.name}"), false)
             product.execute(executionEnv, echo, outputPrefix)
         }
+        echo(0, twist().consStr(), false)
     }
     companion object {
         var output: (Int, Any?, Boolean) -> Unit = { i: Int, s: Any?, err: Boolean ->
@@ -95,7 +96,7 @@ class Product(val name: String?, val body: List<Expr>, loc: Location): AstNode(l
                 if (other.valueType.supportsText) {
                     text + other.valueType.toText(other) + "\n"
                 } else {
-                    twists + other.twist().toString() + "\n\n"
+                    twists + other.twist().consStr() + "\n\n"
                 }
             }
             val textOut = text.toString()
@@ -110,5 +111,4 @@ class Product(val name: String?, val body: List<Expr>, loc: Location): AstNode(l
             }
         }
     }
-
 }

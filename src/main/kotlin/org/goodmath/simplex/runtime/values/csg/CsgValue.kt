@@ -30,7 +30,6 @@ import org.goodmath.simplex.runtime.values.primitives.ArrayValue
 import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
 import org.goodmath.simplex.runtime.values.primitives.FloatValueType
 import org.goodmath.simplex.twist.Twist
-import java.security.Signature
 
 
 object CsgValueType: ValueType<CsgValue>() {
@@ -129,7 +128,8 @@ object CsgValueType: ValueType<CsgValue>() {
             object: PrimitiveMethod<CsgValue>("bounds",
                 MethodSignature(CsgValueType,
                     emptyList(),
-                    ArrayValueType)) {
+                    ArrayValueType.of(FloatValueType))) {
+
                 override fun execute(
                     target: Value,
                     args: List<Value>
@@ -138,7 +138,7 @@ object CsgValueType: ValueType<CsgValue>() {
                     val bounds = csg.bounds!!
                     val result = listOf(ThreeDPoint(bounds.min),
                         ThreeDPoint(bounds.max))
-                    return ArrayValue(result)
+                    return ArrayValue(ArrayValueType.of(FloatValueType), result)
                 }
             },
             object: PrimitiveMethod<CsgValue>("centroid",
