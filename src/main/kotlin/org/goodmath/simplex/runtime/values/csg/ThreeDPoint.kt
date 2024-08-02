@@ -17,21 +17,24 @@ package org.goodmath.simplex.runtime.values.csg
 
 import eu.mihosoft.vvecmath.Transform
 import eu.mihosoft.vvecmath.Vector3d
-import org.goodmath.simplex.runtime.values.primitives.FloatValueType
+import org.goodmath.simplex.ast.Type
+import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.PrimitiveMethod
-import org.goodmath.simplex.runtime.SimplexTypeError
-import org.goodmath.simplex.runtime.SimplexUnsupportedOperation
+
 import org.goodmath.simplex.runtime.values.FunctionSignature
 import org.goodmath.simplex.runtime.values.MethodSignature
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.runtime.values.Param
+import org.goodmath.simplex.runtime.values.primitives.BooleanValue
 
 
-object ThreeDPointValueType: ValueType<ThreeDPoint>() {
+object ThreeDPointValueType: ValueType() {
     override val name: String = "ThreeDPoint"
+    override val asType: Type = Type.ThreeDPointType
+
 
     override val supportsText: Boolean = true
 
@@ -44,83 +47,25 @@ object ThreeDPointValueType: ValueType<ThreeDPoint>() {
         return true
     }
 
-    override fun add(
-        v1: Value,
-        v2: Value
-    ): Value {
-        val p1 = assertIs(v1).xyz
-        val p2 = assertIs(v2).xyz
-        return ThreeDPoint(p1.plus(p2))
+    override fun assertIs(v: Value): ThreeDPoint {
+        return if (v is ThreeDPoint) {
+            v
+        } else {
+            throwTypeError(v)
+        }
     }
 
-    override fun subtract(
-        v1: Value,
-        v2: Value
-    ): Value {
-        val p1 = assertIs(v1).xyz
-        val p2 = assertIs(v2).xyz
-        return ThreeDPoint(p1.minus(p2))
-    }
 
-    override fun mult(
-        v1: Value,
-        v2: Value
-    ): Value {
-        val p1 = assertIs(v1).xyz
-        val d = assertIsFloat(v2)
-        return ThreeDPoint(p1.times(d))
-    }
-
-    override fun div(
-        v1: Value,
-        v2: Value
-    ): Value {
-        val p1 = assertIs(v1).xyz
-        val d = assertIsFloat(v2)
-        return ThreeDPoint(p1.divided(d))
-    }
-
-    override fun mod(
-        v1: Value,
-        v2: Value
-    ): Value {
-        throw SimplexUnsupportedOperation("Point", "modulo")
-    }
-
-    override fun pow(
-        v1: Value,
-        v2: Value
-    ): Value {
-        throw SimplexTypeError("Point", "exponentiation")
-    }
-
-    override fun equals(
-        v1: Value,
-        v2: Value
-    ): Boolean {
-        val p1 = assertIs(v1).xyz
-        val p2 = assertIs(v2).xyz
-        return p1 == p2
-    }
-
-    override fun neg(v1: Value): Value {
-        val p1 = assertIs(v1).xyz
-        return ThreeDPoint(p1.negated())
-    }
-
-    override fun compare(v1: Value, v2: Value): Int {
-        throw SimplexTypeError("Point", "ordering")
-    }
 
     override val providesFunctions: List<PrimitiveFunctionValue> by lazy {
         listOf(
             object: PrimitiveFunctionValue(
                 "point",
                 FunctionSignature(listOf(
-                    Param("x", FloatValueType),
-                    Param("y", FloatValueType),
-                    Param("z", FloatValueType)
-                ), ThreeDPointValueType
+                    Param("x", Type.FloatType),
+                    Param("y", Type.FloatType),
+                    Param("z", Type.FloatType)
+                ), asType
             )) {
                 override fun execute(args: List<Value>): Value {
                     val x = assertIsFloat(args[0])
@@ -131,18 +76,18 @@ object ThreeDPointValueType: ValueType<ThreeDPoint>() {
             })
     }
 
-    override val providesOperations: List<PrimitiveMethod<ThreeDPoint>> by lazy {
+    override val providesOperations: List<PrimitiveMethod> by lazy {
         listOf(
-            object: PrimitiveMethod<ThreeDPoint>("scale",
-                MethodSignature(ThreeDPointValueType,
-                    listOf(Param("factor", FloatValueType)), ThreeDPointValueType),
+            object: PrimitiveMethod("scale",
+                MethodSignature(asType,
+                    listOf(Param("factor", Type.FloatType)), asType),
                 MethodSignature(
-                    ThreeDPointValueType,
-                    listOf(Param("xFactor", FloatValueType),
-                        Param("yFactor", FloatValueType),
-                        Param("zFactor", FloatValueType)),
-                    ThreeDPointValueType)) {
-                override fun execute(target: Value, args: List<Value>): Value {
+                    asType,
+                    listOf(Param("xFactor", Type.FloatType),
+                        Param("yFactor", Type.FloatType),
+                        Param("zFactor", Type.FloatType)),
+                    asType)) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val point = assertIs(target).xyz
                     if (args.size == 1) {
                         val factor = assertIsFloat(args[0])
@@ -155,17 +100,18 @@ object ThreeDPointValueType: ValueType<ThreeDPoint>() {
                     }
                 }
             },
-            object: PrimitiveMethod<ThreeDPoint>("rot",
-                MethodSignature<ThreeDPoint>(
-                    ThreeDPointValueType,
+            object: PrimitiveMethod("rot",
+                MethodSignature(
+                    asType,
                     listOf(
-                        Param("xAngle", FloatValueType),
-                        Param("yAngle", FloatValueType),
-                        Param("zAngle", FloatValueType)),
-                ThreeDPointValueType)) {
+                        Param("xAngle", Type.FloatType),
+                        Param("yAngle", Type.FloatType),
+                        Param("zAngle", Type.FloatType)),
+                asType)) {
                 override fun execute(
                     target: Value,
-                    args: List<Value>
+                    args: List<Value>,
+                    env: Env
                 ): Value {
                     val point = assertIs(target).xyz
                     val x = assertIsFloat(args[0])
@@ -173,12 +119,59 @@ object ThreeDPointValueType: ValueType<ThreeDPoint>() {
                     val z = assertIsFloat(args[2])
                     return ThreeDPoint(point.transformed(Transform().rot(x, y, z)))
                 }
+            },
+            object: PrimitiveMethod("plus",
+                MethodSignature(asType, listOf(Param("r", asType)), asType)) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val p1 = assertIs(target).xyz
+                    val p2 = assertIs(args[0]).xyz
+                    return ThreeDPoint(p1.plus(p2))
+                }
+            },
+            object: PrimitiveMethod("minus",
+                MethodSignature(asType, listOf(Param("r", asType)), asType)) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val p1 = assertIs(target).xyz
+                    val p2 = assertIs(args[0]).xyz
+                    return ThreeDPoint(p1.minus(p2))
+                }
+            },
+            object: PrimitiveMethod("multBy",
+                MethodSignature(asType, listOf(Param("r", Type.FloatType)), asType)) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val p1 = assertIs(target).xyz
+                    val p2 = assertIsFloat(args[0])
+                    return ThreeDPoint(p1.times(p2))
+                }
+            },
+            object: PrimitiveMethod("divBy",
+                MethodSignature(asType, listOf(Param("r", Type.FloatType)), asType)) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val p1 = assertIs(target).xyz
+                    val p2 = assertIsFloat(args[0])
+                    return ThreeDPoint(p1.divided(p2))
+                }
+            },
+            object: PrimitiveMethod("eq",
+                MethodSignature(asType, listOf(Param("r", asType)), Type.BooleanType)) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val p1 = assertIs(target).xyz
+                    val p2 = assertIs(args[0]).xyz
+                    return BooleanValue(p1 == p2)
+                }
+            },
+            object: PrimitiveMethod("neg",
+                MethodSignature(asType, emptyList(), asType)) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val p1 = assertIs(target).xyz
+                    return ThreeDPoint(p1.negated())
+                }
             })
     }
 }
 
 class ThreeDPoint(val xyz: Vector3d): Value {
-    override val valueType: ValueType<ThreeDPoint> = ThreeDPointValueType
+    override val valueType: ValueType = ThreeDPointValueType
 
 
     override fun twist(): Twist {

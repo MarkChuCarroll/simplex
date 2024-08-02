@@ -29,7 +29,6 @@ import org.goodmath.simplex.runtime.values.primitives.FloatValueType
 import org.goodmath.simplex.runtime.values.primitives.IntegerValueType
 import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
 import org.goodmath.simplex.runtime.values.primitives.BooleanValueType
-import org.goodmath.simplex.runtime.values.primitives.FunctionValueType
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.StringValueType
 import org.goodmath.simplex.twist.Twist
@@ -37,19 +36,46 @@ import org.goodmath.simplex.twist.Twistable
 import java.util.UUID
 import com.github.ajalt.mordant.rendering.TextColors.*
 import org.goodmath.simplex.ast.ArrayType
-import org.goodmath.simplex.ast.SimpleType
+import org.goodmath.simplex.ast.MethodType
 import org.goodmath.simplex.ast.Type
 import org.goodmath.simplex.runtime.values.AnyType
-import org.goodmath.simplex.runtime.values.primitives.ArrayValue
-import org.goodmath.simplex.runtime.values.primitives.IntegerValue
 import org.goodmath.simplex.runtime.values.primitives.StringValue
+
 
 open class Env(defList: List<Definition>,
     val parentEnv: Env?): Twistable {
-    val defs = defList.associateBy { it.name }
+    val defs = defList.associateBy { it.name }.toMutableMap()
     val vars = HashMap<String, Value>()
+    val declaredTypes = HashMap<String, Type>()
+    open val types = HashMap<String, ValueType>()
 
     open val id: String = UUID.randomUUID().toString()
+
+    fun registerType(name: String, valueType: ValueType) {
+        types[name] = valueType
+    }
+
+    fun getType(name: String): ValueType {
+        return types[name] ?: throw SimplexUndefinedError(name,  "type")
+    }
+
+
+    fun declareTypeOf(name: String, t: Type) {
+        if (declaredTypes.containsKey(name) && declaredTypes[name] != t) {
+            throw SimplexAnalysisError("Type of $name is already defined")
+        }
+        declaredTypes[name] = t
+    }
+
+    fun getDeclaredTypeOf(name: String): Type {
+        return if (declaredTypes.containsKey(name)) {
+            declaredTypes[name]!!
+        } else if (parentEnv != null) {
+            parentEnv.getDeclaredTypeOf(name)
+        } else {
+            throw SimplexUndefinedError(name, "symbol")
+        }
+    }
 
     fun getValue(name: String): Value {
         return if (vars.containsKey(name)) {
@@ -65,9 +91,37 @@ open class Env(defList: List<Definition>,
         return defs[name] ?: throw SimplexUndefinedError(name, "definition")
     }
 
-    fun installDefinitionValues() {
+    fun installStaticDefinitions() {
+        for (t in valueTypes) {
+            registerType(t.name, t)
+            for (m in t.providesOperations) {
+                t.asType.registerMethod(m.name, Type.method(m.sig.self, m.sig.params.map { it.type }, m.sig.returnType) as MethodType)
+            }
+            for (f in t.providesFunctions) {
+                val sig = f.signatures[0]
+                declareTypeOf(f.name, Type.function(sig.params.map { it.type }, sig.returnType))
+            }
+        }
+        for (f in functions) {
+            val sig = f.signatures[0]
+            val funType = Type.function(sig.params.map { it.type }, sig.returnType)
+            declareTypeOf(f.name, funType)
+        }
         for (d in defs.values) {
-            d.installInEnv(this)
+            d.installStatic(this)
+        }
+    }
+
+    fun installDefinitionValues() {
+        for (t in valueTypes) {
+            registerType(t.name, t)
+            for (m in t.providesOperations) {
+                t.addMethod(m)
+                t.asType.registerMethod(m.name, Type.method(m.sig.self, m.sig.params.map { it.type }, m.sig.returnType) as MethodType)
+            }
+        }
+        for (d in defs.values) {
+            d.installValues(this)
         }
     }
 
@@ -93,57 +147,38 @@ open class Env(defList: List<Definition>,
             ))
 
     companion object {
-        val valueTypes: List<ValueType<*>> = listOf(
-            IntegerValueType,
-            FunctionValueType,
+        val valueTypes: List<ValueType> by lazy {
+            listOf(IntegerValueType,
             FloatValueType,
             StringValueType,
             BooleanValueType,
             ThreeDPointValueType,
             TwoDPointValueType,
             PolygonValueType,
-            CsgValueType
-        )
+            CsgValueType)
+        }
 
-        val functions: List<PrimitiveFunctionValue> = listOf(
-            object: PrimitiveFunctionValue("print",
-                FunctionSignature(listOf(Param("values", ArrayValueType.of(AnyType))), StringValueType)) {
-                override fun execute(args: List<Value>): Value {
-                    val arr = ArrayValueType.of(AnyType).assertIsArray(args[0])
-                    val result = arr.map {
-                        if (it.valueType.supportsText) {
-                            it.valueType.toText(it)
-                        } else {
-                            it.valueType.name
-                        }
-                    }.joinToString("")
-                    Model.output(0, brightWhite(result), false)
-                    return StringValue(result)
-                }
-            },
-            object: PrimitiveFunctionValue("range",
-                FunctionSignature(
-                    listOf(
-                        Param("from", IntegerValueType),
-                        Param("to", IntegerValueType)),
-                    RootEnv.getType(ArrayType(SimpleType("Int")))),
-                FunctionSignature(
-                    listOf(Param("to", IntegerValueType)),
-                    RootEnv.getType(ArrayType(SimpleType("Int"))))) {
-                override fun execute(args: List<Value>): Value {
-                    val resultType = ArrayValueType.of(IntegerValueType)
-                    val l = IntegerValueType.assertIs(args[0]).i
-                    if (args.size == 1) {
-                        return ArrayValue(resultType, (0..<l).map { IntegerValue(it) }.toList())
-                    } else {
-                        val r = IntegerValueType.assertIs(args[1]).i
-                        return ArrayValue(resultType, (l..<r).map { IntegerValue(it) }.toList())
+        val functions: List<PrimitiveFunctionValue> by lazy {
+            listOf(
+                object: PrimitiveFunctionValue("print",
+                    FunctionSignature(listOf(Param("values", ArrayType(AnyType.asType))), StringValueType.asType)) {
+                    override fun execute(args: List<Value>): Value {
+                        val arr = ArrayValueType.of(AnyType).assertIsArray(args[0])
+                        val result = arr.map {
+                            if (it.valueType.supportsText) {
+                                it.valueType.toText(it)
+                            } else {
+                                it.valueType.name
+                            }
+                        }.joinToString("")
+                        Model.output(0, brightWhite(result), false)
+                        return StringValue(result)
                     }
-                }
+                })
+        }
 
-            })
 
-        fun createRootEnv(model: Model): Env {
+        fun createRootEnv(): Env {
             for (t in valueTypes) {
                 for (t in t.providesFunctions) {
                     RootEnv.addVariable(t.name, t)
@@ -158,36 +193,28 @@ open class Env(defList: List<Definition>,
 }
 
 object RootEnv: Env(emptyList(), null) {
-    val types = hashMapOf(
-        "Int" to IntegerValueType,
-        "Float" to FloatValueType,
-        "String" to StringValueType,
-        "CSG" to CsgValueType,
-        "TwoDPoint" to TwoDPointValueType,
-        "ThreeDPoint" to ThreeDPointValueType,
-        "Polygon" to PolygonValueType,
-        "Function" to FunctionValueType,
-        "Any" to AnyType,
-    )
 
 
-
-    fun getType(t: Type?): ValueType<out Value> {
-        return if (t == null) {
-            AnyType
-        } else if (t is SimpleType) {
-            types[t.name] ?: throw SimplexUndefinedError(t.name, "type")
-        } else if (t is ArrayType) {
-            ArrayValueType.of(getType(t.elementType))
-        } else {
-            throw SimplexError(SimplexError.Kind.Internal, "Undefined type $t")
-        }
+    fun addDefinition(def: Definition) {
+        defs[def.name] = def
     }
 
-    fun registerType(v: ValueType<*>) {
-        types[v.name] = v
+    fun getDefinition(name: String): Definition {
+        return defs[name] ?: throw SimplexUndefinedError(name, "definition")
     }
 
+    override val types by lazy {
+        hashMapOf(
+            "Int" to IntegerValueType,
+            "Float" to FloatValueType,
+            "String" to StringValueType,
+            "CSG" to CsgValueType,
+            "TwoDPoint" to TwoDPointValueType,
+            "ThreeDPoint" to ThreeDPointValueType,
+            "Polygon" to PolygonValueType,
+            "Any" to AnyType,
+        )
+    }
 
     override val id: String = "Root"
 }

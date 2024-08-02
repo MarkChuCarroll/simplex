@@ -16,10 +16,12 @@
 package org.goodmath.simplex.ast
 
 import org.goodmath.simplex.runtime.Env
-import org.goodmath.simplex.runtime.RootEnv
+import org.goodmath.simplex.runtime.SimplexError
+import org.goodmath.simplex.runtime.SimplexEvaluationError
 import org.goodmath.simplex.runtime.SimplexParameterCountError
+import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.SimplexUndefinedError
-import org.goodmath.simplex.runtime.values.Param
+import org.goodmath.simplex.runtime.values.MethodValue
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.primitives.FunctionValue
 import org.goodmath.simplex.runtime.values.primitives.IntegerValue
@@ -32,14 +34,16 @@ import org.goodmath.simplex.twist.Twist
  * @param loc the source location
  */
 abstract class Definition(val name: String, loc: Location): AstNode(loc) {
-    abstract fun installInEnv(env: Env)
+    abstract fun installStatic(env: Env)
+    abstract fun installValues(env: Env)
+    abstract fun validate(env: Env)
 }
 
 /**
  * A name with an optional type declaration, used in several places
  * in the code.
  */
-class TypedName(val name: String, val type: Type?, loc: Location): AstNode(loc) {
+class TypedName(val name: String, val type: Type, loc: Location): AstNode(loc) {
     override fun twist(): Twist =
         Twist.obj("TypedName",
             Twist.attr("name", name),
@@ -59,11 +63,14 @@ class TypedName(val name: String, val type: Type?, loc: Location): AstNode(loc) 
  * @param loc the source location.
  */
 class FunctionDefinition(name: String,
-                         val returnType: Type?,
+                         val returnType: Type,
                          val params: List<TypedName>,
     val localDefs: List<Definition>,
     val body: List<Expr>,
     loc: Location): Definition(name, loc) {
+
+    val type = Type.function(params.map { it.type }, returnType)
+
     override fun twist(): Twist =
         Twist.obj(
             "FunctionDefinition",
@@ -73,7 +80,11 @@ class FunctionDefinition(name: String,
             Twist.array("body", body)
         )
 
-    override fun installInEnv(env: Env) {
+    override fun installStatic(env: Env) {
+        env.declareTypeOf(name, type)
+    }
+
+    override fun installValues(env: Env) {
         val funValue = FunctionValue(
             returnType,
             params,
@@ -84,18 +95,56 @@ class FunctionDefinition(name: String,
         )
         env.addVariable(name, funValue)
     }
+
+    override fun validate(env: Env) {
+        val functionEnv = Env(localDefs, env)
+        functionEnv.installStaticDefinitions()
+        for (p in params) {
+            functionEnv.declareTypeOf(p.name, p.type)
+        }
+        for (b in body) {
+            b.validate(functionEnv)
+        }
+        val actualReturnType = body.last().resultType(functionEnv)
+        if (!returnType.matchedBy(actualReturnType)) {
+            throw SimplexTypeError(returnType.toString(), actualReturnType.toString(),
+                location = loc)
+        }
+    }
 }
 
 class MethodDefinition(
     val targetType: Type,
     val methodName: String,
     val params: List<TypedName>,
-    val resultType: Type?,
+    val resultType: Type,
     val body: List<Expr>,
     loc: Location): Definition("${targetType}->name", loc) {
-    override fun installInEnv(env: Env) {
-        val type = RootEnv.getType(targetType)
-        type.addMethod(this)
+    override fun installValues(env: Env) {
+        val valueType = env.getType(targetType.toString())
+        valueType.addMethod(MethodValue(targetType, resultType, params, body, this))
+
+    }
+
+    override fun validate(env: Env) {
+        val methodEnv = Env(emptyList(), env)
+        methodEnv.declareTypeOf("self", targetType)
+        for (p in params) {
+            methodEnv.declareTypeOf(p.name, p.type)
+        }
+
+        for (b in body) {
+            b.validate(methodEnv)
+        }
+        val actualReturnType = body.last().resultType(methodEnv)
+        if (!resultType.matchedBy(actualReturnType)) {
+            throw SimplexTypeError(resultType.toString(), actualReturnType.toString(),
+                location = loc)
+        }
+    }
+
+    override fun installStatic(env: Env) {
+        targetType.registerMethod(name, Type.method(targetType, params.map { it.type }, resultType) as MethodType)
     }
 
     override fun twist(): Twist =
@@ -106,11 +155,12 @@ class MethodDefinition(
             Twist.value("resultType", resultType),
             Twist.array("body", body))
 
-    fun applyTo(target: Value, args: List<Value>): Value {
-        val localEnv = Env(emptyList(), RootEnv)
+    fun applyTo(target: Value, args: List<Value>, env: Env): Value {
+        val localEnv = Env(emptyList(), env)
         localEnv.addVariable("self", target)
         if (params.size != args.size) {
-            throw SimplexParameterCountError("method ${targetType}.${methodName}", listOf(params.size), args.size)
+            throw SimplexParameterCountError("method ${targetType}.${methodName}", listOf(params.size), args.size,
+                loc)
         }
         params.zip(args).map { (param, arg) ->
             localEnv.addVariable(param.name, arg)
@@ -127,29 +177,38 @@ class MethodDefinition(
 
 class TupleDefinition(name: String, val fields: List<TypedName>,
     loc: Location): Definition(name, loc) {
+
+    val valueType =  TupleValueType(this)
     override fun twist(): Twist =
         Twist.obj("TupleDefinition",
             Twist.attr("name", name),
-            Twist.array("fields", fields)
-            )
+            Twist.array("fields", fields))
 
-    override fun installInEnv(env: Env) {
-        val type = TupleValueType(this)
+    override fun installValues(env: Env) {
+    }
 
-        // No need to do anything
+    override fun validate(env: Env) {
+        // Nothing to check here.
     }
 
     fun indexOf(fieldName: String): Int {
         val idx = fields.indexOfFirst { it.name == fieldName }
         if (idx < 0) {
-            throw SimplexUndefinedError(fieldName, "tuple field of $name")
+            throw SimplexUndefinedError(fieldName, "tuple field of $name", loc=loc)
         } else {
             return idx
         }
     }
+
+    override fun installStatic(env: Env) {
+        val tupleType = TupleValueType(this)
+        env.registerType(name, tupleType)
+        Type.simple(name)
+    }
+
 }
 
-class VariableDefinition(name: String, val type: Type?,
+class VariableDefinition(name: String, val type: Type,
                          val initialValue: Expr, loc: Location):
         Definition(name, loc) {
     override fun twist(): Twist =
@@ -158,9 +217,32 @@ class VariableDefinition(name: String, val type: Type?,
             Twist.value("type", type),
             Twist.value("value", initialValue))
 
-    override fun installInEnv(env: Env) {
-        val v = initialValue.evaluateIn(env)
-        env.addVariable(name, v)
+    override fun installStatic(env: Env) {
+        env.declareTypeOf(name, type)
+    }
 
+    override fun installValues(env: Env) {
+        try {
+            val v = initialValue.evaluateIn(env)
+            env.addVariable(name, v)
+        } catch (e: Exception) {
+            if (e is SimplexError) {
+                if (e.location == null) {
+                    e.location = loc
+                }
+                throw e
+            } else {
+                throw SimplexEvaluationError("Evaluation error in variable definition", cause=e,
+                    loc=loc)
+            }
+        }
+
+    }
+
+    override fun validate(env: Env) {
+        val actualType = initialValue.resultType(env)
+        if (!type.matchedBy(actualType)) {
+            throw SimplexTypeError(type.toString(), actualType.toString(), location = loc)
+        }
     }
 }

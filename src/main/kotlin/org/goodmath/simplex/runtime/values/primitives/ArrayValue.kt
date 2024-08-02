@@ -15,12 +15,14 @@
  */
 package org.goodmath.simplex.runtime.values.primitives
 
-import org.goodmath.simplex.ast.ArrayType
 import org.goodmath.simplex.ast.Type
+import org.goodmath.simplex.runtime.Env
+import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.SimplexEvaluationError
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.values.MethodSignature
+import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.twist.Twist
@@ -31,11 +33,16 @@ import kotlin.collections.zip
 import kotlin.math.min
 
 class ArrayValueType(
-    val elementType: ValueType<*>
-): ValueType<ArrayValue>() {
+    val elementType: ValueType
+): ValueType() {
     override val name: String = "[${elementType.name}]"
 
-    override val asType: Type = ArrayType(elementType.asType)
+    override val asType: Type = Type.array(elementType.asType)
+
+    init {
+        RootEnv.registerType(name, this)
+    }
+
 
     fun assertIsArray(v: Value): List<Value> {
         if (v is ArrayValue) {
@@ -60,138 +67,138 @@ class ArrayValueType(
     }
 
 
-    override fun subscript(v1: Value, v2: Value): Value {
-        val arr = assertIsArray(v1)
-        val idx = assertIsInt(v2)
-        return arr[idx]
-    }
-
     override fun isTruthy(v: Value): Boolean {
         val a = assertIsArray(v)
         return a.isNotEmpty()
     }
 
-    override fun add(
-        v1: Value,
-        v2: Value,
-    ): Value {
-        val a1 = assertIsArray(v1)
-        val a2 = assertIsArray(v2)
-        if (a1.size != a2.size) {
-            throw SimplexEvaluationError("Cannot add arrays of different lengths")
-        }
-
-        return ArrayValue(this, a1.zip(a2).map { (l, r) -> l.valueType.add(l, r) })
-    }
-
-    override fun subtract(
-        v1: Value,
-        v2: Value,
-    ): Value {
-        val a1 = assertIsArray(v1)
-        val a2 = assertIsArray(v2)
-        if (a1.size != a2.size) {
-            throw SimplexEvaluationError("Cannot add arrays of different lengths")
-        }
-
-        return ArrayValue(this, a1.zip(a2).map { (l, r) -> l.valueType.subtract(l, r) })
-    }
-
-    override fun mult(
-        v1: Value,
-        v2: Value,
-    ): Value {
-        val arr = assertIsArray(v1)
-        return ArrayValue(this, arr.map { it.valueType.mult(it, v2) })
-    }
-
-    override fun div(
-        v1: Value,
-        v2: Value,
-    ): Value {
-        val arr = assertIsArray(v1)
-        return ArrayValue(this, arr.map { it.valueType.div(it, v2) })
-    }
-
-    override fun mod(
-        v1: Value,
-        v2: Value,
-    ): Value {
-        val arr = assertIsArray(v1)
-        return ArrayValue(this, arr.map { it.valueType.mod(it, v2) })
-    }
-
-    override fun pow(
-        v1: Value,
-        v2: Value,
-    ): Value {
-        val arr = assertIsArray(v1)
-        return ArrayValue(this, arr.map { it.valueType.pow(it, v2) })
-
-    }
-
-    override fun equals(
-        v1: Value,
-        v2: Value,
-    ): Boolean {
-        val a1 = assertIsArray(v1)
-        val a2 = assertIsArray(v2)
-        if (a1.size != a2.size) {
-            return false
-        }
-        return a1.zip(a2).all { (l, r) -> l.valueType.equals(l, r) }
-
-    }
-
-    override fun neg(v1: Value): Value {
-        val a1 = assertIsArray(v1)
-        return ArrayValue(this, a1.map { it.valueType.neg(it) })
-    }
-
-    override fun compare(
-        v1: Value,
-        v2: Value,
-    ): Int {
-        // Basically doing a lexicographic ordering.
-        val a1 = assertIsArray(v1)
-        val a2 = assertIsArray(v2)
-        val commonLength = min(a1.size, a2.size)
-        for (i in 0..<commonLength) {
-            val c = a1[i].valueType.compare(a1[i], a2[i])
-            if (c != 0) {
-                return c
-            }
-        }
-        // If the elements up to the common length were equal, then the longer
-        // list is greater.
-        return if (a1.size > a2.size) {
-            1
-        } else if (a1.size < a2.size) {
-            -1
-        } else {
-            0
-        }
-    }
 
     override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()
 
-    override val providesOperations: List<PrimitiveMethod<ArrayValue>> by lazy {
-         listOf(
-            object : PrimitiveMethod<ArrayValue>(
-                "length",
-                MethodSignature<ArrayValue>(this, emptyList(), IntegerValueType)
+    override val providesOperations: List<PrimitiveMethod> by lazy {
+        listOf(
+            object : PrimitiveMethod(
+                "subscript",
+                MethodSignature(asType, listOf(Param("sub", Type.IntType)), elementType.asType)
             ) {
-                override fun execute(target: Value, args: List<Value>): Value {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env
+                ): Value {
+                    val arr = assertIsArray(target)
+                    val idx = assertIsInt(args[0])
+                    return arr[idx]
+                }
+
+            },
+
+            object : PrimitiveMethod(
+                "length",
+                MethodSignature(asType, emptyList(), Type.IntType)
+            ) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val a = this@ArrayValueType.assertIs(target).elements
                     return IntegerValue(a.size)
+                }
+            },
+            object : PrimitiveMethod(
+                "plus",
+                MethodSignature(asType, listOf(Param("r", asType)), asType)
+            ) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val a1 = assertIsArray(target)
+                    val a2 = assertIsArray(args[0])
+                    if (a1.size != a2.size) {
+                        throw SimplexEvaluationError("Cannot add arrays of different lengths")
+                    }
+                    return ArrayValue(this@ArrayValueType, a1.zip(a2).map { (l, r) ->
+                        l.valueType.applyMethod(l, "plus", listOf(r), env)
+                    })
+                }
+            },
+            object : PrimitiveMethod(
+                "minus",
+                MethodSignature(asType, listOf(Param("r", asType)), asType)
+            ) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val a1 = assertIsArray(target)
+                    val a2 = assertIsArray(args[0])
+                    if (a1.size != a2.size) {
+                        throw SimplexEvaluationError("Cannot add arrays of different lengths")
+                    }
+                    return ArrayValue(this@ArrayValueType, a1.zip(a2).map { (l, r) ->
+                        l.valueType.applyMethod(l, "minus", listOf(r), env)
+                    })
+                }
+            },
+            object : PrimitiveMethod(
+                "eq",
+                MethodSignature(asType, listOf(Param("r", asType)), Type.BooleanType)
+            ) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val a1 = assertIsArray(target)
+                    val a2 = assertIsArray(args[0])
+                    if (a1.size != a2.size) {
+                        return BooleanValue(false)
+                    }
+                    return BooleanValue(a1.zip(a2).all { (l, r) ->
+                        val e = l.valueType.applyMethod(l, "eq", listOf(r), env)
+                        e.valueType.isTruthy(e)
+                    })
+                }
+            },
+            object : PrimitiveMethod(
+                "neg",
+                MethodSignature(asType, emptyList(), asType)
+            ) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val a1 = assertIsArray(target)
+                    return ArrayValue(this@ArrayValueType, a1.map {
+                        it.valueType.applyMethod(it, "neg", emptyList(), env)
+                    })
+                }
+            },
+            object : PrimitiveMethod(
+                "compare",
+                MethodSignature(asType, listOf(Param("r", asType)), Type.IntType)
+            ) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    // Basically doing a lexicographic ordering.
+                    val a1 = assertIsArray(target)
+                    val a2 = assertIsArray(args[0])
+                    val commonLength = min(a1.size, a2.size)
+                    for (i in 0..<commonLength) {
+                        val c = assertIsInt(a1[i].valueType.applyMethod(target, "compare", listOf(a2[i]), env))
+                        if (c != 0) {
+                            return IntegerValue(c)
+                        }
+                    }
+                    // If the elements up to the common length were equal, then the longer
+                    // list is greater.
+                    return if (a1.size > a2.size) {
+                        IntegerValue(1)
+                    } else if (a1.size < a2.size) {
+                        IntegerValue(-1)
+                    } else {
+                        IntegerValue(0)
+                    }
                 }
             })
     }
 
-    companion object {
-        val arrayTypes = HashMap<ValueType<*>, ArrayValueType>()
+    override fun assertIs(v: Value): ArrayValue {
+        if (v is ArrayValue) {
+            return v
+        } else {
+            throwTypeError(v)
+        }
+    }
 
-        fun of(t: ValueType<*>): ArrayValueType {
+    companion object {
+        val arrayTypes = HashMap<ValueType, ArrayValueType>()
+
+        fun of(t: ValueType): ArrayValueType {
             return arrayTypes.computeIfAbsent(t) { t ->
                 ArrayValueType(t)
             }
@@ -200,10 +207,9 @@ class ArrayValueType(
 }
 
 
-class ArrayValue(val type: ArrayValueType, val elements: List<Value>): Value {
+class ArrayValue(val elementType: ValueType, val elements: List<Value>): Value {
     fun isEmpty(): Boolean = elements.isEmpty()
-    override val valueType: ValueType<ArrayValue> = type
-
+    override val valueType: ValueType = ArrayValueType(elementType)
 
     override fun twist(): Twist =
         Twist.obj("ArrayValue",

@@ -63,7 +63,7 @@ abstract class Twist: Twistable {
 
 class TwistObj(val name: String, val children: List<Twist>): Twist() {
     override fun render(b: StringBuilder, indent: Int) {
-        b * indent + "=== $name === {\n"
+        b * indent + "obj $name {\n"
         for (c in children) {
             c.render(b, indent+1)
         }
@@ -81,7 +81,7 @@ class TwistObj(val name: String, val children: List<Twist>): Twist() {
 class TwistAttr(val name: String, val v: String?): Twist() {
     override fun render(b: StringBuilder, indent: Int) {
         if (v != null) {
-            b * indent + "$name='${v}'\n"
+            b * indent + "attr $name='${v}'\n"
         }
     }
 
@@ -106,13 +106,13 @@ class TwistArray(val name: String, val children: List<Twist>): Twist() {
     }
 
     override fun cons(indent: Int): String {
-        if (children.size == 0) {
-            return "   ".repeat(indent) + "(array $name)"
+        if (children.isEmpty()) {
+            return "   ".repeat(indent) + "[array $name]"
         } else {
             var result = "   ".repeat(indent)
-            result += "(array $name\n"
+            result += "[array $name\n"
             result += children.map { it.cons(indent + 1) }.filterNotNull().joinToString("\n")
-            result += ")"
+            result += "]"
             return result
         }
     }
@@ -121,7 +121,7 @@ class TwistArray(val name: String, val children: List<Twist>): Twist() {
 class TwistVal(val name: String, val value: Twist?): Twist() {
     override fun render(b: StringBuilder, indent: Int) {
         if (value != null) {
-            b * indent + "$name=(\n"
+            b * indent + "val $name=(\n"
             value.render(b, indent + 1)
             b * indent + ")\n"
         }

@@ -15,89 +15,42 @@
  */
 package org.goodmath.simplex.runtime.values.primitives
 
+import org.goodmath.simplex.ast.Type
+import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.values.PrimitiveMethod
-import org.goodmath.simplex.runtime.SimplexUnsupportedOperation
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.twist.Twist
 
-object BooleanValueType: ValueType<BooleanValue>() {
+object BooleanValueType: ValueType() {
     override val name: String = "Boolean"
+    override val asType: Type = Type.BooleanType
+    init {
+        RootEnv.registerType(name, this)
+    }
 
     override fun isTruthy(v: Value): Boolean {
         return assertIsBoolean(v)
     }
 
-    override fun add(
-        v1: Value,
-        v2: Value,
-    ): Value {
-        throw SimplexUnsupportedOperation(name, "addition")
-    }
-
-    override fun subtract(
-        v1: Value,
-        v2: Value,
-    ): Value {
-        throw SimplexUnsupportedOperation(name, "subtraction")
-    }
-
-    override fun mult(
-        v1: Value,
-        v2: Value,
-    ): Value {
-        throw SimplexUnsupportedOperation(name, "multiplication")
-    }
-
-    override fun div(
-        v1: Value,
-        v2: Value,
-    ): Value {
-        throw SimplexUnsupportedOperation(name, "division")
-    }
-
-    override fun mod(
-        v1: Value,
-        v2: Value,
-    ): Value {
-        throw SimplexUnsupportedOperation(name, "modulo")
-    }
-
-    override fun pow(
-        v1: Value,
-        v2: Value,
-    ): Value {
-        throw SimplexUnsupportedOperation(name, "exponentiation")
-    }
-
-    override fun equals(
-        v1: Value,
-        v2: Value,
-    ): Boolean {
-        return assertIsBoolean(v1) == assertIsBoolean(v2)
-    }
-
-    override fun neg(v1: Value): Value {
-        return BooleanValue(!assertIsBoolean(v1))
-    }
-
-    override fun compare(
-        v1: Value,
-        v2: Value,
-    ): Int {
-        throw SimplexUnsupportedOperation(name, "ordering")
-    }
-
     override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()
 
-    override val providesOperations: List<PrimitiveMethod<BooleanValue>> = emptyList()
+    override val providesOperations: List<PrimitiveMethod> = listOf(
+    )
+
+    override fun assertIs(v: Value): BooleanValue {
+        if (v is BooleanValue) {
+            return v
+        } else {
+            throwTypeError(v)
+        }
+    }
 }
 
 class BooleanValue(val b: Boolean): Value {
-    override val valueType: ValueType<BooleanValue> = BooleanValueType
+    override val valueType: ValueType = BooleanValueType
 
     override fun twist(): Twist =
         Twist.obj("BooleanValue",
-            Twist.attr("value", b.toString())
-            )
+            Twist.attr("value", b.toString()))
 }

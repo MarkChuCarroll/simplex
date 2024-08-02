@@ -15,23 +15,152 @@
  */
 package org.goodmath.simplex.ast
 
+import org.goodmath.simplex.runtime.values.AnyType
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
 
-abstract class Type: Twistable
+abstract class Type: Twistable {
+
+    abstract fun matchedBy(t: Type): Boolean
+
+    companion object {
+        private val types = HashMap<String, Type>()
+        val IntType = simple("Int")
+        val FloatType = simple("Float")
+        val StringType = simple("String")
+        val CsgType = simple("Csg")
+        val TwoDPointType = simple("TwoDPoint")
+        val ThreeDPointType = simple("ThreeDPoint")
+        val ExtrusionProfileType = simple("ExtrusionProfile")
+        val ProfileSliceType = simple("ProfileSlice")
+        val PolygonType = simple("Polygon")
+        val BooleanType = simple("Boolean")
+        val AnyType = simple("Any")
+
+        operator fun get(name: String): Type? =
+            types[name]
+
+        fun all(): List<Type> {
+            return types.values.toList()
+        }
+
+        fun simple(name: String): Type {
+            return types.computeIfAbsent(name) { n -> SimpleType(n) }
+        }
+
+        fun array(baseType: Type): Type {
+            val name = "[$baseType]"
+            return types.computeIfAbsent(name) { n -> ArrayType(baseType) }
+        }
+
+        fun method(target: Type, args: List<Type>, result: Type): Type {
+            val name = "$target->(${args.map{it.toString()}.joinToString(",")}):$result"
+            return types.computeIfAbsent(name) { _ -> MethodType(target, args, result) }
+        }
+
+        fun function(args: List<Type>, result: Type): Type {
+            val name = "(${args.map{it.toString()}.joinToString(",")}):$result"
+            return types.computeIfAbsent(name) { _ -> FunctionType(args, result) }
+        }
+
+    }
 
 
-class SimpleType(val name: String): Type() {
-    override fun twist(): Twist =
-        Twist.obj("SimpleType",
-            Twist.attr("name", name)
-            )
+
+    fun registerMethod(name: String, type: MethodType) {
+        methods[name] = type
+    }
+
+    fun getMethod(name: String): MethodType? {
+        return methods[name]
+    }
+
+    val  methods = HashMap<String, MethodType>()
 }
 
-class ArrayType(val elementType: Type): Type() {
+class SimpleType internal constructor(val name: String): Type() {
+    override fun twist(): Twist =
+        Twist.obj("SimpleType",
+            Twist.attr("name", name))
+
+    override fun toString(): String {
+        return name
+    }
+
+    override fun matchedBy(t: Type): Boolean {
+        return if (this == Type.AnyType) {
+            true
+        } else if (t is SimpleType) {
+            t.name == name
+        } else {
+            false
+        }
+    }
+}
+
+class ArrayType internal constructor(val elementType: Type): Type() {
     override fun twist(): Twist =
         Twist.obj("ArrayType",
             Twist.value("elementType", elementType))
 
+    override fun toString(): String {
+        return "[$elementType]"
+    }
+
+    override fun matchedBy(t: Type): Boolean {
+        return if (t is ArrayType) {
+            elementType.matchedBy(t.elementType)
+        } else {
+            false
+        }
+    }
 }
+
+class FunctionType internal constructor(val args: List<Type>, val returnType: Type): Type() {
+    override fun twist(): Twist =
+        Twist.obj("FunctionType",
+            Twist.value("return", returnType),
+            Twist.array("args", args ))
+
+    override fun toString(): String {
+        var argStr = args.map { it.toString() }.joinToString(", ")
+        return "($argStr):$returnType"
+    }
+
+    override fun matchedBy(t: Type): Boolean {
+        return if (t is FunctionType) {
+            (t.args.size == args.size) &&
+                args.zip(t.args).all { (l, r) -> l.matchedBy(r) } &&
+                        returnType.matchedBy(t.returnType)
+        } else {
+            false
+        }
+    }
+}
+
+class MethodType internal constructor(val target: Type, val args: List<Type>, val returnType: Type): Type() {
+    override fun twist(): Twist =
+        Twist.obj("MethodType",
+            Twist.value("target", target),
+            Twist.value("return", returnType),
+            Twist.array("args", args))
+
+    override fun toString(): String {
+        val argStr = args.map { it.toString() }.joinToString(", ")
+        val resultStr = returnType.toString()
+        val targetStr = target.toString()
+        return "$targetStr->($argStr):$resultStr"
+    }
+
+    override fun matchedBy(t: Type): Boolean {
+        return if (t is MethodType) {
+            target.matchedBy(t.target) && (args.size == t.args.size) &&
+                    args.zip(t.args).all { (l, r) -> l.matchedBy(r) } &&
+                    returnType.matchedBy(t.returnType)
+        } else {
+            false
+        }
+    }
+}
+
 

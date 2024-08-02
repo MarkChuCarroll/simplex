@@ -15,7 +15,9 @@
  */
 package org.goodmath.simplex.runtime.values.csg
 
-import org.goodmath.simplex.runtime.SimplexUnsupportedOperation
+import org.goodmath.simplex.ast.ArrayType
+import org.goodmath.simplex.ast.Type
+import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.FunctionSignature
 import org.goodmath.simplex.runtime.values.MethodSignature
 import org.goodmath.simplex.runtime.values.Param
@@ -23,6 +25,8 @@ import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
+import org.goodmath.simplex.runtime.values.primitives.BooleanValue
+import org.goodmath.simplex.runtime.values.primitives.BooleanValueType
 import org.goodmath.simplex.runtime.values.primitives.FloatValueType
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.twist.Twist
@@ -69,7 +73,7 @@ fun List<Double>.bisect(target: Double): Int {
  * by a ProfileSlice.
  */
 data class ProfileSlice(val z: Double, val lowDiam: Double, val highDiam: Double): Value {
-    override val valueType: ValueType<ProfileSlice> = ProfileSliceType
+    override val valueType: ValueType = ProfileSliceType
 
     override fun twist(): Twist =
         Twist.obj("ProfileSlice",
@@ -78,73 +82,12 @@ data class ProfileSlice(val z: Double, val lowDiam: Double, val highDiam: Double
             Twist.attr("high", highDiam.toString()))
 }
 
-object ProfileSliceType: ValueType<ProfileSlice>() {
+object ProfileSliceType: ValueType() {
     override val name: String = "ProfileSlice"
+    override val asType: Type = Type.ProfileSliceType
 
     override fun isTruthy(v: Value): Boolean {
         return true
-    }
-
-    override fun add(
-        v1: Value,
-        v2: Value
-    ): Value {
-        throw SimplexUnsupportedOperation(name, "addition")
-    }
-
-    override fun subtract(
-        v1: Value,
-        v2: Value
-    ): Value {
-        throw SimplexUnsupportedOperation(name, "subtraction")
-    }
-
-    override fun mult(
-        v1: Value,
-        v2: Value
-    ): Value {
-        throw SimplexUnsupportedOperation(name, "multiplication")
-    }
-
-    override fun div(
-        v1: Value,
-        v2: Value
-    ): Value {
-        throw SimplexUnsupportedOperation(name, "division")
-    }
-
-    override fun mod(
-        v1: Value,
-        v2: Value
-    ): Value {
-        throw SimplexUnsupportedOperation(name, "modulo")
-    }
-
-    override fun pow(
-        v1: Value,
-        v2: Value
-    ): Value {
-        throw SimplexUnsupportedOperation(name, "exponentiation")
-    }
-
-    override fun equals(
-        v1: Value,
-        v2: Value
-    ): Boolean {
-        val s1 = assertIs(v1)
-        val s2 = assertIs(v2)
-        return s1 == s2
-    }
-
-    override fun neg(v1: Value): Value {
-        throw SimplexUnsupportedOperation(name, "negation")
-    }
-
-    override fun compare(
-        v1: Value,
-        v2: Value
-    ): Int {
-        throw SimplexUnsupportedOperation(name, "ordering")
     }
 
     override val providesFunctions: List<PrimitiveFunctionValue> by lazy {
@@ -153,10 +96,10 @@ object ProfileSliceType: ValueType<ProfileSlice>() {
                 "slice",
                 FunctionSignature(
                     listOf(
-                        Param("pos", FloatValueType),
-                        Param("lowDiam", FloatValueType),
-                        Param("highDiam", FloatValueType)),
-                    ProfileSliceType)
+                        Param("pos", Type.FloatType),
+                        Param("lowDiam", Type.FloatType),
+                        Param("highDiam", Type.FloatType)),
+                    asType)
             ) {
                 override fun execute(args: List<Value>): Value {
                     val z = assertIsFloat(args[0])
@@ -167,7 +110,25 @@ object ProfileSliceType: ValueType<ProfileSlice>() {
             }
         )
     }
-    override val providesOperations: List<PrimitiveMethod<ProfileSlice>> = emptyList()
+    override val providesOperations: List<PrimitiveMethod> = listOf(
+        object: PrimitiveMethod("eq",
+            MethodSignature(asType, listOf(Param("r", asType)), Type.BooleanType)) {
+            override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                val s1 = assertIs(target)
+                val s2 = assertIs(args[0])
+                return BooleanValue(s1 == s2)
+            }
+        }
+    )
+
+    override fun assertIs(v: Value): ProfileSlice {
+        if (v is ProfileSlice) {
+            return v
+        } else {
+            throwTypeError(v)
+        }
+
+    }
 }
 
 data class ExtrusionProfile(val slices: List<ProfileSlice>): Value {
@@ -302,7 +263,7 @@ data class ExtrusionProfile(val slices: List<ProfileSlice>): Value {
         return ExtrusionProfile(newSlices)
     }
 
-    override val valueType: ValueType<ExtrusionProfile> = ExtrusionProfileType
+    override val valueType: ValueType = ExtrusionProfileType
 
     override fun twist(): Twist =
         Twist.obj("ExtrusionProfile",
@@ -310,84 +271,21 @@ data class ExtrusionProfile(val slices: List<ProfileSlice>): Value {
         )
 }
 
-object ExtrusionProfileType: ValueType<ExtrusionProfile>() {
+object ExtrusionProfileType: ValueType() {
     override val name: String = "ExtrusionProfile"
+    override val asType: Type = Type.ExtrusionProfileType
 
     override fun isTruthy(v: Value): Boolean {
         return true
     }
 
-    override fun add(
-        v1: Value,
-        v2: Value
-    ): Value {
-        val p1 = assertIs(v1)
-        val p2 = assertIs(v2)
-        return p1 + p2
-    }
-
-    override fun subtract(
-        v1: Value,
-        v2: Value
-    ): Value {
-        val p1 = assertIs(v1)
-        val p2 = assertIs(v2)
-        return p1 - p2
-    }
-
-    override fun mult(
-        v1: Value,
-        v2: Value
-    ): Value {
-        throw SimplexUnsupportedOperation(name, "multiplication")
-    }
-
-    override fun div(
-        v1: Value,
-        v2: Value
-    ): Value {
-        throw SimplexUnsupportedOperation(name, "division")
-    }
-
-    override fun mod(
-        v1: Value,
-        v2: Value
-    ): Value {
-        throw SimplexUnsupportedOperation(name, "modulo")
-    }
-
-    override fun pow(
-        v1: Value,
-        v2: Value
-    ): Value {
-        throw SimplexUnsupportedOperation(name, "exponentiation")
-    }
-
-    override fun equals(
-        v1: Value,
-        v2: Value
-    ): Boolean {
-        return v1 == v2
-    }
-
-    override fun neg(v1: Value): Value {
-        val p = assertIs(v1)
-        return p.reversed()
-    }
-
-    override fun compare(
-        v1: Value,
-        v2: Value
-    ): Int {
-        throw SimplexUnsupportedOperation(name, "ordering")
-    }
 
     override val providesFunctions: List<PrimitiveFunctionValue> by lazy {
         listOf(
             object: PrimitiveFunctionValue("profile",
                 FunctionSignature(listOf(
-                    Param("slices", ArrayValueType.of(ProfileSliceType))),
-                    ExtrusionProfileType)) {
+                    Param("slices", Type.array(Type.ProfileSliceType))),
+                    asType)) {
                 override fun execute(args: List<Value>): Value {
                     val arr = ArrayValueType.of(ProfileSliceType).assertIsArray(args[0]).map {
                         ProfileSliceType.assertIs(it)
@@ -398,15 +296,19 @@ object ExtrusionProfileType: ValueType<ExtrusionProfile>() {
         )
     }
 
-    override val providesOperations: List<PrimitiveMethod<ExtrusionProfile>> by lazy {
+    override val providesOperations: List<PrimitiveMethod> by lazy {
         listOf(
-            object: PrimitiveMethod<ExtrusionProfile>("clipped",
-                MethodSignature<ExtrusionProfile>(
-                    ExtrusionProfileType,
-                    listOf(Param("low", FloatValueType), Param("high", FloatValueType)), ExtrusionProfileType)) {
+            object : PrimitiveMethod(
+                "clipped",
+                MethodSignature(
+                    asType,
+                    listOf(Param("low", Type.FloatType), Param("high", Type.FloatType)), asType
+                )
+            ) {
                 override fun execute(
                     target: Value,
-                    args: List<Value>
+                    args: List<Value>,
+                    env: Env
                 ): Value {
                     val profile = assertIs(target)
                     val start = assertIsFloat(args[0])
@@ -414,46 +316,104 @@ object ExtrusionProfileType: ValueType<ExtrusionProfile>() {
                     return profile.clipped(start, end)
                 }
             },
-            object: PrimitiveMethod<ExtrusionProfile>("move",
-                MethodSignature(ExtrusionProfileType,
-                    listOf(Param("distance", FloatValueType)),
-                    ExtrusionProfileType)) {
+            object : PrimitiveMethod(
+                "move",
+                MethodSignature(
+                    asType,
+                    listOf(Param("distance", Type.FloatType)),
+                    asType
+                )
+            ) {
                 override fun execute(
                     target: Value,
-                    args: List<Value>
+                    args: List<Value>,
+                    env: Env
                 ): Value {
                     val profile = assertIs(target)
                     val distance = assertIsFloat(args[1])
                     return profile.moved(distance)
                 }
             },
-            object: PrimitiveMethod<ExtrusionProfile>("append",
-                MethodSignature(ExtrusionProfileType,
-                    listOf(Param("other", ExtrusionProfileType)),
-                    ExtrusionProfileType)) {
+            object : PrimitiveMethod(
+                "append",
+                MethodSignature(
+                    asType,
+                    listOf(Param("other", asType)),
+                    asType
+                )
+            ) {
                 override fun execute(
                     target: Value,
-                    args: List<Value>
+                    args: List<Value>,
+                    env: Env
                 ): Value {
                     val profile = assertIs(target)
                     val other = assertIs(args[0])
                     return profile.appendedWith(other)
                 }
             },
-            object: PrimitiveMethod<ExtrusionProfile>("stepped",
-                MethodSignature<ExtrusionProfile>(
-                    ExtrusionProfileType,
-                    listOf(Param("stepSize", FloatValueType)),
-                    ExtrusionProfileType)) {
+            object : PrimitiveMethod(
+                "stepped",
+                MethodSignature(
+                    asType,
+                    listOf(Param("stepSize", Type.FloatType)),
+                    asType
+                )
+            ) {
                 override fun execute(
                     target: Value,
-                    args: List<Value>
+                    args: List<Value>,
+                    env: Env
                 ): Value {
                     val profile = assertIs(target)
                     val maxStep = assertIsFloat(args[0])
                     return profile.asStepped(maxStep)
                 }
-            }
-        )
+            },
+            object : PrimitiveMethod(
+                "plus",
+                MethodSignature(asType, listOf(Param("r", asType)), asType)
+            ) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env
+                ): Value {
+                    val p1 = assertIs(target)
+                    val p2 = assertIs(args[0])
+                    return p1 + p2
+                }
+            },
+            object : PrimitiveMethod(
+                "minus",
+                MethodSignature(asType, listOf(Param("r", asType)), asType)
+            ) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env
+                ): Value {
+                    val p1 = assertIs(target)
+                    val p2 = assertIs(args[0])
+                    return p1 - p2
+                }
+            },
+            object : PrimitiveMethod(
+                "neg",
+                MethodSignature(asType, emptyList(), asType)
+            ) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val p = assertIs(target)
+                    return p.reversed()
+                }
+            })
+    }
+
+    override fun assertIs(v: Value): ExtrusionProfile {
+        if (v is ExtrusionProfile) {
+            return v
+        } else {
+            throwTypeError(v)
+        }
     }
 }

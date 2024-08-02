@@ -58,7 +58,7 @@ class Simplex: CliktCommand(help="Evaluate a Simplex model") {
             if (verbosity >= 1) {
                 echo(cyan("Loading model from $inputPath"))
             }
-            val result = SimplexParseListener().parse(stream, captiveEcho)
+            val result = SimplexParseListener().parse(input, stream, captiveEcho)
             Model.output = captiveEcho
             result.execute(renders?.toSet(), pre, captiveEcho)
         } catch (e: SimplexError) {

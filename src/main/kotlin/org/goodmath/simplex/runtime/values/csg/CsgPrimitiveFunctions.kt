@@ -1,22 +1,38 @@
+/*
+ * Copyright 2024 Mark C. Chu-Carroll
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.goodmath.simplex.runtime.values.csg
 
 import eu.mihosoft.jcsg.Cube
 import eu.mihosoft.jcsg.Sphere
 import eu.mihosoft.vvecmath.Transform
 import eu.mihosoft.vvecmath.Vector3d
+import org.goodmath.simplex.ast.Type
+import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.FunctionSignature
 import org.goodmath.simplex.runtime.values.MethodSignature
 import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.values.Value
-import org.goodmath.simplex.runtime.values.primitives.FloatValueType
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 
 object CsgBlockFunction: PrimitiveFunctionValue("block",
     FunctionSignature(
-        listOf(Param("x", FloatValueType), Param("y", FloatValueType),
-            Param("z", FloatValueType)),
-        CsgValueType)) {
+        listOf(Param("x", Type.FloatType), Param("y", Type.FloatType),
+            Param("z", Type.FloatType)),
+        Type.CsgType)) {
     override fun execute(args: List<Value>): Value {
         val width = CsgValueType.assertIsFloat(args[0])
         val height = CsgValueType.assertIsFloat(args[1])
@@ -32,8 +48,8 @@ object CsgBlockFunction: PrimitiveFunctionValue("block",
 object CsgSphereFunction: PrimitiveFunctionValue(
     "sphere",
     FunctionSignature(
-        listOf(Param("radius", FloatValueType)),
-        CsgValueType)) {
+        listOf(Param("radius", Type.FloatType)),
+        Type.CsgType)) {
     override fun execute(args: List<Value>): Value {
         val radius = CsgValueType.assertIsFloat(args[0])
         val (slices, stacks) = if (args.size == 3) {
@@ -51,11 +67,11 @@ object CsgSphereFunction: PrimitiveFunctionValue(
 object CsgCylinderFunction: PrimitiveFunctionValue(
     "cylinder",
     FunctionSignature(
-    listOf(Param("height", FloatValueType),
-        Param("lowerRadius", FloatValueType),
-        Param("upperRadius", FloatValueType)
+    listOf(Param("height", Type.FloatType),
+        Param("lowerRadius", Type.FloatType),
+        Param("upperRadius", Type.FloatType)
     ),
-    CsgValueType)) {
+    Type.CsgType)) {
     override fun execute(args: List<Value>): Value {
         val height = CsgValueType.assertIsFloat(args[0])
         val lowerDiam = CsgValueType.assertIsFloat(args[1])
@@ -69,12 +85,13 @@ object CsgCylinderFunction: PrimitiveFunctionValue(
     }
 }
 
-object CsgScaleMethod: PrimitiveMethod<CsgValue>(
+object CsgScaleMethod: PrimitiveMethod(
     "scale",
-    MethodSignature(CsgValueType, listOf(Param("factor", FloatValueType)), CsgValueType)) {
+    MethodSignature(Type.CsgType, listOf(Param("factor", Type.FloatType)), Type.CsgType)) {
     override fun execute(
         target: Value,
-        args: List<Value>
+        args: List<Value>,
+        env: Env
     ): Value {
         val csg = CsgValueType.assertIsCsg(target)
         if (args.size == 1) {
@@ -89,16 +106,17 @@ object CsgScaleMethod: PrimitiveMethod<CsgValue>(
     }
 }
 
-object CsgMoveMethod: PrimitiveMethod<CsgValue>("move",
-    MethodSignature<CsgValue>(
-        CsgValueType,
-        listOf(Param("xFactor", FloatValueType),
-            Param("yFactor", FloatValueType),
-            Param("zFactor", FloatValueType)),
-        CsgValueType)) {
+object CsgMoveMethod: PrimitiveMethod("move",
+    MethodSignature(
+        Type.CsgType,
+        listOf(Param("xFactor", Type.FloatType),
+            Param("yFactor", Type.FloatType),
+            Param("zFactor", Type.FloatType)),
+        Type.CsgType)) {
     override fun execute(
         target: Value,
-        args: List<Value>
+        args: List<Value>,
+        env: Env
     ): Value {
         val x = CsgValueType.assertIsFloat(args[0])
         val y = CsgValueType.assertIsFloat(args[1])
@@ -108,14 +126,15 @@ object CsgMoveMethod: PrimitiveMethod<CsgValue>("move",
     }
 }
 
-object CsgRotateMethod: PrimitiveMethod<CsgValue>("rot",
-    MethodSignature<CsgValue>(CsgValueType,
-        listOf(Param("xAngle", FloatValueType),
-            Param("yAngle", FloatValueType),
-            Param("zAngle", FloatValueType)), CsgValueType)) {
+object CsgRotateMethod: PrimitiveMethod("rot",
+    MethodSignature(Type.CsgType,
+        listOf(Param("xAngle", Type.FloatType),
+            Param("yAngle", Type.FloatType),
+            Param("zAngle", Type.FloatType)), Type.CsgType)) {
     override fun execute(
         target: Value,
-        args: List<Value>
+        args: List<Value>,
+        env: Env
     ): Value {
         val x = CsgValueType.assertIsFloat(args[0])
         val y = CsgValueType.assertIsFloat(args[1])

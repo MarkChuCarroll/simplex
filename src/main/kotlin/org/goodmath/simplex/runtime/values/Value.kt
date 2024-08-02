@@ -15,25 +15,24 @@
  */
 package org.goodmath.simplex.runtime.values
 
-import org.goodmath.simplex.ast.ArrayType
+import org.goodmath.simplex.ast.Expr
 import org.goodmath.simplex.ast.MethodDefinition
-import org.goodmath.simplex.ast.SimpleType
+import org.goodmath.simplex.ast.MethodType
 import org.goodmath.simplex.ast.Type
-import org.goodmath.simplex.runtime.RootEnv
-import org.goodmath.simplex.runtime.SimplexInvalidParameterError
-import org.goodmath.simplex.runtime.SimplexParameterCountError
+import org.goodmath.simplex.ast.TypedName
+import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.SimplexUndefinedError
 import org.goodmath.simplex.runtime.SimplexUnsupportedOperation
-import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
+import org.goodmath.simplex.runtime.values.primitives.BooleanValue
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
 import org.goodmath.simplex.runtime.values.primitives.IntegerValue
-import org.goodmath.simplex.runtime.values.primitives.BooleanValue
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.StringValue
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
 import kotlin.collections.associateBy
+import kotlin.math.sign
 
 /**
  * The abstract supertype of all values.
@@ -41,7 +40,7 @@ import kotlin.collections.associateBy
  * is report their value type.
  */
 interface Value: Twistable {
-    val valueType: ValueType<*>
+    val valueType: ValueType
 }
 
 /**
@@ -49,23 +48,14 @@ interface Value: Twistable {
  * the basic arithmetic and comparison operations
  * for the type's values.
  */
-abstract class ValueType<T: Value>: Twistable {
+abstract class ValueType: Twistable {
     abstract val name: String
 
-    open val asType: Type by lazy {
-        SimpleType(name)
+    fun throwTypeError(v: Value): Nothing {
+        throw SimplexTypeError(v.valueType.asType.toString(), this.toString())
     }
 
-    fun satisfiesConstraint(t: Type): Boolean {
-        val vt = RootEnv.getType(t)
-        return if (vt == AnyType) {
-            true
-        } else if (t is ArrayType && this is ArrayValueType) {
-            elementType.satisfiesConstraint(t.elementType)
-        } else {
-            vt == this
-        }
-    }
+    abstract val asType: Type
 
     open val supportsText: Boolean = false
 
@@ -83,29 +73,22 @@ abstract class ValueType<T: Value>: Twistable {
      */
     abstract fun isTruthy(v: Value): Boolean
 
-    abstract fun add(v1: Value, v2: Value): Value
-    abstract fun subtract(v1: Value, v2: Value): Value
-    abstract fun mult(v1: Value, v2: Value): Value
-    abstract fun div(v1: Value, v2: Value): Value
-    abstract fun mod(v1: Value, v2: Value): Value
-    abstract fun pow(v1: Value, v2: Value): Value
-    abstract fun equals(v1: Value, v2: Value): Boolean
-    abstract fun neg(v1: Value): Value
-    open fun subscript(v1: Value, v2: Value): Value {
-        throw SimplexUnsupportedOperation(name, "subscripting")
-    }
-    abstract fun compare(v1: Value, v2: Value): Int
+
     abstract val providesFunctions: List<PrimitiveFunctionValue>
-    abstract val providesOperations: List<PrimitiveMethod<T>>
+    abstract val providesOperations: List<PrimitiveMethod>
 
-    protected val methods: HashMap<String, MethodDefinition> = HashMap()
+    protected val methods: HashMap<String, AbstractMethod> = HashMap()
 
-    fun getMethod(name: String): MethodDefinition {
+    fun hasMethod(name: String): Boolean {
+        return methods.containsKey(name)
+    }
+
+    fun getMethod(name: String): AbstractMethod {
         return methods[name] ?: throw SimplexUndefinedError(name, "method")
     }
 
-    fun addMethod(method: MethodDefinition) {
-        methods[method.methodName] = method
+    fun addMethod(method: AbstractMethod) {
+        methods[method.name] = method
     }
 
     val primitiveMethods by lazy {
@@ -116,9 +99,15 @@ abstract class ValueType<T: Value>: Twistable {
         return primitiveMethods.containsKey(name)
     }
 
-    fun getPrimitiveMethod(name: String): PrimitiveMethod<T> {
+    fun getPrimitiveMethod(name: String): PrimitiveMethod {
         return primitiveMethods[name] ?: throw SimplexUndefinedError(name, "method")
     }
+
+    fun applyMethod(target: Value, name: String,  args: List<Value>, env: Env): Value {
+        val meth = target.valueType.getMethod(name)
+        return meth.applyTo(target, args, env)
+    }
+
 
     fun assertIsString(v: Value): String {
         if (v !is StringValue) {
@@ -152,19 +141,12 @@ abstract class ValueType<T: Value>: Twistable {
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
-    open fun assertIs(v: Value): T {
-        if (v.valueType != this) {
-            throw SimplexTypeError(name, v.valueType.name)
-        } else {
-            return v as T
-        }
-    }
+    abstract fun assertIs(v: Value):Value
 }
 
 data class FunctionSignature(
     val params: List<Param>,
-    val returnType: ValueType<*>
+    val returnType: Type
 ): Twistable {
     override fun twist(): Twist =
         Twist.obj("FunctionSignature",
@@ -174,17 +156,17 @@ data class FunctionSignature(
 
 }
 
-data class Param(val name: String, val type: ValueType<*>): Twistable {
+data class Param(val name: String, val type: Type): Twistable {
     override fun twist(): Twist =
         Twist.obj("Param",
             Twist.attr("name", name),
-            Twist.attr("type", type.name))
+            Twist.attr("type", type.toString()))
 }
 
-data class MethodSignature<T: Value>(
-    val self: ValueType<T>,
+data class MethodSignature(
+    val self: Type,
     val params: List<Param>,
-    val returnType: ValueType<*>
+    val returnType: Type,
 ): Twistable {
     override fun twist(): Twist =
         Twist.obj("MethodSig",
@@ -194,36 +176,78 @@ data class MethodSignature<T: Value>(
 
 }
 
-abstract class PrimitiveMethod<T: Value>(
-    val name: String,
-    vararg val signatures: MethodSignature<T>) {
-    abstract fun execute(target: Value, args: List<Value>): Value
-    fun validateCall(selfValue: Value,
-                     argValues: List<Value>): ValueType<*> {
-        for (sig in signatures) {
-            if (selfValue.valueType != sig.self || argValues.size != sig.params.size) {
-                continue
-            } else { // if the arity is correct, then the parameter types
-                // must match.
-                for ((param, arg) in sig.params.zip(argValues)) {
-                    if (param.type != arg.valueType) {
-                        throw SimplexInvalidParameterError(
-                            "method $name", param.name, param.type,
-                            arg.valueType
-                        )
-                    }
-                }
-                return sig.returnType
-            }
-        }
-        throw SimplexParameterCountError("method $name",
-            signatures.map { it.params.size },
-            argValues.size)
+abstract class AbstractMethod(val name: String,
+    val sig: MethodSignature): Value {
+    abstract fun applyTo(target: Value, args: List<Value>, env: Env): Value
+}
+
+abstract class PrimitiveMethod(
+    name: String,
+    vararg val signatures: MethodSignature): AbstractMethod(name, signatures[0]) {
+    abstract fun execute(target: Value, args: List<Value>,
+                         env: Env): Value
+
+    override fun twist(): Twist =
+        Twist.obj("PrimitiveMethod",
+            Twist.attr("name", name),
+            Twist.attr("sig", sig.toString()))
+
+    override val valueType = MethodValueType(Type.method(sig.self, sig.params.map { it.type }, sig.returnType) as MethodType)
+
+    override fun applyTo(target: Value, args: List<Value>, env: Env): Value {
+        return execute(target, args, env)
     }
 }
 
-object AnyType: ValueType<Value>() {
+
+class MethodValue(
+    val targetType: Type,
+    val returnType: Type,
+    val params: List<TypedName>,
+    val body: List<Expr>,
+    val def: MethodDefinition
+): AbstractMethod(def.methodName, MethodSignature(targetType, params.map { Param(it.name, it.type)}, returnType)) {
+    override val valueType: ValueType = MethodValueType(Type.method(targetType, params.map { it.type }, returnType) as MethodType)
+
+    override fun twist(): Twist =
+        Twist.obj("MethodValue",
+            Twist.attr("target", targetType.toString()),
+            Twist.attr("name", def.methodName),
+            Twist.array("params", params),
+            Twist.array("body", body),
+            Twist.value("def", def))
+
+    override fun applyTo(target: Value, args: List<Value>, env: Env): Value {
+        return def.applyTo(target, args, env)
+    }
+
+}
+
+class MethodValueType(val methodType: MethodType): ValueType() {
+    override val name: String = "Method($methodType)"
+
+    override val asType: Type = methodType
+
+    override fun isTruthy(v: Value): Boolean {
+        return true
+    }
+
+    override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()
+    override val providesOperations: List<PrimitiveMethod> = emptyList()
+    override fun assertIs(v: Value): AbstractMethod {
+        if (v is AbstractMethod) {
+            return v
+        } else {
+            throw SimplexTypeError(v.valueType.asType.toString(), this.toString())
+        }
+    }
+}
+
+
+object AnyType: ValueType() {
     override val name: String = "Any"
+    override val asType: Type = Type.simple("Any")
+
     override fun assertIs(v: Value): Value {
         return v
     }
@@ -232,68 +256,8 @@ object AnyType: ValueType<Value>() {
         return v.valueType.isTruthy(v)
     }
 
-    override fun add(
-        v1: Value,
-        v2: Value
-    ): Value {
-        throw SimplexUnsupportedOperation("Any", "addition")
-    }
-
-    override fun subtract(
-        v1: Value,
-        v2: Value
-    ): Value {
-        throw SimplexUnsupportedOperation("Any", "subtraction")
-    }
-
-    override fun mult(
-        v1: Value,
-        v2: Value
-    ): Value {
-        throw SimplexUnsupportedOperation("Any", "multiplication")
-    }
-
-    override fun div(
-        v1: Value,
-        v2: Value
-    ): Value {
-        throw SimplexUnsupportedOperation("Any", "division")
-    }
-
-    override fun mod(
-        v1: Value,
-        v2: Value
-    ): Value {
-        throw SimplexUnsupportedOperation("Any", "modulo")
-    }
-
-    override fun pow(
-        v1: Value,
-        v2: Value
-    ): Value {
-        throw SimplexUnsupportedOperation("Any", "exponentiation")
-    }
-
-    override fun equals(
-        v1: Value,
-        v2: Value
-    ): Boolean {
-        return v1 == v2
-    }
-
-    override fun neg(v1: Value): Value {
-        throw SimplexUnsupportedOperation("Any", "negation")
-    }
-
-    override fun compare(
-        v1: Value,
-        v2: Value
-    ): Int {
-        throw SimplexUnsupportedOperation("Any", "ordering")
-    }
-
     override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()
 
-    override val providesOperations: List<PrimitiveMethod<Value>> = emptyList()
+    override val providesOperations: List<PrimitiveMethod> = emptyList()
 
 }

@@ -16,21 +16,23 @@
 package org.goodmath.simplex.runtime.csg
 
 import eu.mihosoft.vvecmath.Vector3d
-import org.goodmath.simplex.runtime.values.primitives.FloatValueType
-import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
-import org.goodmath.simplex.runtime.values.PrimitiveMethod
-import org.goodmath.simplex.runtime.SimplexUnsupportedOperation
+import org.goodmath.simplex.ast.Type
+import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.FunctionSignature
 import org.goodmath.simplex.runtime.values.MethodSignature
 import org.goodmath.simplex.runtime.values.Param
+import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
+import org.goodmath.simplex.runtime.values.primitives.BooleanValue
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
+import org.goodmath.simplex.runtime.values.primitives.IntegerValue
+import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.twist.Twist
 import kotlin.math.sqrt
 
 data class TwoDPoint(val x: Double, val y: Double): Value {
-    override val valueType: ValueType<TwoDPoint> = TwoDPointValueType
+    override val valueType: ValueType = TwoDPointValueType
 
     override fun twist(): Twist =
         Twist.obj("Point2D",
@@ -62,8 +64,10 @@ data class TwoDPoint(val x: Double, val y: Double): Value {
 }
 
 
-object TwoDPointValueType: ValueType<TwoDPoint>() {
-    override val name: String = "Point2D"
+object TwoDPointValueType: ValueType() {
+    override val name: String = "TwoDPoint"
+    override val asType: Type = Type.TwoDPointType
+
 
     override val supportsText: Boolean = true
 
@@ -76,84 +80,15 @@ object TwoDPointValueType: ValueType<TwoDPoint>() {
         return true
     }
 
-    override fun add(
-        v1: Value,
-        v2: Value
-    ): Value {
-        val p1 = assertIs(v1)
-        val p2 = assertIs(v1)
-        return p1 + p2
-    }
-
-    override fun subtract(
-        v1: Value,
-        v2: Value
-    ): Value {
-        val p1 = assertIs(v1)
-        val p2 = assertIs(v1)
-        return p1 - p2
-    }
-
-    override fun mult(
-        v1: Value,
-        v2: Value
-    ): Value {
-        val p1 = assertIs(v1)
-        val p2 = assertIsFloat(v2)
-        return TwoDPoint(p1.x * p2, p1.y * p2)
-    }
-
-    override fun div(
-        v1: Value,
-        v2: Value
-    ): Value {
-        val p1 = assertIs(v1)
-        val p2 = assertIsFloat(v2)
-        return TwoDPoint(p1.x / p2, p1.y / p2)
-    }
-
-    override fun mod(
-        v1: Value,
-        v2: Value
-    ): Value {
-        throw SimplexUnsupportedOperation(name, "modulo")
-    }
-
-    override fun pow(
-        v1: Value,
-        v2: Value
-    ): Value {
-        throw SimplexUnsupportedOperation(name, "exponentiation")
-    }
-
-    override fun equals(
-        v1: Value,
-        v2: Value
-    ): Boolean {
-        val p1 = assertIs(v1)
-        val p2 = assertIs(v2)
-        return p1 == p2
-    }
-
-    override fun neg(v1: Value): Value {
-        val p1 = assertIs(v1)
-        return TwoDPoint(-p1.x, -p1.y)
-    }
-
-    override fun compare(v1: Value, v2: Value): Int {
-        val p1 = assertIs(v1)
-        val p2 = assertIs(v2)
-        return p1.compareTo(p2)
-    }
 
     override val providesFunctions: List<PrimitiveFunctionValue> by lazy {
         listOf(
             object : PrimitiveFunctionValue(
                 "p2d",
                 FunctionSignature(listOf(
-                    Param("x", FloatValueType),
-                    Param("y", FloatValueType)),
-                    TwoDPointValueType)
+                    Param("x", Type.FloatType),
+                    Param("y", Type.FloatType)),
+                    asType)
             ) {
                 override fun execute(args: List<Value>): Value {
                     val x = assertIsFloat(args[0])
@@ -163,14 +98,69 @@ object TwoDPointValueType: ValueType<TwoDPoint>() {
             })
     }
 
-    override val providesOperations: List<PrimitiveMethod<TwoDPoint>> by lazy {
+    override val providesOperations: List<PrimitiveMethod> by lazy {
         listOf(
-            object: PrimitiveMethod<TwoDPoint>("mag",
-                MethodSignature(TwoDPointValueType, emptyList(), FloatValueType)) {
-                override fun execute(target: Value, args: List<Value>): Value {
+            object: PrimitiveMethod("mag",
+                MethodSignature(asType, emptyList(), Type.FloatType)) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val p = assertIs(args[0])
                     return FloatValue(sqrt(p.x * p.x + p.y * p.y))
                 }
+            },
+            object: PrimitiveMethod("plus",
+                MethodSignature(asType, listOf(Param("r", asType)), asType)) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val p1 = assertIs(target)
+                    val p2 = assertIs(args[0])
+                    return p1 + p2
+                }
+            },
+            object: PrimitiveMethod("minus",
+                MethodSignature(asType, listOf(Param("r", asType)), asType)) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val p1 = assertIs(target)
+                    val p2 = assertIs(args[0])
+                    return p1 - p2
+                }
+            },
+            object: PrimitiveMethod("multBy",
+                MethodSignature(asType, listOf(Param("r", Type.FloatType)), asType)) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val p1 = assertIs(target)
+                    val v = assertIsFloat(args[0])
+                    return TwoDPoint(p1.x * v, p1.y * v)
+                }
+            },
+            object: PrimitiveMethod("eq",
+                MethodSignature(asType, listOf(Param("r", asType)), Type.BooleanType)) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val p1 = assertIs(target)
+                    val p2 = assertIs(args[0])
+                    return BooleanValue(p1 == p2)
+                }
+            },
+            object: PrimitiveMethod("neg",
+                MethodSignature(asType, emptyList(), asType)) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val p1 = assertIs(target)
+                    return TwoDPoint(-p1.x, -p1.y)
+                }
+            },
+            object: PrimitiveMethod("compare",
+                MethodSignature(asType, listOf(Param("r", asType)), Type.IntType)) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val p1 = assertIs(target)
+                    val p2 = assertIs(args[0])
+                    return IntegerValue(p1.compareTo(p2))
+                }
             })
+    }
+
+    override fun assertIs(v: Value): TwoDPoint {
+        if (v is TwoDPoint) {
+            return v
+        } else {
+            throwTypeError(v)
+        }
     }
 }

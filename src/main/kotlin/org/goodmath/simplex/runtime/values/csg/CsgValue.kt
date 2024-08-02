@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2024 Mark C. Chu-Carroll
  *
@@ -18,22 +19,28 @@ package org.goodmath.simplex.runtime.values.csg
 import eu.mihosoft.jcsg.CSG
 import eu.mihosoft.vvecmath.Transform
 import eu.mihosoft.vvecmath.Vector3d
+import org.goodmath.simplex.ast.ArrayType
+import org.goodmath.simplex.ast.Type
+import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.SimplexTypeError
-import org.goodmath.simplex.runtime.SimplexUnsupportedOperation
 import org.goodmath.simplex.runtime.values.MethodSignature
 import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.runtime.values.primitives.ArrayValue
 import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
+import org.goodmath.simplex.runtime.values.primitives.BooleanValueType
+import org.goodmath.simplex.runtime.values.primitives.BooleanValue
 import org.goodmath.simplex.runtime.values.primitives.FloatValueType
 import org.goodmath.simplex.twist.Twist
 
 
-object CsgValueType: ValueType<CsgValue>() {
+object CsgValueType: ValueType() {
     override val name: String = "CSG"
+
+    override val asType: Type = Type.CsgType
 
     override fun isTruthy(v: Value): Boolean {
         return true
@@ -47,69 +54,12 @@ object CsgValueType: ValueType<CsgValue>() {
         }
     }
 
-    override fun add(
-        v1: Value,
-        v2: Value
-    ): Value {
-        val c1 = assertIsCsg(v1)
-        val c2 = assertIsCsg(v2)
-        return CsgValue(c1.union(c2))
-    }
-
-    override fun subtract(
-        v1: Value,
-        v2: Value
-    ): Value {
-        val c1 = assertIsCsg(v1)
-        val c2 = assertIsCsg(v2)
-        return CsgValue(c1.difference(c2))
-    }
-
-    override fun mult(
-        v1: Value,
-        v2: Value
-    ): Value {
-        throw SimplexUnsupportedOperation("CSG", "multiplication")
-    }
-
-    override fun div(
-        v1: Value,
-        v2: Value
-    ): Value {
-        val c1 = assertIsCsg(v1)
-        val c2 = assertIsCsg(v2)
-        return CsgValue(c1.intersect(c2))
-    }
-
-    override fun mod(
-        v1: Value,
-        v2: Value
-    ): Value {
-        throw SimplexTypeError("CSG", "modulo")
-    }
-
-    override fun pow(
-        v1: Value,
-        v2: Value
-    ): Value {
-        throw SimplexTypeError("CSG", "exponentiation")
-    }
-
-    override fun equals(
-        v1: Value,
-        v2: Value
-    ): Boolean {
-        val c1 = assertIsCsg(v1)
-        val c2 = assertIsCsg(v2)
-        return c1 == c2
-    }
-
-    override fun neg(v1: Value): Value {
-        throw SimplexTypeError("CSG", "negation")
-    }
-
-    override fun compare(v1: Value, v2: Value): Int {
-        throw SimplexTypeError("CSG", "ordering")
+    override fun assertIs(v: Value): CsgValue {
+        if (v is CsgValue) {
+            return v
+        } else {
+            throwTypeError(v)
+        }
     }
 
 
@@ -122,17 +72,17 @@ object CsgValueType: ValueType<CsgValue>() {
     }
 
 
-    override val providesOperations: List<PrimitiveMethod<CsgValue>> by lazy {
+    override val providesOperations: List<PrimitiveMethod> by lazy {
         listOf(
             CsgScaleMethod, CsgMoveMethod, CsgRotateMethod,
-            object: PrimitiveMethod<CsgValue>("bounds",
-                MethodSignature(CsgValueType,
+            object: PrimitiveMethod("bounds",
+                MethodSignature(Type.CsgType,
                     emptyList(),
-                    ArrayValueType.of(FloatValueType))) {
-
+                    Type.array(Type.FloatType))) {
                 override fun execute(
                     target: Value,
-                    args: List<Value>
+                    args: List<Value>,
+                    env: Env
                 ): Value {
                     val csg = assertIsCsg(target)
                     val bounds = csg.bounds!!
@@ -141,36 +91,38 @@ object CsgValueType: ValueType<CsgValue>() {
                     return ArrayValue(ArrayValueType.of(FloatValueType), result)
                 }
             },
-            object: PrimitiveMethod<CsgValue>("centroid",
-                MethodSignature(CsgValueType,
+            object: PrimitiveMethod("centroid",
+                MethodSignature(asType,
                 emptyList(),
-                ThreeDPointValueType)) {
-
+                Type.ThreeDPointType)) {
                 override fun execute(
                     target: Value,
-                    args: List<Value>
+                    args: List<Value>,
+                    env: Env
                 ): Value {
                     target as CsgValue
                     return ThreeDPoint(target.centroid)
                 }
             },
-            object: PrimitiveMethod<CsgValue>("hull",
-                MethodSignature<CsgValue>(CsgValueType, emptyList(), CsgValueType)) {
+            object: PrimitiveMethod("hull",
+                MethodSignature(asType, emptyList(), asType)) {
                 override fun execute(
                     target: Value,
-                    args: List<Value>
+                    args: List<Value>,
+                    env: Env
                 ): Value {
                     val csg = assertIsCsg(target)
                     return CsgValue(csg.hull())
                 }
             },
-            object: PrimitiveMethod<CsgValue>("move_to",
-                MethodSignature<CsgValue>(CsgValueType,
-                    listOf(Param("x", FloatValueType), Param("y", FloatValueType), Param("z", FloatValueType)),
-                    CsgValueType)) {
+            object: PrimitiveMethod("move_to",
+                MethodSignature(asType,
+                    listOf(Param("x", Type.FloatType), Param("y", Type.FloatType), Param("z", Type.FloatType)),
+                    Type.CsgType)) {
                 override fun execute(
                     target: Value,
-                    args: List<Value>
+                    args: List<Value>,
+                    env: Env
                 ): Value {
                     val csg = assertIs(target)
                     val x = assertIsFloat(args[0])
@@ -188,13 +140,47 @@ object CsgValueType: ValueType<CsgValue>() {
                         Transform().translate(dx, dy, dz)
                     ))
                 }
-            }
-        )
+            },
+            object: PrimitiveMethod("plus",
+                MethodSignature(asType, listOf(Param("r", asType)), asType)) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val c1 = assertIsCsg(target)
+                    val c2 = assertIsCsg(args[0])
+                    return CsgValue(c1.union(c2))
+                }
+            },
+            object: PrimitiveMethod("minus",
+                MethodSignature(asType, listOf(Param("r", asType)), asType)) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val c1 = assertIsCsg(target)
+                    val c2 = assertIsCsg(args[0])
+                    return CsgValue(c1.difference(c2))
+                }
+            },
+            object: PrimitiveMethod("div",
+                MethodSignature(asType, listOf(Param("r", asType)), asType)) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val c1 = assertIsCsg(target)
+                    val c2 = assertIsCsg(args[0])
+                    return CsgValue(c1.intersect(c2))
+                }
+            },
+            object: PrimitiveMethod("eq",
+                MethodSignature(asType, listOf(Param("r", asType)), Type.BooleanType)) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val c1 = assertIsCsg(target)
+                    val c2 = assertIsCsg(args[0])
+                    return BooleanValue(c1 == c2)
+                }
+            })
+
     }
+
+
 }
 
 class CsgValue(val csgValue: CSG): Value {
-    override val valueType: ValueType<CsgValue> = CsgValueType
+    override val valueType: ValueType = CsgValueType
 
     val centroid: Vector3d by lazy {
         val faceCenters = csgValue.polygons.map { it.centroid() }

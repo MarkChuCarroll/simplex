@@ -23,6 +23,9 @@ import org.goodmath.simplex.twist.plus
 import kotlin.io.path.Path
 import kotlin.io.path.writeText
 import com.github.ajalt.mordant.rendering.TextColors.*
+import org.goodmath.simplex.runtime.RootEnv
+import org.goodmath.simplex.runtime.SimplexError
+import org.goodmath.simplex.runtime.SimplexEvaluationError
 
 /**
  * A 3d model for execution in simplex.
@@ -36,23 +39,33 @@ class Model(val defs: List<Definition>,
         Twist.obj("Model",
             Twist.array("defs", defs))
 
+    fun analyze() {
+        for (d in defs) {
+            RootEnv.addDefinition(d)
+        }
+        RootEnv.installStaticDefinitions()
+        for (d in defs) {
+            d.validate(RootEnv)
+        }
+    }
+
     fun execute(renderNames: Set<String>?,
                 outputPrefix: String,
                 echo: (Int, Any?, Boolean) -> Unit) {
-        val rootEnv = Env.createRootEnv(this)
-        val executionEnv = Env(defs, rootEnv)
+        val rootEnv = Env.createRootEnv()
+        analyze()
+        val executionEnv = Env(defs,
+            rootEnv)
         executionEnv.installDefinitionValues()
         val toRender = if (renderNames == null) {
             products
         } else {
             products.filter { renderNames.contains(it.name) }
         }
-
         for (product in toRender) {
             echo(1, cyan("Rendering ${product.name}"), false)
             product.execute(executionEnv, echo, outputPrefix)
         }
-        echo(0, twist().consStr(), false)
     }
     companion object {
         var output: (Int, Any?, Boolean) -> Unit = { i: Int, s: Any?, err: Boolean ->
@@ -77,7 +90,19 @@ class Product(val name: String?, val body: List<Expr>, loc: Location): AstNode(l
 
     fun execute(env: Env, echo: (Int, Any?, Boolean) -> Unit,
                 prefix: String) {
-        val results = body.map { it.evaluateIn(env) }
+
+        val results = try {
+            body.map { it.evaluateIn(env) }
+        } catch (e: Exception) {
+            if (e is SimplexError) {
+                if (e.location == null) {
+                    e.location = loc
+                }
+                throw e
+            } else {
+                throw SimplexEvaluationError("Error evaluating model", cause=e, loc=loc)
+            }
+        }
         val bodies = results.filter { it is CsgValue }.map { it as CsgValue }
             .map { it.csgValue }
         if (bodies.isNotEmpty()) {

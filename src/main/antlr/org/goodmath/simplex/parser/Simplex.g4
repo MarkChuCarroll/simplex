@@ -41,38 +41,41 @@ params:
 ;
 
 varDef:
-  'val' ID ( ':' type )? '=' expr
+  'val' ID  ':' type  '=' expr
 ;
 
 funDef:
-   'fun' ID '(' params? ')' (':' type)? 'do'
+   'fun' ID '(' params? ')' ':' type 'do'
     def*
     expr*
   'end'
  ;
 
  methDef:
-    'meth' target=type '->' ID '(' params? ')' (':' result=type)? 'do'
+    'meth' target=type '->' ID '(' params? ')' ':' result=type 'do'
        expr+
     'end'
 ;
 
 param:
-    ID ( ':' type )?
+    ID  ':' type
+;
+
+types:
+   type (',' type)*
 ;
 
 type:
    ID #optSimpleType
 |  '[' type ']' #optVectorType
+| '(' types? ')' ':' type # optFunType
+| target=type '->' '(' types? ')' ':' result=type #optMethodType
 ;
 
 bindings:
    binding ( ',' binding )*
 ;
 
-updates:
-   update (',' update)*
-;
 
 exprs:
   expr (',' expr)*
@@ -83,8 +86,9 @@ expr:
 | primary  #exprPrimary
 | complex  #exprComplex
 | expr '->' ID '(' exprs? ')' #exprMethod
-| expr '[' expr ']' #exprSubscript
 | expr '(' exprs? ')' #exprCall
+| expr '[' expr ']' #exprSubscript
+| expr '.' ID #exprField
 
 | unaryOp  expr #exprUnary
 
@@ -105,13 +109,12 @@ complex:
 | 'if' condClause ( 'elif' condClause )* 'else' expr 'end' #complexCondExpr
 | 'for' ID 'in' expr 'do' expr+ 'end' #complexForExpr
 | 'do' expr+ 'end'  #complexDoExpr
-| 'update' target=expr 'set' updates  #complexUpdateExpr
-| 'lambda' (':' type )? '(' params ')' 'do' expr+ 'end' #complexLambdaExpr
+| 'lambda' ':' type '(' params ')' 'do' expr+ 'end' #complexLambdaExpr
 | 'with' focus=expr 'do' body=expr+ 'end' #complexWithExpr
 ;
 
 primary:
-  ID #optIdExpr
+  ID (':=' expr)? #optIdExpr
 | '['  exprs   ']' #optVecExpr
 | '#' ID '(' exprs ')' #optTupleExpr
 | LIT_INT #optLitInt
@@ -121,10 +124,8 @@ primary:
 | 'false' #optFalse
 ;
 
-update: ID '=' expr ;
-
 binding:
-   ID ( ':' type  )? '=' expr
+   ID ':' type  '=' expr
 ;
 
 expOp:
