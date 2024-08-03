@@ -1,93 +1,124 @@
 module.exports = grammar({
     name: 'simplex',
+  extras: ($) => [$.comment, $._whitespace],
 
     rules: {
-        // TODO: add the actual grammar rules
         source_file: $ =>
             seq(
-                repeat($.definition),
-                repeat($.product)),
+                field('defs', repeat1($.definition)),
+                field('products', repeat1($.product))),
         definition: $ =>
-            choice($.vardef, $.fundef, $.tupdef),
-        vardef: $ =>
+            choice($.varDef, $.funDef, $.tupDef, $.methDef),
+        varDef: $ =>
             seq(
-                'var',
-                $.id,
-                optional(seq(':', $.type)),
+                'val',
+                field('name', $.id),
+                ':',
+                field('type', $.type),
                 '=',
-                $.expr
+                field('value', $.expr)
             ),
-        fundef: $ =>
+        funDef: $ =>
             seq(
             'fun',
-            $.id, '(', optional($.params) ,')', optional(seq(':', $.type)), 'do',
-            repeat($.definition),
-            repeat($.expr),
-            'end'),
-        tupdef: $ => seq(
-            'tup', $.id, '(', $.params, ')'
+              field('name', $.id),
+              '(', field('parameters', optional($.params)) ,')',
+              ':', field('type', $.type), 'do',
+              field('localDefs', repeat($.definition)),
+              field('body', repeat($.expr)),
+              'end'),
+        tupDef: $ => seq(
+            'tup', field('name', $.id), 'fields', '(', field('fields', $.params), ')'
             ),
-
+        methDef: $ =>
+            seq('meth', $.type, '->', $.id, '(', optional($.params), ')', ':', $.type, 'do',
+            repeat1($.expr), 'end'),
         params: $ => seq(
             $.param, repeat(seq(',', $.param))
         ),
         param: $ =>
-            seq($.id, optional(seq(':', $.type))),
-        type: $ =>
-            choice($.id, seq('[', $.type, ']')),
+            seq($.id, ':', $.type),
+        types: $ =>
+            seq($.type, repeat(seq(',', $.type))),
+      simpleType: $ => $.id,
+      arrayType: $ => prec.left(1, seq('[', $.type, ']')),
+      funType: $ => prec.left(2, seq('(', optional($.types), ')', ':', $.type)),
+      methType: $ => prec.left(3, seq($.type, '->', '(', optional($.types), ')', ':', $.type)),
+      type: $ =>
+            choice(
+              $.simpleType,
+              $.arrayType,
+              $.funType,
+              $.methType),
+      methodCall: $ => prec.left(9, seq($.expr, '->', $.id, '(', optional($.exprs), ')')),
+      subscript: $ => prec(9, seq($.expr,'[' , $.expr, ']')),
+      funCall: $ => prec(9, seq($.expr, '(', optional($.exprs), ')')),
+      power: $ => prec.left(8,seq($.expr, $.expOp, $.expr)),
+      multiply: $ => prec.left(7, seq($.expr, $.multOp, $.expr)),
+      add: $ => prec.left(6, seq($.expr, $.addOp, $.expr)),
+      compare: $ => prec.left(5,seq($.expr, $.compOp, $.expr)),
+      logic: $ => prec.left(4, seq($.expr, $.logicOp, $.expr)),
+      unary: $ => prec.right(9, seq($.unaryOp, $.expr)),
+        paren: $ => prec.left(10, seq('(', $.expr, ')')),
         expr:$ =>
             choice(
-                seq('(', $.expr, ')'),
-                $.primary,
-                $.complex,
-                seq($.expr, '->', $.id, '(', $.exprs, ')'),
-                seq($.expr,'[' , $.expr, ']'),
-                seq($.expr, '(', optional($.exprs), ')'),
-                seq($.unaryop, $.expr),
-                seq($.expr, $.expop, $.expr),
-                seq($.expr, $.multop, $.expr),
-                seq($.expr, $.addop, $.expr),
-                seq($.expr, $.compop, $.expr),
-                seq($.expr, $.logicop, $.expr)),
-        complex: $ =>
+              $.paren,
+                prec(9, $._primary),
+                prec(9, $._complex),
+              $.methodCall,
+              $.subscript,
+                $.funCall,
+              $.unary,
+                $.power,
+              $.multiply,
+              $.add,
+              $.compare,
+              $.logic),
+      cond: $ => seq('if', $.condClause,
+        repeat(seq('elif',$.condClause)),
+        'else', $.expr,
+        'end'),
+      lambda: $ => seq('lambda', ':', $.type,
+      '(', $.params, ')', 'do', repeat1($.expr), 'end'),
+      block: $ => seq('do', repeat1($.expr), 'end'),
+      with: $ => seq('with', $.expr, 'do', repeat1($.expr), 'end'),
+      letExpr: $ => seq('let', $.bindings, 'in', repeat1($.expr),
+        'end'),
+      loop: $ => seq('for', $.id, 'in', $.expr, 'do', repeat1($.expr), 'end' ),
+        _complex: $ =>
             choice(
-                seq('let', $.bindings, 'in', repeat1($.expr),
-                    'end'),
-                seq('if', $.condClause,
-                    repeat(seq('elif',$.condClause)),
-                    'else', $.expr,
-                    'end'),
-                seq('for', $.id, 'in', $.expr, 'do', repeat1($.expr), 'end' ),
-                seq('do', repeat1($.expr), 'end'),
-                seq('update', $.expr, 'set', $.updates),
-                seq('lambda', optional(seq(':', $.type)),
-                    '(', $.params, ')', 'do', repeat1($.expr), 'end'),
-                seq('with', $.expr, 'do', repeat1($.expr), 'end')
+              $.letExpr,
+                $.cond,
+                $.loop,
+                $.block,
+                $.lambda,
+              $.with,
             ),
-        primary: $ =>
-            choice($.id,
-                seq('[', $.exprs, ']'),
-                seq('#', $.id, '(', $.exprs, ')'),
-                $.litint,
-                $.litfloat,
-                $.litstr,
-                'true',
-                'false'),
-        updates: $ =>
-            seq($.update, repeat(seq(',', $.update))),
-        update: $ =>
-            seq($.id, '=', $.expr),
+      assignment: $ =>  seq($.id, optional(seq(':=', $.expr))),
+      tuple: $ => seq('#', $.id, '(', $.exprs, ')'),
+      array: $ => seq('[', $.exprs, ']'),
+        _primary: $ =>
+            choice(
+              $.assignment,
+              $.array,
+              $.tuple,
+              $.litint,
+              $.litfloat,
+              $.litstr,
+              $.litbool),
+      litbool: $ =>
+        choice('true','false'),
         bindings: $ =>
             seq($.binding, repeat(seq(',', $.binding))),
         binding: $ =>
-            seq($.id, optional(seq(':', $.type)), '=', $.expr),
-        expop: $ => '^',
-        multop: $ => choice('*', '/', '%'),
-        addop: $ => choice('+', '-'),
-        compop: $ =>
+            seq($.id, ':', $.type, '=', $.expr),
+        expOp: $ => '^',
+        multOp: $ => choice('*', '/', '%'),
+        addOp: $ => choice('+', '-'),
+        compOp: $ =>
             choice('<', '>', '<=', '>=', '==', '!='),
-        logicop: $ => choice('and', 'or'),
-        unaryop: $ => choice('not', '-'),
+        logicOp: $ => choice('and', 'or'),
+        unaryOp: $ => choice('not', '-'),
         condClause: $ => seq($.expr, 'then', $.expr),
         product: $ => seq('produce', '(', $.id, ')', 'do',
             repeat1($.expr), 'end'),
@@ -96,6 +127,8 @@ module.exports = grammar({
         id: $ => /[A-Za-z_][A-Za-z_0-9]*/,
         litint: $ => /[0-9]+/,
         litfloat: $ => /[0-9]+\.[0-9]*([eE]-?[0-9]+)?/,
-        litstr: $ => /'.*'/,
-    }
+        litstr: $ => /".*"/,
+      _whitespace: $ => /\s+/,
+      comment: $ => seq('//', /.*/, '\n')
+    },
 });

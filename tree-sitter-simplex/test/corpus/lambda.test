@@ -1,0 +1,186 @@
+===================
+Test a model using a lambda function
+===================
+// Make sure lambda works correctly.
+fun test_lambda(a: Int): Int do
+  let x : (Int,Int):Int = lambda:Int(a: Int, b: Int) do a+b end in
+     x(a, 8)
+   end
+end
+
+val t: Int = test_lambda(3)/2
+
+// And check that recursion in functions works.
+fun fact(n: Int): Int do
+  if n == 0 then 1
+  else n * fact(n - 1)
+  end
+end
+
+produce(n) do
+  print(["Factorial of 5 = ", fact(5)])
+end
+
+
+produce(t) do
+   t
+end
+----
+   (source_file
+      (comment)
+      (definition
+        (funDef
+          (id)
+          (params
+            (param
+              (id)
+              (type
+                (simpleType
+                  (id)))))
+          (type
+            (simpleType
+              (id)))
+          (expr
+            (letExpr
+              (bindings
+                (binding
+                  (id)
+                  (type
+                    (funType
+                      (types
+                        (type
+                          (simpleType
+                            (id)))
+                        (type
+                          (simpleType
+                            (id))))
+                      (type
+                        (simpleType
+                          (id)))))
+                  (expr
+                    (lambda
+                      (type
+                        (simpleType
+                          (id)))
+                      (params
+                        (param
+                          (id)
+                          (type
+                            (simpleType
+                              (id))))
+                        (param
+                          (id)
+                          (type
+                            (simpleType
+                              (id)))))
+                      (expr
+                        (add
+                          (expr
+                            (assignment
+                              (id)))
+                          (addOp)
+                          (expr
+                            (assignment
+                              (id)))))))))
+              (expr
+                (funCall
+                  (expr
+                    (assignment
+                      (id)))
+                  (exprs
+                    (expr
+                      (assignment
+                        (id)))
+                    (expr
+                      (litint)))))))))
+      (definition
+        (varDef
+          (id)
+          (type
+            (simpleType
+              (id)))
+          (expr
+            (multiply
+              (expr
+                (funCall
+                  (expr
+                    (assignment
+                      (id)))
+                  (exprs
+                    (expr
+                      (litint)))))
+              (multOp)
+              (expr
+                (litint))))))
+      (comment)
+      (definition
+        (funDef
+          (id)
+          (params
+            (param
+              (id)
+              (type
+                (simpleType
+                  (id)))))
+          (type
+            (simpleType
+              (id)))
+          (expr
+            (cond
+              (condClause
+                (expr
+                  (compare
+                    (expr
+                      (assignment
+                        (id)))
+                    (compOp)
+                    (expr
+                      (litint))))
+                (expr
+                  (litint)))
+              (expr
+                (multiply
+                  (expr
+                    (assignment
+                      (id)))
+                  (multOp)
+                  (expr
+                    (funCall
+                      (expr
+                        (assignment
+                          (id)))
+                      (exprs
+                        (expr
+                          (add
+                            (expr
+                              (assignment
+                                (id)))
+                            (addOp)
+                            (expr
+                              (litint)))))))))))))
+      (product
+        (id)
+        (expr
+          (funCall
+            (expr
+              (assignment
+                (id)))
+            (exprs
+              (expr
+                (array
+                  (exprs
+                    (expr
+                      (litstr))
+                    (expr
+                      (funCall
+                        (expr
+                          (assignment
+                            (id)))
+                        (exprs
+                          (expr
+                            (litint))))))))))))
+      (product
+        (id)
+        (expr
+          (assignment
+            (id)))))

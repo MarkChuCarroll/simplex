@@ -1,0 +1,147 @@
+=================================
+recursive function definition
+=================================
+fun fact(n: Int): Int do
+  if n == 0 then
+    1
+  else
+    n * fact(n-1)
+  end
+end
+
+produce(it) do
+  fact(5)
+end
+------
+
+    (source_file
+      (definition
+        (funDef
+          (id)
+          (params
+            (param
+              (id)
+              (type
+                (simpleType
+                  (id)))))
+          (type
+            (simpleType
+              (id)))
+          (expr
+            (cond
+              (condClause
+                (expr
+                  (compare
+                    (expr
+                      (assignment
+                        (id)))
+                    (compOp)
+                    (expr
+                      (litint))))
+                (expr
+                  (litint)))
+              (expr
+                (multiply
+                  (expr
+                    (assignment
+                      (id)))
+                  (multOp)
+                  (expr
+                    (funCall
+                      (expr
+                        (assignment
+                          (id)))
+                      (exprs
+                        (expr
+                          (add
+                            (expr
+                              (assignment
+                                (id)))
+                            (addOp)
+                            (expr
+                              (litint)))))))))))))
+      (product
+        (id)
+        (expr
+          (funCall
+            (expr
+              (assignment
+                (id)))
+            (exprs
+              (expr
+                (litint)))))))
+
+=================================
+function call with method call
+=================================
+fun use_meth(x: Int): Float do
+   x->f()
+end
+
+meth Int->f(): Float do
+   self->float()
+end
+
+produce(result) do
+   print([3->f(), use_meth(4)])
+end
+------
+ (source_file
+      (definition
+        (funDef
+          (id)
+          (params
+            (param
+              (id)
+              (type
+                (simpleType
+                  (id)))))
+          (type
+            (simpleType
+              (id)))
+          (expr
+            (methodCall
+              (expr
+                (assignment
+                  (id)))
+              (id)))))
+      (definition
+        (methDef
+          (type
+            (simpleType
+              (id)))
+          (id)
+          (type
+            (simpleType
+              (id)))
+          (expr
+            (methodCall
+              (expr
+                (assignment
+                  (id)))
+              (id)))))
+      (product
+        (id)
+        (expr
+          (funCall
+            (expr
+              (assignment
+                (id)))
+            (exprs
+              (expr
+                (array
+                  (exprs
+                    (expr
+                      (methodCall
+                        (expr
+                          (litint))
+                        (id)))
+                    (expr
+                      (funCall
+                        (expr
+                          (assignment
+                            (id)))
+                        (exprs
+                          (expr
+                            (litint)))))))))))))
+
