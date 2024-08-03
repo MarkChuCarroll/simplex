@@ -52,7 +52,7 @@ object IntegerValueType: ValueType() {
 
     override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()
 
-    override val providesOperations: List<PrimitiveMethod> by lazy {
+    override val providesPrimitiveMethods: List<PrimitiveMethod> by lazy {
         listOf(
             object : PrimitiveMethod(
                 "to",
@@ -68,7 +68,7 @@ object IntegerValueType: ValueType() {
                 ): Value {
                     val lower = assertIs(target).i
                     val upper = assertIs(args[0]).i
-                    return ArrayValue(ArrayValueType.of(IntegerValueType), (lower..upper).map { IntegerValue(it) })
+                    return ArrayValue(IntegerValueType, (lower..upper).map { IntegerValue(it) })
                 }
             },
             object : PrimitiveMethod(

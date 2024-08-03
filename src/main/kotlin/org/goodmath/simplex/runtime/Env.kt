@@ -36,12 +36,17 @@ import org.goodmath.simplex.twist.Twistable
 import java.util.UUID
 import com.github.ajalt.mordant.rendering.TextColors.*
 import org.goodmath.simplex.ast.ArrayType
-import org.goodmath.simplex.ast.MethodType
 import org.goodmath.simplex.ast.Type
 import org.goodmath.simplex.runtime.values.AnyType
 import org.goodmath.simplex.runtime.values.primitives.StringValue
 
-
+/**
+ * An environment, which contains the definitions, types, variables,
+ * functions, and methods available in a static scope of the program.
+ * @param defList a list of the definitions local to the scope.
+ * @param parentEnv the static scope that encloses this environment,
+ *    if any.
+ */
 open class Env(defList: List<Definition>,
     val parentEnv: Env?): Twistable {
     val defs = defList.associateBy { it.name }.toMutableMap()
@@ -49,17 +54,31 @@ open class Env(defList: List<Definition>,
     val declaredTypes = HashMap<String, Type>()
     open val types = HashMap<String, ValueType>()
 
+    /**
+     * A unique identifier for a scope. Used only for debugging
+     * purposes.
+     */
     open val id: String = UUID.randomUUID().toString()
 
+    /**
+     * Register a new type defined within the scope.
+     */
     fun registerType(name: String, valueType: ValueType) {
         types[name] = valueType
     }
 
+    /**
+     * Get a type in the scope. The key is the string returned by a
+     * static type's "toString"  method.
+     */
     fun getType(name: String): ValueType {
         return types[name] ?: throw SimplexUndefinedError(name,  "type")
     }
 
 
+    /**
+     * Declare the static type of a new variable name in the scope.
+     */
     fun declareTypeOf(name: String, t: Type) {
         if (declaredTypes.containsKey(name) && declaredTypes[name] != t) {
             throw SimplexAnalysisError("Type of $name is already defined")
@@ -67,16 +86,24 @@ open class Env(defList: List<Definition>,
         declaredTypes[name] = t
     }
 
+    /**
+     * Get the statically declared type of a name in the scope,
+     * or any of its parent scopes.
+     */
     fun getDeclaredTypeOf(name: String): Type {
         return if (declaredTypes.containsKey(name)) {
             declaredTypes[name]!!
         } else if (parentEnv != null) {
             parentEnv.getDeclaredTypeOf(name)
         } else {
-            throw SimplexUndefinedError(name, "symbol")
+            throw SimplexUndefinedError(name, "variable")
         }
     }
 
+    /**
+     * Get the value associated with a name. Can only be called during
+     * execution, not during the analysis phase.
+     */
     fun getValue(name: String): Value {
         return if (vars.containsKey(name)) {
             vars[name]!!
@@ -87,24 +114,32 @@ open class Env(defList: List<Definition>,
         }
     }
 
+    /**
+     * Get a definition declared within the scope.
+     */
     fun getDef(name: String): Definition {
         return defs[name] ?: throw SimplexUndefinedError(name, "definition")
     }
 
+    /**
+     * For use during analysis: Iterate through the definitions in this scope, and register
+     * their static types and methods with the environment.
+     */
     fun installStaticDefinitions() {
         for (t in valueTypes) {
             registerType(t.name, t)
-            for (m in t.providesOperations) {
-                t.asType.registerMethod(m.name, Type.method(m.sig.self, m.sig.params.map { it.type }, m.sig.returnType) as MethodType)
+            for (m in t.providesPrimitiveMethods) {
+                t.asType.registerMethod(m.name, m.sig.toStaticType())
+
             }
             for (f in t.providesFunctions) {
-                val sig = f.signatures[0]
-                declareTypeOf(f.name, Type.function(sig.params.map { it.type }, sig.returnType))
+                val sig = f.signature
+                declareTypeOf(f.name, sig.toStaticType())
             }
         }
         for (f in functions) {
-            val sig = f.signatures[0]
-            val funType = Type.function(sig.params.map { it.type }, sig.returnType)
+            val sig = f.signature
+            val funType = sig.toStaticType()
             declareTypeOf(f.name, funType)
         }
         for (d in defs.values) {
@@ -112,12 +147,16 @@ open class Env(defList: List<Definition>,
         }
     }
 
+    /**
+     * For use during execution when entering a scope: register the runtime values
+     * of symbols, functions, and methods provided by the scope's definitions.
+     */
     fun installDefinitionValues() {
         for (t in valueTypes) {
             registerType(t.name, t)
-            for (m in t.providesOperations) {
+            for (m in t.providesPrimitiveMethods) {
                 t.addMethod(m)
-                t.asType.registerMethod(m.name, Type.method(m.sig.self, m.sig.params.map { it.type }, m.sig.returnType) as MethodType)
+                t.asType.registerMethod(m.name, Type.method(m.sig.self, m.sig.params.map { it.type }, m.sig.returnType))
             }
         }
         for (d in defs.values) {
@@ -192,15 +231,13 @@ open class Env(defList: List<Definition>,
     }
 }
 
+/**
+ * The root scope of a model. This is the scope where builtins are
+ * defined and installed.
+ */
 object RootEnv: Env(emptyList(), null) {
-
-
     fun addDefinition(def: Definition) {
         defs[def.name] = def
-    }
-
-    fun getDefinition(name: String): Definition {
-        return defs[name] ?: throw SimplexUndefinedError(name, "definition")
     }
 
     override val types by lazy {

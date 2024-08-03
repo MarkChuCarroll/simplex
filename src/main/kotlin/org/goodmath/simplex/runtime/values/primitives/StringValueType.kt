@@ -57,7 +57,7 @@ object StringValueType: ValueType() {
 
 
     override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()
-    override val providesOperations: List<PrimitiveMethod> by lazy {
+    override val providesPrimitiveMethods: List<PrimitiveMethod> by lazy {
         listOf(
             object : PrimitiveMethod("length",
                 MethodSignature(asType, emptyList(), Type.IntType)) {

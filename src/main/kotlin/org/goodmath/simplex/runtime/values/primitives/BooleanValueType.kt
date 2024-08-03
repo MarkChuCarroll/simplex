@@ -35,7 +35,7 @@ object BooleanValueType: ValueType() {
 
     override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()
 
-    override val providesOperations: List<PrimitiveMethod> = listOf(
+    override val providesPrimitiveMethods: List<PrimitiveMethod> = listOf(
     )
 
     override fun assertIs(v: Value): BooleanValue {

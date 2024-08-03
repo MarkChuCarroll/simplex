@@ -35,13 +35,14 @@ import kotlin.math.min
 class ArrayValueType(
     val elementType: ValueType
 ): ValueType() {
+    override fun twist(): Twist {
+        return Twist.obj("ArrayValueType",
+            Twist.value("elementType", elementType)
+        )
+    }
     override val name: String = "[${elementType.name}]"
 
     override val asType: Type = Type.array(elementType.asType)
-
-    init {
-        RootEnv.registerType(name, this)
-    }
 
 
     fun assertIsArray(v: Value): List<Value> {
@@ -75,11 +76,11 @@ class ArrayValueType(
 
     override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()
 
-    override val providesOperations: List<PrimitiveMethod> by lazy {
+    override val providesPrimitiveMethods: List<PrimitiveMethod> by lazy {
         listOf(
             object : PrimitiveMethod(
-                "subscript",
-                MethodSignature(asType, listOf(Param("sub", Type.IntType)), elementType.asType)
+                "sub",
+                MethodSignature(asType, listOf(Param("subscript", Type.IntType)), elementType.asType)
             ) {
                 override fun execute(
                     target: Value,
@@ -112,7 +113,7 @@ class ArrayValueType(
                     if (a1.size != a2.size) {
                         throw SimplexEvaluationError("Cannot add arrays of different lengths")
                     }
-                    return ArrayValue(this@ArrayValueType, a1.zip(a2).map { (l, r) ->
+                    return ArrayValue(this@ArrayValueType.elementType, a1.zip(a2).map { (l, r) ->
                         l.valueType.applyMethod(l, "plus", listOf(r), env)
                     })
                 }
@@ -127,7 +128,7 @@ class ArrayValueType(
                     if (a1.size != a2.size) {
                         throw SimplexEvaluationError("Cannot add arrays of different lengths")
                     }
-                    return ArrayValue(this@ArrayValueType, a1.zip(a2).map { (l, r) ->
+                    return ArrayValue(this@ArrayValueType.elementType, a1.zip(a2).map { (l, r) ->
                         l.valueType.applyMethod(l, "minus", listOf(r), env)
                     })
                 }
@@ -154,7 +155,7 @@ class ArrayValueType(
             ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val a1 = assertIsArray(target)
-                    return ArrayValue(this@ArrayValueType, a1.map {
+                    return ArrayValue(this@ArrayValueType.elementType, a1.map {
                         it.valueType.applyMethod(it, "neg", emptyList(), env)
                     })
                 }
@@ -195,6 +196,7 @@ class ArrayValueType(
         }
     }
 
+
     companion object {
         val arrayTypes = HashMap<ValueType, ArrayValueType>()
 
@@ -202,6 +204,13 @@ class ArrayValueType(
             return arrayTypes.computeIfAbsent(t) { t ->
                 ArrayValueType(t)
             }
+        }
+    }
+
+    init {
+        RootEnv.registerType(name, this)
+        for ((name, meth) in primitiveMethods) {
+            this.addMethod(meth)
         }
     }
 }
@@ -214,6 +223,7 @@ class ArrayValue(val elementType: ValueType, val elements: List<Value>): Value {
     override fun twist(): Twist =
         Twist.obj("ArrayValue",
             Twist.array("elements", elements))
+
 
 
 }

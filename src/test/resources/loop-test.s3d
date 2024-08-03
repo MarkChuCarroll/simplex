@@ -1,5 +1,5 @@
-
-fun cubish(length, width, height, x) do
+// Simple test of iteration.
+fun cubish(length: Float, width: Float, height: Float, x: Float): Csg do
     block(length, width, height)->move_to(x, x, x*2.0)
 end
 
@@ -9,7 +9,7 @@ fun make_a_bunch(): [Csg] do
   end
 end
 
-val list = make_a_bunch()
+val list: [Csg] = make_a_bunch()
 
 produce(a) do
    list[0]

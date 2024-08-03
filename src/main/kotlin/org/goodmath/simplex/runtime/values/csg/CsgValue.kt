@@ -19,21 +19,19 @@ package org.goodmath.simplex.runtime.values.csg
 import eu.mihosoft.jcsg.CSG
 import eu.mihosoft.vvecmath.Transform
 import eu.mihosoft.vvecmath.Vector3d
-import org.goodmath.simplex.ast.ArrayType
 import org.goodmath.simplex.ast.Type
 import org.goodmath.simplex.runtime.Env
-import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
-import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.values.MethodSignature
 import org.goodmath.simplex.runtime.values.Param
+import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.runtime.values.primitives.ArrayValue
 import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
-import org.goodmath.simplex.runtime.values.primitives.BooleanValueType
 import org.goodmath.simplex.runtime.values.primitives.BooleanValue
 import org.goodmath.simplex.runtime.values.primitives.FloatValueType
+import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.twist.Twist
 
 
@@ -72,7 +70,7 @@ object CsgValueType: ValueType() {
     }
 
 
-    override val providesOperations: List<PrimitiveMethod> by lazy {
+    override val providesPrimitiveMethods: List<PrimitiveMethod> by lazy {
         listOf(
             CsgScaleMethod, CsgMoveMethod, CsgRotateMethod,
             object: PrimitiveMethod("bounds",
@@ -88,7 +86,7 @@ object CsgValueType: ValueType() {
                     val bounds = csg.bounds!!
                     val result = listOf(ThreeDPoint(bounds.min),
                         ThreeDPoint(bounds.max))
-                    return ArrayValue(ArrayValueType.of(FloatValueType), result)
+                    return ArrayValue(FloatValueType, result)
                 }
             },
             object: PrimitiveMethod("centroid",

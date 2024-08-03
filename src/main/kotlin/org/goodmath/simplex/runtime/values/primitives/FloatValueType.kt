@@ -50,7 +50,7 @@ object FloatValueType: ValueType() {
 
     override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()
 
-    override val providesOperations: List<PrimitiveMethod> by lazy {
+    override val providesPrimitiveMethods: List<PrimitiveMethod> by lazy {
         listOf(
             object : PrimitiveMethod("isNaN",
                 MethodSignature(asType, emptyList(), Type.BooleanType)) {

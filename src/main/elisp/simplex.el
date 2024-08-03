@@ -28,5 +28,5 @@
    "major mode for editing simplex language code."
    (setq font-lock-defaults '(simplex-fontlock)))
 
-(add-to-list 'auto-mode-alist '("\\.smp3d\\'" . simplex-mode))
+(add-to-list 'auto-mode-alist '("\\.s3d\\'" . simplex-mode))
 (provide 'simplex-mode)

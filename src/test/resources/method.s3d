@@ -1,6 +1,6 @@
 
 
-meth Int->f() do
+meth Int->f(): Float do
    self->float()
 end
 

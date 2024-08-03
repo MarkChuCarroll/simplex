@@ -144,7 +144,8 @@ class MethodDefinition(
     }
 
     override fun installStatic(env: Env) {
-        targetType.registerMethod(name, Type.method(targetType, params.map { it.type }, resultType) as MethodType)
+        targetType.registerMethod(name,
+            Type.method(targetType, params.map { it.type }, resultType))
     }
 
     override fun twist(): Twist =

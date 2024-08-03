@@ -15,7 +15,6 @@
  */
 package org.goodmath.simplex.ast
 
-import org.goodmath.simplex.runtime.values.AnyType
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
 
@@ -44,23 +43,23 @@ abstract class Type: Twistable {
             return types.values.toList()
         }
 
-        fun simple(name: String): Type {
-            return types.computeIfAbsent(name) { n -> SimpleType(n) }
+        fun simple(name: String): SimpleType {
+            return types.computeIfAbsent(name) { n -> SimpleType(n) } as SimpleType
         }
 
-        fun array(baseType: Type): Type {
+        fun array(baseType: Type): ArrayType {
             val name = "[$baseType]"
-            return types.computeIfAbsent(name) { n -> ArrayType(baseType) }
+            return types.computeIfAbsent(name) { n -> ArrayType(baseType) } as ArrayType
         }
 
-        fun method(target: Type, args: List<Type>, result: Type): Type {
+        fun method(target: Type, args: List<Type>, result: Type): MethodType {
             val name = "$target->(${args.map{it.toString()}.joinToString(",")}):$result"
-            return types.computeIfAbsent(name) { _ -> MethodType(target, args, result) }
+            return types.computeIfAbsent(name) { _ -> MethodType(target, args, result) } as MethodType
         }
 
-        fun function(args: List<Type>, result: Type): Type {
+        fun function(args: List<Type>, result: Type): FunctionType {
             val name = "(${args.map{it.toString()}.joinToString(",")}):$result"
-            return types.computeIfAbsent(name) { _ -> FunctionType(args, result) }
+            return types.computeIfAbsent(name) { _ -> FunctionType(args, result) } as FunctionType
         }
 
     }

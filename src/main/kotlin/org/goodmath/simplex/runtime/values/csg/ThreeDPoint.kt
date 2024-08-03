@@ -76,11 +76,18 @@ object ThreeDPointValueType: ValueType() {
             })
     }
 
-    override val providesOperations: List<PrimitiveMethod> by lazy {
+    override val providesPrimitiveMethods: List<PrimitiveMethod> by lazy {
         listOf(
             object: PrimitiveMethod("scale",
                 MethodSignature(asType,
-                    listOf(Param("factor", Type.FloatType)), asType),
+                    listOf(Param("factor", Type.FloatType)), asType)) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val point = assertIs(target).xyz
+                    val factor = assertIsFloat(args[0])
+                    return ThreeDPoint(point.transformed(Transform().scale(factor)))
+                }
+            },
+            object: PrimitiveMethod("scale3",
                 MethodSignature(
                     asType,
                     listOf(Param("xFactor", Type.FloatType),
@@ -89,15 +96,10 @@ object ThreeDPointValueType: ValueType() {
                     asType)) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val point = assertIs(target).xyz
-                    if (args.size == 1) {
-                        val factor = assertIsFloat(args[0])
-                        return ThreeDPoint(point.transformed(Transform().scale(factor)))
-                    } else {
-                        val xFactor = assertIsFloat(args[0])
-                        val yFactor = assertIsFloat(args[1])
-                        val zFactor = assertIsFloat(args[2])
-                        return ThreeDPoint(point.transformed(Transform().scale(xFactor, yFactor, zFactor)))
-                    }
+                    val xFactor = assertIsFloat(args[0])
+                    val yFactor = assertIsFloat(args[1])
+                    val zFactor = assertIsFloat(args[2])
+                    return ThreeDPoint(point.transformed(Transform().scale(xFactor, yFactor, zFactor)))
                 }
             },
             object: PrimitiveMethod("rot",

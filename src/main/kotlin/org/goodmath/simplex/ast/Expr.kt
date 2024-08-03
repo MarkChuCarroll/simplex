@@ -335,7 +335,7 @@ class LoopExpr(val idxVar: String, val collExpr: Expr, val body: List<Expr>, loc
 
     override fun evaluateIn(env: Env): Value {
         val collValue = collExpr.evaluateIn(env)
-        if (collValue.valueType != ArrayValueType) {
+        if (collValue.valueType !is ArrayValueType) {
             throw SimplexEvaluationError("Loops can only iterate over arrays, not ${collValue.valueType.name}", loc=loc)
         }
         collValue as ArrayValue
@@ -356,7 +356,7 @@ class LoopExpr(val idxVar: String, val collExpr: Expr, val body: List<Expr>, loc
         }
         // TODO this should be better.
         return ArrayValue(
-            ArrayValueType.of(result[0].valueType), result
+            result[0].valueType, result
         )
     }
 
@@ -486,9 +486,17 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location) : Expr
                 }
             }
         } catch (t: Throwable) {
-            val e = SimplexEvaluationError("Error evaluating expression", cause = t)
-            e.location = loc
-            throw e
+            if (t is SimplexError) {
+                if (t.location == null) {
+                    t.location = loc
+                }
+                throw t
+            } else {
+                throw SimplexEvaluationError(
+                    "Error evaluating expression", cause = t,
+                    loc = loc
+                )
+            }
         }
     }
 
@@ -617,7 +625,6 @@ class AssignmentExpr(val target: String, val expr: Expr, loc: Location) : Expr(l
             Twist.attr("variable", target),
             Twist.value("value", expr)
         )
-
 }
 
 class MethodCallExpr(
@@ -627,13 +634,8 @@ class MethodCallExpr(
     override fun evaluateIn(env: Env): Value {
         val targetValue = target.evaluateIn(env)
         val argValues = args.map { it.evaluateIn(env) }
-        return if (targetValue.valueType.hasPrimitiveMethod(name)) {
-            val meth = targetValue.valueType.getPrimitiveMethod(name)
-            return meth.execute(targetValue, argValues, env)
-        } else {
-            val meth = targetValue.valueType.getMethod(name)
-            return meth.applyTo(targetValue, argValues, env)
-        }
+        val meth = targetValue.valueType.getMethod(name)
+        return meth.applyTo(targetValue, argValues, env)
     }
 
     override fun resultType(env: Env): Type {
@@ -715,7 +717,7 @@ class ArrayExpr(val elements: List<Expr>, loc: Location) : Expr(loc) {
         } else {
             elementTypes.first()
         }
-        return ArrayValue(ArrayValueType.of(elementType), elementValues)
+        return ArrayValue(elementType, elementValues)
     }
 
     override fun resultType(env: Env): Type {

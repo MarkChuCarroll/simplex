@@ -98,7 +98,7 @@ object TwoDPointValueType: ValueType() {
             })
     }
 
-    override val providesOperations: List<PrimitiveMethod> by lazy {
+    override val providesPrimitiveMethods: List<PrimitiveMethod> by lazy {
         listOf(
             object: PrimitiveMethod("mag",
                 MethodSignature(asType, emptyList(), Type.FloatType)) {

@@ -15,7 +15,6 @@
  */
 package org.goodmath.simplex.runtime.values.csg
 
-import org.goodmath.simplex.ast.ArrayType
 import org.goodmath.simplex.ast.Type
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.FunctionSignature
@@ -26,8 +25,6 @@ import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
 import org.goodmath.simplex.runtime.values.primitives.BooleanValue
-import org.goodmath.simplex.runtime.values.primitives.BooleanValueType
-import org.goodmath.simplex.runtime.values.primitives.FloatValueType
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.twist.Twist
 import java.util.ArrayList
@@ -110,7 +107,7 @@ object ProfileSliceType: ValueType() {
             }
         )
     }
-    override val providesOperations: List<PrimitiveMethod> = listOf(
+    override val providesPrimitiveMethods: List<PrimitiveMethod> = listOf(
         object: PrimitiveMethod("eq",
             MethodSignature(asType, listOf(Param("r", asType)), Type.BooleanType)) {
             override fun execute(target: Value, args: List<Value>, env: Env): Value {
@@ -296,7 +293,7 @@ object ExtrusionProfileType: ValueType() {
         )
     }
 
-    override val providesOperations: List<PrimitiveMethod> by lazy {
+    override val providesPrimitiveMethods: List<PrimitiveMethod> by lazy {
         listOf(
             object : PrimitiveMethod(
                 "clipped",

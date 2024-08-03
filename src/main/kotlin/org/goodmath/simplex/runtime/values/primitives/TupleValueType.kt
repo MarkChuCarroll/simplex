@@ -32,8 +32,10 @@ class TupleValueType(val tupleDef: TupleDefinition) : ValueType() {
 
     init {
         RootEnv.registerType(name, this)
+        for ((name, meth) in primitiveMethods) {
+            this.addMethod(meth)
+        }
     }
-
 
     override val supportsText: Boolean = true
 
@@ -65,7 +67,7 @@ class TupleValueType(val tupleDef: TupleDefinition) : ValueType() {
 
     override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()
 
-    override val providesOperations: List<PrimitiveMethod> = emptyList()
+    override val providesPrimitiveMethods: List<PrimitiveMethod> = emptyList()
     override fun assertIs(v: Value): TupleValue {
         if (v.valueType is TupleValueType) {
             return v as TupleValue

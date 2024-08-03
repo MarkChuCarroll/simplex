@@ -30,15 +30,18 @@ import kotlin.io.path.Path
 import kotlin.io.path.exists
 import kotlin.system.exitProcess
 
+/**
+ * The simplex command line!
+ */
 class Simplex: CliktCommand(help="Evaluate a Simplex model") {
-    val input: String by argument(help="The path to the input file. The pathname must end in .smp3d")
+    val input: String by argument(help="The path to the input file. The pathname must end in .s3d")
     val prefix: String? by option("--prefix", help="Prefix for all output files")
     val renders: List<String>? by option("--render", help="The names of product blocks to render").split(Regex(","))
     val verbosity: Int by option("--verbosity", help="How chatty the execution of the model should be.").int().default(1)
 
     override fun run() {
-        if (!input.endsWith(".smp3d")) {
-            echo("input must be an smp3d file", err=true)
+        if (!input.endsWith(".s3d")) {
+            echo("input must be an s3d file", err=true)
             exitProcess(1)
         }
         val inputPath = Path(input)

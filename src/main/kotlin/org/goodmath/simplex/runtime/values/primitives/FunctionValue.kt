@@ -19,15 +19,10 @@ import org.goodmath.simplex.ast.Definition
 import org.goodmath.simplex.ast.Expr
 import org.goodmath.simplex.ast.FunctionDefinition
 import org.goodmath.simplex.ast.FunctionType
-import org.goodmath.simplex.ast.MethodDefinition
-import org.goodmath.simplex.ast.MethodType
-import org.goodmath.simplex.ast.SimpleType
 import org.goodmath.simplex.ast.Type
 import org.goodmath.simplex.ast.TypedName
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexEvaluationError
-import org.goodmath.simplex.runtime.SimplexInvalidParameterError
-import org.goodmath.simplex.runtime.SimplexParameterCountError
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.values.FunctionSignature
 import org.goodmath.simplex.runtime.values.PrimitiveMethod
@@ -49,7 +44,7 @@ class FunctionValue(
     val staticScope: Env,
     val def: FunctionDefinition? = null
 ): AbstractFunctionValue() {
-    override val valueType: ValueType = FunctionValueType(Type.function(params.map { it.type}, returnType) as FunctionType)
+    override val valueType: ValueType = FunctionValueType(Type.function(params.map { it.type}, returnType))
 
     override fun applyTo(args: List<Value>): Value {
         val localEnv = Env(localDefs, staticScope)
@@ -84,7 +79,7 @@ class FunctionValueType(val type: FunctionType): ValueType() {
 
     override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()
 
-    override val providesOperations: List<PrimitiveMethod> = emptyList()
+    override val providesPrimitiveMethods: List<PrimitiveMethod> = emptyList()
     override fun assertIs(v: Value): FunctionValue {
         if (v is FunctionValue) {
             return v
@@ -103,7 +98,7 @@ object PrimitiveFunctionValueType: ValueType() {
     }
 
     override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()
-    override val providesOperations: List<PrimitiveMethod> = emptyList()
+    override val providesPrimitiveMethods: List<PrimitiveMethod> = emptyList()
     override fun assertIs(v: Value): PrimitiveFunctionValue {
         if (v is PrimitiveFunctionValue) {
             return v
@@ -115,7 +110,7 @@ object PrimitiveFunctionValueType: ValueType() {
 
 abstract class PrimitiveFunctionValue(
     val name: String,
-    vararg val signatures: FunctionSignature
+    val signature: FunctionSignature
 ): AbstractFunctionValue() {
     abstract fun execute(args: List<Value>): Value
 
@@ -125,7 +120,7 @@ abstract class PrimitiveFunctionValue(
         Twist.obj("PrimitiveFunctionValue",
             Twist.attr("name", name),
             Twist.attr("resultType", name),
-            Twist.array("signatures", signatures.toList()))
+            Twist.value("signature", signature))
 
     override fun applyTo(args: List<Value>): Value {
         return execute(args)
