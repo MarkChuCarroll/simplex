@@ -13,63 +13,45 @@ produce(it) do
   fact(5)
 end
 ------
-
-    (source_file
+ (source_file
       (definition
         (funDef
           (id)
           (params
             (param
               (id)
-              (type
-                (simpleType
-                  (id)))))
-          (type
-            (simpleType
-              (id)))
-          (expr
-            (cond
-              (condClause
-                (expr
-                  (compare
-                    (expr
-                      (assignment
-                        (id)))
-                    (compOp)
-                    (expr
-                      (litint))))
-                (expr
-                  (litint)))
-              (expr
-                (multiply
-                  (expr
-                    (assignment
-                      (id)))
-                  (multOp)
-                  (expr
-                    (funCall
-                      (expr
-                        (assignment
-                          (id)))
-                      (exprs
-                        (expr
-                          (add
-                            (expr
-                              (assignment
-                                (id)))
-                            (addOp)
-                            (expr
-                              (litint)))))))))))))
+              (simpleType
+                (id))))
+          (simpleType
+            (id))
+          (cond
+            (condClause
+              (compare
+                (ref
+                  (id))
+                (compOp)
+                (litint))
+              (litint))
+            (multiply
+              (ref
+                (id))
+              (multOp)
+              (funCall
+                (ref
+                  (id))
+                (exprs
+                  (add
+                    (ref
+                      (id))
+                    (addOp)
+                    (litint))))))))
       (product
         (id)
-        (expr
-          (funCall
-            (expr
-              (assignment
-                (id)))
-            (exprs
-              (expr
-                (litint)))))))
+        (funCall
+          (ref
+            (id))
+          (exprs
+            (litint)))))
 
 =================================
 function call with method call
@@ -86,62 +68,45 @@ produce(result) do
    print([3->f(), use_meth(4)])
 end
 ------
- (source_file
+  (source_file
       (definition
         (funDef
           (id)
           (params
             (param
               (id)
-              (type
-                (simpleType
-                  (id)))))
-          (type
-            (simpleType
-              (id)))
-          (expr
-            (methodCall
-              (expr
-                (assignment
-                  (id)))
-              (id)))))
+              (simpleType
+                (id))))
+          (simpleType
+            (id))
+          (methodCall
+            (ref
+              (id))
+            (id))))
       (definition
         (methDef
-          (type
-            (simpleType
-              (id)))
+          (simpleType
+            (id))
           (id)
-          (type
-            (simpleType
-              (id)))
-          (expr
-            (methodCall
-              (expr
-                (assignment
-                  (id)))
-              (id)))))
+          (simpleType
+            (id))
+          (methodCall
+            (ref
+              (id))
+            (id))))
       (product
         (id)
-        (expr
-          (funCall
-            (expr
-              (assignment
-                (id)))
-            (exprs
-              (expr
-                (array
+        (funCall
+          (ref
+            (id))
+          (exprs
+            (array
+              (exprs
+                (methodCall
+                  (litint)
+                  (id))
+                (funCall
+                  (ref
+                    (id))
                   (exprs
-                    (expr
-                      (methodCall
-                        (expr
-                          (litint))
-                        (id)))
-                    (expr
-                      (funCall
-                        (expr
-                          (assignment
-                            (id)))
-                        (exprs
-                          (expr
-                            (litint)))))))))))))
-
+                    (litint)))))))))

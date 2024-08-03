@@ -9,7 +9,7 @@
     "prebuildify": "prebuildify --napi --strip"
   },
   "author": "",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "description": "",
   "dependencies": {
     "node-addon-api": "^7.1.0",
@@ -38,7 +38,7 @@
   "tree-sitter": [
     {
       "scope": "source.simplex",
-      "injection-regex": "^simplex$"
+      "file-types": ["s3d"]
     }
   ]
 }

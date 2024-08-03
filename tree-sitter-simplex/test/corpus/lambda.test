@@ -26,7 +26,8 @@ produce(t) do
    t
 end
 ----
-   (source_file
+
+    (source_file
       (comment)
       (definition
         (funDef
@@ -34,84 +35,60 @@ end
           (params
             (param
               (id)
-              (type
-                (simpleType
-                  (id)))))
-          (type
-            (simpleType
-              (id)))
-          (expr
-            (letExpr
-              (bindings
-                (binding
-                  (id)
-                  (type
-                    (funType
-                      (types
-                        (type
-                          (simpleType
-                            (id)))
-                        (type
-                          (simpleType
-                            (id))))
-                      (type
-                        (simpleType
-                          (id)))))
-                  (expr
-                    (lambda
-                      (type
-                        (simpleType
-                          (id)))
-                      (params
-                        (param
-                          (id)
-                          (type
-                            (simpleType
-                              (id))))
-                        (param
-                          (id)
-                          (type
-                            (simpleType
-                              (id)))))
-                      (expr
-                        (add
-                          (expr
-                            (assignment
-                              (id)))
-                          (addOp)
-                          (expr
-                            (assignment
-                              (id)))))))))
-              (expr
-                (funCall
-                  (expr
-                    (assignment
+              (simpleType
+                (id))))
+          (simpleType
+            (id))
+          (letExpr
+            (bindings
+              (binding
+                (id)
+                (funType
+                  (types
+                    (simpleType
+                      (id))
+                    (simpleType
                       (id)))
-                  (exprs
-                    (expr
-                      (assignment
+                  (simpleType
+                    (id)))
+                (lambda
+                  (simpleType
+                    (id))
+                  (params
+                    (param
+                      (id)
+                      (simpleType
                         (id)))
-                    (expr
-                      (litint)))))))))
+                    (param
+                      (id)
+                      (simpleType
+                        (id))))
+                  (add
+                    (ref
+                      (id))
+                    (addOp)
+                    (ref
+                      (id))))))
+            (funCall
+              (ref
+                (id))
+              (exprs
+                (ref
+                  (id))
+                (litint))))))
       (definition
         (varDef
           (id)
-          (type
-            (simpleType
-              (id)))
-          (expr
-            (multiply
-              (expr
-                (funCall
-                  (expr
-                    (assignment
-                      (id)))
-                  (exprs
-                    (expr
-                      (litint)))))
-              (multOp)
-              (expr
-                (litint))))))
+          (simpleType
+            (id))
+          (multiply
+            (funCall
+              (ref
+                (id))
+              (exprs
+                (litint)))
+            (multOp)
+            (litint))))
       (comment)
       (definition
         (funDef
@@ -119,68 +96,46 @@ end
           (params
             (param
               (id)
-              (type
-                (simpleType
-                  (id)))))
-          (type
-            (simpleType
-              (id)))
-          (expr
-            (cond
-              (condClause
-                (expr
-                  (compare
-                    (expr
-                      (assignment
-                        (id)))
-                    (compOp)
-                    (expr
-                      (litint))))
-                (expr
-                  (litint)))
-              (expr
-                (multiply
-                  (expr
-                    (assignment
-                      (id)))
-                  (multOp)
-                  (expr
-                    (funCall
-                      (expr
-                        (assignment
-                          (id)))
-                      (exprs
-                        (expr
-                          (add
-                            (expr
-                              (assignment
-                                (id)))
-                            (addOp)
-                            (expr
-                              (litint)))))))))))))
+              (simpleType
+                (id))))
+          (simpleType
+            (id))
+          (cond
+            (condClause
+              (compare
+                (ref
+                  (id))
+                (compOp)
+                (litint))
+              (litint))
+            (multiply
+              (ref
+                (id))
+              (multOp)
+              (funCall
+                (ref
+                  (id))
+                (exprs
+                  (add
+                    (ref
+                      (id))
+                    (addOp)
+                    (litint))))))))
       (product
         (id)
-        (expr
-          (funCall
-            (expr
-              (assignment
-                (id)))
-            (exprs
-              (expr
-                (array
+        (funCall
+          (ref
+            (id))
+          (exprs
+            (array
+              (exprs
+                (litstr)
+                (funCall
+                  (ref
+                    (id))
                   (exprs
-                    (expr
-                      (litstr))
-                    (expr
-                      (funCall
-                        (expr
-                          (assignment
-                            (id)))
-                        (exprs
-                          (expr
-                            (litint))))))))))))
+                    (litint))))))))
       (product
         (id)
-        (expr
-          (assignment
-            (id)))))
+        (ref
+          (id))))

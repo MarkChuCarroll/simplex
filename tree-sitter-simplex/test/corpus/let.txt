@@ -1,0 +1,63 @@
+====================
+function with let
+====================
+
+
+// comment
+fun test(x: Float, y: Int): String do
+  let local: String = x + x
+  in
+    print([local, y2])
+  end
+end
+
+produce(str) do
+   testfun("abc", 27)
+end
+---
+(source_file
+  (comment)
+  (definition
+    (funDef
+      (id)
+      (params
+        (param
+          (id)
+          (simpleType
+            (id)))
+        (param
+          (id)
+          (simpleType
+            (id))))
+      (simpleType
+        (id))
+      (letExpr
+        (bindings
+          (binding
+            (id)
+            (simpleType
+              (id))
+            (add
+              (ref
+                (id))
+              (addOp)
+              (ref
+                (id)))))
+        (funCall
+          (ref
+            (id))
+          (exprs
+            (array
+              (exprs
+                (ref
+                  (id))
+                (ref
+                  (id)))))))))
+  (product
+    (id)
+    (funCall
+      (ref
+        (id))
+      (exprs
+        (litstr)
+        (litint)))))
