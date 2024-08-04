@@ -15,6 +15,7 @@
  */
 package org.goodmath.simplex.ast
 
+import org.goodmath.simplex.ast.expr.Expr
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexError
 import org.goodmath.simplex.runtime.SimplexEvaluationError
@@ -65,9 +66,9 @@ class TypedName(val name: String, val type: Type, loc: Location): AstNode(loc) {
 class FunctionDefinition(name: String,
                          val returnType: Type,
                          val params: List<TypedName>,
-    val localDefs: List<Definition>,
-    val body: List<Expr>,
-    loc: Location): Definition(name, loc) {
+                         val localDefs: List<Definition>,
+                         val body: List<Expr>,
+                         loc: Location): Definition(name, loc) {
 
     val type = Type.function(params.map { it.type }, returnType)
 

@@ -15,13 +15,12 @@
  */
 package org.goodmath.simplex.runtime.values
 
-import org.goodmath.simplex.ast.Expr
+import org.goodmath.simplex.ast.expr.Expr
 import org.goodmath.simplex.ast.MethodDefinition
 import org.goodmath.simplex.ast.MethodType
 import org.goodmath.simplex.ast.Type
 import org.goodmath.simplex.ast.TypedName
 import org.goodmath.simplex.runtime.Env
-import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.SimplexUndefinedError
 import org.goodmath.simplex.runtime.SimplexUnsupportedOperation

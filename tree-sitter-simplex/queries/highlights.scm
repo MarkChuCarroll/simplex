@@ -12,6 +12,15 @@
 "lambda" @definer
 "with" @keyword
 "produce" @definition
+(litint) @number
+(litstr) @string
+(comment) @comment
+
+(funDef name: (id) @function)
+
+(methDef name: (id) @function.method)
+(methDef (params (param)@parameter))
+(letExpr "let"@sc   "in"@sc  "end"@sc) @keyword.local
 
 
 (id) @variable

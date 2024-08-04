@@ -45,16 +45,16 @@ varDef:
 ;
 
 funDef:
-   'fun' ID '(' params? ')' ':' type 'do'
+   'fun' ID '(' params? ')' ':' type '{'
     def*
     expr*
-  'end'
+  '}'
  ;
 
  methDef:
-    'meth' target=type '->' ID '(' params? ')' ':' result=type 'do'
+    'meth' target=type '->' ID '(' params? ')' ':' result=type '{'
        expr+
-    'end'
+    '}'
 ;
 
 param:
@@ -104,13 +104,15 @@ expr:
 ;
 
 complex:
-  'let' bindings 'in'
-      expr+ 'end' #complexLetExpr
-| 'if' condClause ( 'elif' condClause )* 'else' expr 'end' #complexCondExpr
-| 'for' ID 'in' expr 'do' expr+ 'end' #complexForExpr
-| 'do' expr+ 'end'  #complexDoExpr
-| 'lambda' ':' type '(' params ')' 'do' expr+ 'end' #complexLambdaExpr
-| 'with' focus=expr 'do' body=expr+ 'end' #complexWithExpr
+  'let' '(' bindings ')' 'in' '{'
+      expr+
+      '}' #complexLetExpr
+| 'if' condClause ( 'elif' condClause )* 'else' expr  #complexCondExpr
+| 'for' ID 'in' expr '{' expr+ '}' #complexForExpr
+| '{' expr+ '}'  #complexDoExpr
+| 'lambda' ':' type '(' params ')' '{' expr+ '}' #complexLambdaExpr
+| 'with' focus=expr '{' body=expr+ '}' #complexWithExpr
+| 'while' expr '{' expr+ '}' #complexWhileExpr
 ;
 
 primary:
@@ -164,12 +166,12 @@ unaryOp:
 
 
 condClause:
-    c=expr 'then' v=expr
+    '(' c=expr ')' v=expr
 ;
 
 product:
-   'produce' '(' ID ')' 'do' expr+
-   'end'
+   'produce' '(' ID ')' '{' expr+
+   '}'
 ;
 
 

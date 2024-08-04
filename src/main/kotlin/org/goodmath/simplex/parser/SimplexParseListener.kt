@@ -23,35 +23,36 @@ import org.antlr.v4.runtime.tree.ParseTree
 import org.antlr.v4.runtime.tree.ParseTreeProperty
 import org.antlr.v4.runtime.tree.ParseTreeWalker
 import org.antlr.v4.runtime.tree.TerminalNode
-import org.goodmath.simplex.ast.ArrayExpr
-import org.goodmath.simplex.ast.AssignmentExpr
-import org.goodmath.simplex.ast.Binding
-import org.goodmath.simplex.ast.BlockExpr
-import org.goodmath.simplex.ast.CondExpr
-import org.goodmath.simplex.ast.Condition
+import org.goodmath.simplex.ast.expr.Binding
+import org.goodmath.simplex.ast.expr.Condition
 import org.goodmath.simplex.ast.Definition
-import org.goodmath.simplex.ast.Expr
-import org.goodmath.simplex.ast.FieldRefExpr
-import org.goodmath.simplex.ast.FunCallExpr
+import org.goodmath.simplex.ast.expr.Expr
 import org.goodmath.simplex.ast.FunctionDefinition
-import org.goodmath.simplex.ast.LambdaExpr
-import org.goodmath.simplex.ast.LetExpr
-import org.goodmath.simplex.ast.LiteralExpr
 import org.goodmath.simplex.ast.Location
-import org.goodmath.simplex.ast.LoopExpr
-import org.goodmath.simplex.ast.MethodCallExpr
 import org.goodmath.simplex.ast.MethodDefinition
 import org.goodmath.simplex.ast.Model
-import org.goodmath.simplex.ast.Operator
-import org.goodmath.simplex.ast.OperatorExpr
+import org.goodmath.simplex.ast.expr.Operator
 import org.goodmath.simplex.ast.Product
 import org.goodmath.simplex.ast.TupleDefinition
-import org.goodmath.simplex.ast.TupleExpr
 import org.goodmath.simplex.ast.Type
 import org.goodmath.simplex.ast.TypedName
-import org.goodmath.simplex.ast.VarRefExpr
 import org.goodmath.simplex.ast.VariableDefinition
-import org.goodmath.simplex.ast.WithExpr
+import org.goodmath.simplex.ast.expr.ArrayExpr
+import org.goodmath.simplex.ast.expr.AssignmentExpr
+import org.goodmath.simplex.ast.expr.BlockExpr
+import org.goodmath.simplex.ast.expr.CondExpr
+import org.goodmath.simplex.ast.expr.FieldRefExpr
+import org.goodmath.simplex.ast.expr.FunCallExpr
+import org.goodmath.simplex.ast.expr.LambdaExpr
+import org.goodmath.simplex.ast.expr.LetExpr
+import org.goodmath.simplex.ast.expr.LiteralExpr
+import org.goodmath.simplex.ast.expr.LoopExpr
+import org.goodmath.simplex.ast.expr.MethodCallExpr
+import org.goodmath.simplex.ast.expr.OperatorExpr
+import org.goodmath.simplex.ast.expr.TupleExpr
+import org.goodmath.simplex.ast.expr.VarRefExpr
+import org.goodmath.simplex.ast.expr.WhileExpr
+import org.goodmath.simplex.ast.expr.WithExpr
 import org.goodmath.simplex.runtime.SimplexError
 
 @Suppress("UNCHECKED_CAST")
@@ -406,7 +407,7 @@ class SimplexParseListener: SimplexListener {
         val idx = ctx.ID().text
         val coll = getValueFor(ctx.expr().first()) as Expr
         val body = ctx.expr().drop(1).map { getValueFor(it) as Expr }
-        setValueFor(ctx, LoopExpr(idx, coll,body, loc(ctx)))
+        setValueFor(ctx, LoopExpr(idx, coll, body, loc(ctx)))
     }
 
     override fun enterComplexDoExpr(ctx: SimplexParser.ComplexDoExprContext) {
@@ -434,6 +435,15 @@ class SimplexParseListener: SimplexListener {
         val focus = getValueFor(ctx.expr()[0]) as Expr
         val body = ctx.expr().drop(1).map { getValueFor(it) as Expr }
         setValueFor(ctx, WithExpr(focus, body, loc(ctx)))
+    }
+
+    override fun enterComplexWhileExpr(ctx: SimplexParser.ComplexWhileExprContext) {
+        }
+
+    override fun exitComplexWhileExpr(ctx: SimplexParser.ComplexWhileExprContext) {
+        val cond = getValueFor(ctx.expr(0)) as Expr
+        val body = ctx.expr().drop(1).map { getValueFor(it) as Expr }
+        setValueFor(ctx, WhileExpr(cond, body, loc(ctx)))
     }
 
     override fun enterOptIdExpr(ctx: SimplexParser.OptIdExprContext) {
@@ -529,7 +539,7 @@ class SimplexParseListener: SimplexListener {
 
 
     override fun enterOpOptSlash(ctx: SimplexParser.OpOptSlashContext) {
-        
+
     }
 
     override fun exitOpOptSlash(ctx: SimplexParser.OpOptSlashContext) {
@@ -537,7 +547,7 @@ class SimplexParseListener: SimplexListener {
     }
 
     override fun enterOpOptPercent(ctx: SimplexParser.OpOptPercentContext) {
-        
+
     }
 
     override fun exitOpOptPercent(ctx: SimplexParser.OpOptPercentContext) {
@@ -545,7 +555,7 @@ class SimplexParseListener: SimplexListener {
     }
 
     override fun enterOpOptPlus(ctx: SimplexParser.OpOptPlusContext) {
-        
+
     }
 
     override fun exitOpOptPlus(ctx: SimplexParser.OpOptPlusContext) {
@@ -553,7 +563,7 @@ class SimplexParseListener: SimplexListener {
     }
 
     override fun enterOpOptMinus(ctx: SimplexParser.OpOptMinusContext) {
-        
+
     }
 
     override fun exitOpOptMinus(ctx: SimplexParser.OpOptMinusContext) {
@@ -562,7 +572,7 @@ class SimplexParseListener: SimplexListener {
 
 
     override fun enterOpOptEqEq(ctx: SimplexParser.OpOptEqEqContext) {
-        
+
     }
 
     override fun exitOpOptEqEq(ctx: SimplexParser.OpOptEqEqContext) {
@@ -570,7 +580,7 @@ class SimplexParseListener: SimplexListener {
     }
 
     override fun enterOpOptBangEq(ctx: SimplexParser.OpOptBangEqContext) {
-        
+
     }
 
     override fun exitOpOptBangEq(ctx: SimplexParser.OpOptBangEqContext) {
@@ -578,7 +588,7 @@ class SimplexParseListener: SimplexListener {
     }
 
     override fun enterOpOptLt(ctx: SimplexParser.OpOptLtContext) {
-        
+
     }
 
     override fun exitOpOptLt(ctx: SimplexParser.OpOptLtContext) {
@@ -586,7 +596,7 @@ class SimplexParseListener: SimplexListener {
     }
 
     override fun enterOpOptLe(ctx: SimplexParser.OpOptLeContext) {
-        
+
     }
 
     override fun exitOpOptLe(ctx: SimplexParser.OpOptLeContext) {
@@ -594,7 +604,7 @@ class SimplexParseListener: SimplexListener {
     }
 
     override fun enterOpOptGt(ctx: SimplexParser.OpOptGtContext) {
-        
+
     }
 
     override fun exitOpOptGt(ctx: SimplexParser.OpOptGtContext) {
@@ -602,7 +612,7 @@ class SimplexParseListener: SimplexListener {
     }
 
     override fun enterOpOptGe(ctx: SimplexParser.OpOptGeContext) {
-        
+
     }
 
     override fun exitOpOptGe(ctx: SimplexParser.OpOptGeContext) {
@@ -626,7 +636,7 @@ class SimplexParseListener: SimplexListener {
     }
 
     override fun enterOpOptNot(ctx: SimplexParser.OpOptNotContext) {
-        
+
     }
 
     override fun exitOpOptNot(ctx: SimplexParser.OpOptNotContext) {

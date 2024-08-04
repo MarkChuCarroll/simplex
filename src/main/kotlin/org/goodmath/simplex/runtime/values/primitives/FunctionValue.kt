@@ -16,7 +16,7 @@
 package org.goodmath.simplex.runtime.values.primitives
 
 import org.goodmath.simplex.ast.Definition
-import org.goodmath.simplex.ast.Expr
+import org.goodmath.simplex.ast.expr.Expr
 import org.goodmath.simplex.ast.FunctionDefinition
 import org.goodmath.simplex.ast.FunctionType
 import org.goodmath.simplex.ast.Type

@@ -1,7 +1,6 @@
 module.exports = grammar({
   name: 'simplex',
   extras: ($) => [$.comment, $._whitespace],
-
   rules: {
     source_file: $ => seq(
       field('defs', repeat1($.definition)),
@@ -42,7 +41,7 @@ module.exports = grammar({
       'meth',
       $._type,
       '->',
-      $.id,
+      field('name', $.id),
       '(',
       optional($.params),
       ')',
@@ -71,36 +70,34 @@ module.exports = grammar({
         $._type
       ))
     ),
-    simpleType: $ => $.id,
+    simpleType: $ => field('name', $.id),
     arrayType: $ => prec.left(1, seq(
-                '[',
-                $._type,
-                ']'
-              )
-             ),
+      '[',
+      $._type,
+      ']'
+    )),
     funType: $ => prec.left(2, seq(
-                '(',
-                optional($.types),
-                ')',
-                ':',
-                $._type
-              )
-             ),
+      '(',
+      optional($.types),
+      ')',
+      ':',
+      $._type
+    )),
     methType: $ => prec.left(3, seq(
-                $._type,
-                '->',
-                '(',
-                optional($.types),
-                ')',
-                ':',
-                $._type
-              )
-             ),
+      $._type,
+      '->',
+      '(',
+      optional($.types),
+      ')',
+      ':',
+      $._type
+    )),
     _type: $ => choice(
       $.simpleType,
       $.arrayType,
       $.funType,
-      $.methType),
+      $.methType
+    ),
     methodCall: $ => prec.left(9, seq(
       $._expr,
       '->',
@@ -109,15 +106,52 @@ module.exports = grammar({
       optional($.exprs),
       ')'
     )),
-    subscript: $ => prec(9, seq($._expr,'[' , $._expr, ']')),
-    funCall: $ => prec(9, seq($._expr, '(', optional($.exprs), ')')),
-    power: $ => prec.left(8,seq($._expr, $.expOp, $._expr)),
-    multiply: $ => prec.left(7, seq($._expr, $.multOp, $._expr)),
-    add: $ => prec.left(6, seq($._expr, $.addOp, $._expr)),
-    compare: $ => prec.left(5,seq($._expr, $.compOp, $._expr)),
-    logic: $ => prec.left(4, seq($._expr, $.logicOp, $._expr)),
-    unary: $ => prec.right(9, seq($.unaryOp, $._expr)),
-    paren: $ => prec.left(10, seq('(', $._expr, ')')),
+    subscript: $ => prec(9, seq(
+      $._expr,
+      '[',
+      $._expr,
+      ']'
+    )),
+    funCall: $ => prec(9, seq(
+      $._expr,
+      '(',
+      optional($.exprs),
+      ')'
+    )),
+    power: $ => prec.left(8, seq(
+      $._expr,
+      $.expOp,
+      $._expr
+    )),
+    multiply: $ => prec.left(7, seq(
+      $._expr,
+      $.multOp,
+      $._expr
+    )),
+    add: $ => prec.left(6, seq(
+      $._expr,
+      $.addOp,
+      $._expr
+    )),
+    compare: $ => prec.left(5, seq(
+      $._expr,
+      $.compOp,
+      $._expr
+    )),
+    logic: $ => prec.left(4, seq(
+      $._expr,
+      $.logicOp,
+      $._expr
+    )),
+    unary: $ => prec.right(9, seq(
+      $.unaryOp,
+      $._expr
+    )),
+    paren: $ => prec.left(10, seq(
+      '(',
+      $._expr,
+      ')'
+    )),
     _expr:$ => choice(
       $.paren,
       prec(9, $._primary),
@@ -132,22 +166,54 @@ module.exports = grammar({
       $.compare,
       $.logic),
     cond: $ => seq(
-      'if', $.condClause,
-      repeat(seq('elif',$.condClause)),
-      'else', $._expr,
-      'end'),
+      'if',
+      $.condClause,
+      repeat(seq(
+        'elif',
+        $.condClause
+      )),
+      'else',
+      $._expr,
+      'end'
+    ),
     lambda: $ => seq(
-      'lambda', ':', $._type,
-      '(', $.params, ')', 'do', repeat1($._expr), 'end'),
+      'lambda',
+      ':',
+      $._type,
+      '(',
+      $.params,
+      ')',
+      'do',
+      repeat1($._expr),
+      'end'),
     block: $ => seq(
       'do',
       repeat1($._expr),
       'end'
     ),
-    with: $ => seq('with', $._expr, 'do', repeat1($._expr), 'end'),
-    letExpr: $ => seq('let', $.bindings, 'in', repeat1($._expr),
-                      'end'),
-    loop: $ => seq('for', $.id, 'in', $._expr, 'do', repeat1($._expr), 'end' ),
+    with: $ => seq(
+      'with',
+      $._expr,
+      'do',
+      repeat1($._expr),
+      'end'
+    ),
+    letExpr: $ => seq(
+      'let',
+      $.bindings,
+      'in',
+      repeat1($._expr),
+      'end'
+    ),
+    loop: $ => seq(
+      'for',
+      $.id,
+      'in',
+      $._expr,
+      'do',
+      repeat1($._expr),
+      'end'
+    ),
     _complex: $ => choice(
       $.letExpr,
       $.cond,
@@ -156,12 +222,25 @@ module.exports = grammar({
       $.lambda,
       $.with,
     ),
-    assignment: $ => seq($.id, ':=', $._expr ),
+    assignment: $ => seq(
+      $.id,
+      ':=',
+      $._expr
+    ),
     ref: $ => $.id,
-    tuple: $ => seq('#', $.id, '(', $.exprs, ')'),
-    array: $ => seq('[', $.exprs, ']'),
-    _primary: $ =>
-    choice(
+    tuple: $ => seq(
+      '#',
+      $.id,
+      '(',
+      $.exprs,
+      ')'
+    ),
+    array: $ => seq(
+      '[',
+      $.exprs,
+      ']'
+    ),
+    _primary: $ => choice(
       $.assignment,
       $.ref,
       $.array,
@@ -169,35 +248,82 @@ module.exports = grammar({
       $.litint,
       $.litfloat,
       $.litstr,
-      $.litbool),
-    litbool: $ =>
-    choice('true','false'),
+      $.litbool
+    ),
+    litbool: $ => choice(
+      'true',
+      'false'
+    ),
     bindings: $ => seq(
       $.binding,
-      repeat(seq(',', $.binding))),
+      repeat(seq(
+        ',',
+        $.binding
+      ))
+    ),
     binding: $ => seq(
       $.id,
       ':',
       $._type,
       '=',
-      $._expr),
+      $._expr
+    ),
     expOp: $ => '^',
-    multOp: $ => choice('*', '/', '%'),
-    addOp: $ => choice('+', '-'),
-    compOp: $ =>
-    choice('<', '>', '<=', '>=', '==', '!='),
-    logicOp: $ => choice('and', 'or'),
-    unaryOp: $ => choice('not', '-'),
-    condClause: $ => seq($._expr, 'then', $._expr),
-    product: $ => seq('produce', '(', $.id, ')', 'do',
-                      repeat1($._expr), 'end'),
-    exprs: $ =>
-    seq($._expr, repeat(seq(',', $._expr))),
+    multOp: $ => choice(
+      '*',
+      '/',
+      '%'
+    ),
+    addOp: $ => choice(
+      '+',
+      '-'
+    ),
+    compOp: $ => choice(
+      '<',
+      '>',
+      '<=',
+      '>=',
+      '==',
+      '!='
+    ),
+    logicOp: $ => choice(
+      'and',
+      'or'
+    ),
+    unaryOp: $ => choice(
+      'not',
+      '-'
+    ),
+    condClause: $ => seq(
+      $._expr,
+      'then',
+      $._expr
+    ),
+    product: $ => seq(
+      'produce',
+      '(',
+      $.id,
+      ')',
+      'do',
+      repeat1($._expr),
+      'end'
+    ),
+    exprs: $ => seq(
+      $._expr,
+      repeat(seq(
+        ',',
+        $._expr
+      ))
+    ),
     id: $ => /[A-Za-z_][A-Za-z_0-9]*/,
     litint: $ => /[0-9]+/,
     litfloat: $ => /[0-9]+\.[0-9]*([eE]-?[0-9]+)?/,
     litstr: $ => /".*"/,
     _whitespace: $ => /\s+/,
-    comment: $ => seq('//', /.*/, '\n')
-  },
+    comment: $ => seq(
+      '//',
+      /.*/,
+      '\n'
+    )
+  }
 });

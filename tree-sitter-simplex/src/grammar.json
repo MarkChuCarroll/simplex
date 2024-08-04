@@ -222,8 +222,12 @@
           "value": "->"
         },
         {
-          "type": "SYMBOL",
-          "name": "id"
+          "type": "FIELD",
+          "name": "name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "id"
+          }
         },
         {
           "type": "STRING",
@@ -338,8 +342,12 @@
       ]
     },
     "simpleType": {
-      "type": "SYMBOL",
-      "name": "id"
+      "type": "FIELD",
+      "name": "name",
+      "content": {
+        "type": "SYMBOL",
+        "name": "id"
+      }
     },
     "arrayType": {
       "type": "PREC_LEFT",

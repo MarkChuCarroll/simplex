@@ -1,9 +1,9 @@
 
 
-meth Int->f(): Float do
+meth Int->f(): Float {
    self->float()
-end
+}
 
-produce(result) do
+produce(result) {
    print([3->f(), " ", 4->f()])
-end
+}

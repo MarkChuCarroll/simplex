@@ -52,6 +52,8 @@ dependencies {
     implementation("eu.mihosoft.vrl.jcsg:jcsg:0.5.7")
     implementation("com.github.ajalt.clikt:clikt:$cliktVersion")
     implementation("com.github.ajalt.mordant:mordant:2.7.1")
+    // https://mvnrepository.com/artifact/org.eclipse.lsp4j/org.eclipse.lsp4j
+    implementation("org.eclipse.lsp4j:org.eclipse.lsp4j:0.23.1")
 }
 
 application {
