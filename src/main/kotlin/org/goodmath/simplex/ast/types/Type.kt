@@ -13,10 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.goodmath.simplex.ast
+package org.goodmath.simplex.ast.types
 
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
+import java.util.HashMap
+import kotlin.collections.all
+import kotlin.collections.joinToString
+import kotlin.collections.map
+import kotlin.collections.set
+import kotlin.collections.toList
+import kotlin.collections.zip
 
 abstract class Type: Twistable {
 
@@ -61,10 +68,7 @@ abstract class Type: Twistable {
             val name = "(${args.map{it.toString()}.joinToString(",")}):$result"
             return types.computeIfAbsent(name) { _ -> FunctionType(args, result) } as FunctionType
         }
-
     }
-
-
 
     fun registerMethod(name: String, type: MethodType) {
         methods[name] = type
@@ -161,5 +165,3 @@ class MethodType internal constructor(val target: Type, val args: List<Type>, va
         }
     }
 }
-
-

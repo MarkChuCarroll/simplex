@@ -46,7 +46,7 @@ varDef:
 
 funDef:
    'fun' ID '(' params? ')' ':' type '{'
-    def*
+    funDef*
     expr*
   '}'
  ;
@@ -88,8 +88,8 @@ expr:
 | expr '->' ID '(' exprs? ')' #exprMethod
 | expr '(' exprs? ')' #exprCall
 | expr '[' expr ']' #exprSubscript
-| expr '.' ID #exprField
-
+| expr '.' ID  #exprField
+| target=expr '.' ID ':=' value=expr #exprUpdate
 | unaryOp  expr #exprUnary
 
 | l=expr expOp r=expr #exprPow

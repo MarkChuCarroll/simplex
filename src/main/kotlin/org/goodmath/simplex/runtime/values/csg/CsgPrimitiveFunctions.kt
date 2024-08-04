@@ -19,7 +19,7 @@ import eu.mihosoft.jcsg.Cube
 import eu.mihosoft.jcsg.Sphere
 import eu.mihosoft.vvecmath.Transform
 import eu.mihosoft.vvecmath.Vector3d
-import org.goodmath.simplex.ast.Type
+import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.FunctionSignature
 import org.goodmath.simplex.runtime.values.MethodSignature
@@ -127,7 +127,8 @@ object CsgMoveMethod: PrimitiveMethod("move",
 }
 
 object CsgRotateMethod: PrimitiveMethod("rot",
-    MethodSignature(Type.CsgType,
+    MethodSignature(
+        Type.CsgType,
         listOf(Param("xAngle", Type.FloatType),
             Param("yAngle", Type.FloatType),
             Param("zAngle", Type.FloatType)), Type.CsgType)) {

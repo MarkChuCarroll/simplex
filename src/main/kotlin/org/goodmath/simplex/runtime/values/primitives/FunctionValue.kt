@@ -15,12 +15,12 @@
  */
 package org.goodmath.simplex.runtime.values.primitives
 
-import org.goodmath.simplex.ast.Definition
+import org.goodmath.simplex.ast.def.Definition
 import org.goodmath.simplex.ast.expr.Expr
-import org.goodmath.simplex.ast.FunctionDefinition
-import org.goodmath.simplex.ast.FunctionType
-import org.goodmath.simplex.ast.Type
-import org.goodmath.simplex.ast.TypedName
+import org.goodmath.simplex.ast.def.FunctionDefinition
+import org.goodmath.simplex.ast.types.FunctionType
+import org.goodmath.simplex.ast.types.Type
+import org.goodmath.simplex.ast.types.TypedName
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexEvaluationError
 import org.goodmath.simplex.runtime.SimplexTypeError

@@ -16,10 +16,10 @@
 package org.goodmath.simplex.runtime.values
 
 import org.goodmath.simplex.ast.expr.Expr
-import org.goodmath.simplex.ast.MethodDefinition
-import org.goodmath.simplex.ast.MethodType
-import org.goodmath.simplex.ast.Type
-import org.goodmath.simplex.ast.TypedName
+import org.goodmath.simplex.ast.def.MethodDefinition
+import org.goodmath.simplex.ast.types.MethodType
+import org.goodmath.simplex.ast.types.Type
+import org.goodmath.simplex.ast.types.TypedName
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.SimplexUndefinedError
@@ -57,6 +57,12 @@ interface Value: Twistable {
  */
 abstract class ValueType: Twistable {
     abstract val name: String
+
+    fun installIn(env: Env) {
+        for (m in providesPrimitiveMethods) {
+            methods.put(m.name, m)
+        }
+    }
 
     /**
      * a utility function to avoid needing to write the same error
@@ -135,9 +141,6 @@ abstract class ValueType: Twistable {
         methods[method.name] = method
     }
 
-    val primitiveMethods by lazy {
-        providesPrimitiveMethods.associateBy { it.name }
-    }
 
     /**
      * Execute a method on a value.
@@ -182,7 +185,6 @@ abstract class ValueType: Twistable {
             return v.b
         }
     }
-
     abstract fun assertIs(v: Value):Value
 
 }
@@ -238,7 +240,8 @@ class MethodValue(
     val returnType: Type,
     val params: List<TypedName>,
     val body: List<Expr>,
-    val def: MethodDefinition
+    val def: MethodDefinition,
+    val staticScope: Env
 ): AbstractMethod(def.methodName, MethodSignature(targetType, params.map { Param(it.name, it.type)}, returnType)) {
     override val valueType: ValueType = MethodValueType(Type.method(targetType, params.map { it.type }, returnType))
 
@@ -251,7 +254,7 @@ class MethodValue(
             Twist.value("def", def))
 
     override fun applyTo(target: Value, args: List<Value>, env: Env): Value {
-        return def.applyTo(target, args, env)
+        return def.applyTo(target, args, staticScope)
     }
 
 }

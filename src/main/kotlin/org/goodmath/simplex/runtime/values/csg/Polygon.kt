@@ -15,7 +15,7 @@
  */
 package org.goodmath.simplex.runtime.values.csg
 
-import org.goodmath.simplex.ast.Type
+import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.csg.TwoDPoint

@@ -15,10 +15,13 @@
  */
 package org.goodmath.simplex.runtime.values.primitives
 
-import org.goodmath.simplex.ast.TupleDefinition
-import org.goodmath.simplex.ast.Type
+import org.goodmath.simplex.ast.def.TupleDefinition
+import org.goodmath.simplex.ast.types.Type
+import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.SimplexTypeError
+import org.goodmath.simplex.runtime.values.MethodSignature
+import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
@@ -30,18 +33,7 @@ class TupleValueType(val tupleDef: TupleDefinition) : ValueType() {
 
     override val asType: Type = Type.simple(tupleDef.name)
 
-    init {
-        RootEnv.registerType(name, this)
-        for ((name, meth) in primitiveMethods) {
-            this.addMethod(meth)
-        }
-    }
-
     override val supportsText: Boolean = true
-
-    init {
-        RootEnv.registerType(name, this)
-    }
 
     override fun toText(v: Value): String {
         val tup = assertIs(v)
@@ -67,7 +59,36 @@ class TupleValueType(val tupleDef: TupleDefinition) : ValueType() {
 
     override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()
 
-    override val providesPrimitiveMethods: List<PrimitiveMethod> = emptyList()
+    override val providesPrimitiveMethods: List<PrimitiveMethod> by lazy {
+        listOf(
+            object: PrimitiveMethod("eq", MethodSignature(asType, listOf(Param("other", asType)),
+            Type.BooleanType)) {
+            override fun execute(
+                target: Value,
+                args: List<Value>,
+                env: Env
+            ): Value {
+                val self = assertIs(target)
+                return if (args[0].valueType != self.valueType) {
+                    BooleanValue(false)
+                } else {
+                    val other = args[0] as TupleValue
+                    if (self.fields.size != other.fields.size) {
+                        BooleanValue(false)
+                    } else {
+                        BooleanValue(self.fields.zip(other.fields).all { (l, r) ->
+                            val result = l.valueType.applyMethod(l, "eq", listOf(r), env)
+                            result.valueType.isTruthy(result)
+                        })
+                    }
+                }
+            }
+            }
+        )
+    }
+
+
+
     override fun assertIs(v: Value): TupleValue {
         if (v.valueType is TupleValueType) {
             return v as TupleValue
@@ -75,9 +96,13 @@ class TupleValueType(val tupleDef: TupleDefinition) : ValueType() {
             throw SimplexTypeError(v.valueType.asType.toString(), this.toString())
         }
     }
+
+    init {
+        RootEnv.registerType(name, this)
+    }
 }
 
-class TupleValue(override val valueType: TupleValueType, val fields: List<Value>): Value {
+class TupleValue(override val valueType: TupleValueType, val fields: MutableList<Value>): Value {
 
     override fun twist(): Twist =
         Twist.obj("TupleValue",

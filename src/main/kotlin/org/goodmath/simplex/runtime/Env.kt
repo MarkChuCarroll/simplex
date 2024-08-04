@@ -15,7 +15,7 @@
  */
 package org.goodmath.simplex.runtime
 
-import org.goodmath.simplex.ast.Definition
+import org.goodmath.simplex.ast.def.Definition
 import org.goodmath.simplex.ast.Model
 import org.goodmath.simplex.runtime.values.csg.CsgValueType
 import org.goodmath.simplex.runtime.csg.TwoDPointValueType
@@ -35,8 +35,8 @@ import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
 import java.util.UUID
 import com.github.ajalt.mordant.rendering.TextColors.*
-import org.goodmath.simplex.ast.ArrayType
-import org.goodmath.simplex.ast.Type
+import org.goodmath.simplex.ast.types.ArrayType
+import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.values.AnyType
 import org.goodmath.simplex.runtime.values.primitives.StringValue
 
@@ -52,7 +52,7 @@ open class Env(defList: List<Definition>,
     val defs = defList.associateBy { it.name }.toMutableMap()
     val vars = HashMap<String, Value>()
     val declaredTypes = HashMap<String, Type>()
-    open val types = HashMap<String, ValueType>()
+    open val valueTypes = HashMap<String, ValueType>()
 
     /**
      * A unique identifier for a scope. Used only for debugging
@@ -64,7 +64,7 @@ open class Env(defList: List<Definition>,
      * Register a new type defined within the scope.
      */
     fun registerType(name: String, valueType: ValueType) {
-        types[name] = valueType
+        valueTypes[name] = valueType
     }
 
     /**
@@ -72,7 +72,7 @@ open class Env(defList: List<Definition>,
      * static type's "toString"  method.
      */
     fun getType(name: String): ValueType {
-        return types[name] ?: throw SimplexUndefinedError(name,  "type")
+        return valueTypes[name] ?: throw SimplexUndefinedError(name,  "type")
     }
 
 
@@ -118,7 +118,13 @@ open class Env(defList: List<Definition>,
      * Get a definition declared within the scope.
      */
     fun getDef(name: String): Definition {
-        return defs[name] ?: throw SimplexUndefinedError(name, "definition")
+        return if (defs.containsKey(name)) {
+            defs[name]!!
+        } else if (parentEnv != null) {
+            return parentEnv.getDef(name)
+        } else {
+            throw SimplexUndefinedError(name, "definition")
+        }
     }
 
     /**
@@ -126,12 +132,8 @@ open class Env(defList: List<Definition>,
      * their static types and methods with the environment.
      */
     fun installStaticDefinitions() {
-        for (t in valueTypes) {
-            registerType(t.name, t)
-            for (m in t.providesPrimitiveMethods) {
-                t.asType.registerMethod(m.name, m.sig.toStaticType())
-
-            }
+        for (t in valueTypes.values) {
+            t.installIn(this)
             for (f in t.providesFunctions) {
                 val sig = f.signature
                 declareTypeOf(f.name, sig.toStaticType())
@@ -152,15 +154,17 @@ open class Env(defList: List<Definition>,
      * of symbols, functions, and methods provided by the scope's definitions.
      */
     fun installDefinitionValues() {
-        for (t in valueTypes) {
-            registerType(t.name, t)
-            for (m in t.providesPrimitiveMethods) {
-                t.addMethod(m)
-                t.asType.registerMethod(m.name, Type.method(m.sig.self, m.sig.params.map { it.type }, m.sig.returnType))
-            }
-        }
         for (d in defs.values) {
             d.installValues(this)
+        }
+        for (t in valueTypes.values) {
+            registerType(t.name, t)
+            for (m in t.providesPrimitiveMethods) {
+                t.installIn(this)
+            }
+        }
+        for (f in functions) {
+            this.addVariable(f.name, f)
         }
     }
 
@@ -186,7 +190,7 @@ open class Env(defList: List<Definition>,
             ))
 
     companion object {
-        val valueTypes: List<ValueType> by lazy {
+        val rootValueTypes: List<ValueType> by lazy {
             listOf(IntegerValueType,
             FloatValueType,
             StringValueType,
@@ -216,9 +220,10 @@ open class Env(defList: List<Definition>,
                 })
         }
 
-
         fun createRootEnv(): Env {
-            for (t in valueTypes) {
+            RootEnv.installStaticDefinitions()
+            RootEnv.installDefinitionValues()
+            for (t in rootValueTypes) {
                 for (t in t.providesFunctions) {
                     RootEnv.addVariable(t.name, t)
                 }
@@ -240,7 +245,7 @@ object RootEnv: Env(emptyList(), null) {
         defs[def.name] = def
     }
 
-    override val types by lazy {
+    override val valueTypes by lazy {
         hashMapOf(
             "Int" to IntegerValueType,
             "Float" to FloatValueType,

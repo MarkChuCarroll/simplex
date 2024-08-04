@@ -78,7 +78,6 @@ class SimplexInvalidParameterError(val callable: String,
             location=location
         )
 
-
 class SimplexUndefinedError(val name: String, val symbolKind: String,
     loc: Location? = null) : SimplexError(Kind.UndefinedSymbol,
     "$symbolKind '$name'", loc)

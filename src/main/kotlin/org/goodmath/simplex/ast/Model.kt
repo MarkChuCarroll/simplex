@@ -23,6 +23,7 @@ import org.goodmath.simplex.twist.plus
 import kotlin.io.path.Path
 import kotlin.io.path.writeText
 import com.github.ajalt.mordant.rendering.TextColors.*
+import org.goodmath.simplex.ast.def.Definition
 import org.goodmath.simplex.ast.expr.Expr
 import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.SimplexError

@@ -16,7 +16,7 @@
 package org.goodmath.simplex.runtime.csg
 
 import eu.mihosoft.vvecmath.Vector3d
-import org.goodmath.simplex.ast.Type
+import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.FunctionSignature
 import org.goodmath.simplex.runtime.values.MethodSignature

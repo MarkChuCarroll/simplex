@@ -19,7 +19,7 @@ package org.goodmath.simplex.runtime.values.csg
 import eu.mihosoft.jcsg.CSG
 import eu.mihosoft.vvecmath.Transform
 import eu.mihosoft.vvecmath.Vector3d
-import org.goodmath.simplex.ast.Type
+import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.values.MethodSignature
@@ -28,7 +28,6 @@ import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.runtime.values.primitives.ArrayValue
-import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
 import org.goodmath.simplex.runtime.values.primitives.BooleanValue
 import org.goodmath.simplex.runtime.values.primitives.FloatValueType
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
@@ -74,7 +73,8 @@ object CsgValueType: ValueType() {
         listOf(
             CsgScaleMethod, CsgMoveMethod, CsgRotateMethod,
             object: PrimitiveMethod("bounds",
-                MethodSignature(Type.CsgType,
+                MethodSignature(
+                    Type.CsgType,
                     emptyList(),
                     Type.array(Type.FloatType))) {
                 override fun execute(

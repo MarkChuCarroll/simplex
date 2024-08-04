@@ -16,7 +16,7 @@
 package org.goodmath.simplex.ast.expr
 
 import org.goodmath.simplex.ast.Location
-import org.goodmath.simplex.ast.Type
+import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexAnalysisError
 import org.goodmath.simplex.runtime.values.Value

@@ -15,8 +15,8 @@
  */
 package org.goodmath.simplex.runtime.values
 
-import org.goodmath.simplex.ast.MethodType
-import org.goodmath.simplex.ast.Type
+import org.goodmath.simplex.ast.types.MethodType
+import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
 
