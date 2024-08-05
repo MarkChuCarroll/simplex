@@ -58,12 +58,6 @@ interface Value: Twistable {
 abstract class ValueType: Twistable {
     abstract val name: String
 
-    fun installIn(env: Env) {
-        for (m in providesPrimitiveMethods) {
-            methods.put(m.name, m)
-        }
-    }
-
     /**
      * a utility function to avoid needing to write the same error
      * expression in every value type's assertIs method.
@@ -123,7 +117,14 @@ abstract class ValueType: Twistable {
      * A collection of all methods - both the built-in primitives,
      * and any implemented by the user as part of a model.
      */
-    protected val methods: HashMap<String, AbstractMethod> = HashMap()
+    val methods: HashMap<String, AbstractMethod> by lazy {
+        val result = HashMap<String, AbstractMethod>()
+        for (m in providesPrimitiveMethods) {
+            asType.registerMethod(m.name, m.sig.toStaticType())
+            result[m.name] = m
+        }
+        result
+    }
 
     /**
      * Get a method for a value, throwing an exception if no method

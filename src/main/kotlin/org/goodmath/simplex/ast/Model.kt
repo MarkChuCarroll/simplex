@@ -55,6 +55,7 @@ class Model(val defs: List<Definition>,
                 outputPrefix: String,
                 echo: (Int, Any?, Boolean) -> Unit) {
         val rootEnv = Env.createRootEnv()
+
         analyze()
         val executionEnv = Env(defs,
             rootEnv)

@@ -1,0 +1,27 @@
+
+// Make sure lambda works correctly.
+fun test_lambda(a: Int): Int {
+  let (x : (Int,Int):Int = lambda:Int(a: Int, b: Int) { a+b }) in {
+     x(a, 8)
+   }
+}
+
+val t: Int = test_lambda(3)/2
+
+// And check that recursion in functions works.
+fun fact(n: Int): Int {
+  if (n == 0) {
+   1
+  } else {
+    n * fact(n - 1)
+  }
+}
+
+produce(n) {
+  print(["Factorial of 5 = ", fact(5)])
+}
+
+
+produce(t) {
+   t
+}

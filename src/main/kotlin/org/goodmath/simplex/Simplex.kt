@@ -49,7 +49,7 @@ class Simplex: CliktCommand(help="Evaluate a Simplex model") {
             echo("input file $input doesn't exist", err=true)
         }
 
-        val pre = prefix ?: "${input.toString().dropLast(6)}-out"
+        val pre = prefix ?: "${input.toString().dropLast(4)}-out"
         val stream = CharStreams.fromFileName(input)
 
         val captiveEcho: (level: Int, msg: Any?, err: Boolean) -> Unit = { level, msg, err ->

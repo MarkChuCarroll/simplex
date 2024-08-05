@@ -38,6 +38,7 @@ import com.github.ajalt.mordant.rendering.TextColors.*
 import org.goodmath.simplex.ast.types.ArrayType
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.values.AnyType
+import org.goodmath.simplex.runtime.values.primitives.AbstractFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.StringValue
 
 /**
@@ -53,6 +54,7 @@ open class Env(defList: List<Definition>,
     val vars = HashMap<String, Value>()
     val declaredTypes = HashMap<String, Type>()
     open val valueTypes = HashMap<String, ValueType>()
+    val functions = HashMap<String, PrimitiveFunctionValue>()
 
     /**
      * A unique identifier for a scope. Used only for debugging
@@ -72,7 +74,13 @@ open class Env(defList: List<Definition>,
      * static type's "toString"  method.
      */
     fun getType(name: String): ValueType {
-        return valueTypes[name] ?: throw SimplexUndefinedError(name,  "type")
+        if (valueTypes.containsKey(name)) {
+            return valueTypes[name]!!
+        } else if (parentEnv != null) {
+            return parentEnv.getType(name)
+        } else {
+            throw SimplexUndefinedError(name, "type")
+        }
     }
 
 
@@ -133,13 +141,13 @@ open class Env(defList: List<Definition>,
      */
     fun installStaticDefinitions() {
         for (t in valueTypes.values) {
-            t.installIn(this)
+            t.methods
             for (f in t.providesFunctions) {
                 val sig = f.signature
                 declareTypeOf(f.name, sig.toStaticType())
             }
         }
-        for (f in functions) {
+        for (f in functions.values) {
             val sig = f.signature
             val funType = sig.toStaticType()
             declareTypeOf(f.name, funType)
@@ -159,11 +167,11 @@ open class Env(defList: List<Definition>,
         }
         for (t in valueTypes.values) {
             registerType(t.name, t)
-            for (m in t.providesPrimitiveMethods) {
-                t.installIn(this)
+            for (f in t.providesFunctions) {
+                functions[f.name] = f
             }
         }
-        for (f in functions) {
+        for (f in functions.values) {
             this.addVariable(f.name, f)
         }
     }
@@ -190,18 +198,8 @@ open class Env(defList: List<Definition>,
             ))
 
     companion object {
-        val rootValueTypes: List<ValueType> by lazy {
-            listOf(IntegerValueType,
-            FloatValueType,
-            StringValueType,
-            BooleanValueType,
-            ThreeDPointValueType,
-            TwoDPointValueType,
-            PolygonValueType,
-            CsgValueType)
-        }
 
-        val functions: List<PrimitiveFunctionValue> by lazy {
+        val rootFunctions: List<PrimitiveFunctionValue> by lazy {
             listOf(
                 object: PrimitiveFunctionValue("print",
                     FunctionSignature(listOf(Param("values", ArrayType(AnyType.asType))), StringValueType.asType)) {
@@ -223,12 +221,7 @@ open class Env(defList: List<Definition>,
         fun createRootEnv(): Env {
             RootEnv.installStaticDefinitions()
             RootEnv.installDefinitionValues()
-            for (t in rootValueTypes) {
-                for (t in t.providesFunctions) {
-                    RootEnv.addVariable(t.name, t)
-                }
-            }
-            for (f in functions) {
+            for (f in rootFunctions) {
                 RootEnv.addVariable(f.name, f)
             }
             return RootEnv
