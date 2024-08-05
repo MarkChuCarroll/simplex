@@ -55,6 +55,7 @@ class Model(val defs: List<Definition>,
                 outputPrefix: String,
                 echo: (Int, Any?, Boolean) -> Unit) {
         val rootEnv = Env.createRootEnv()
+        RootEnv.echo = echo
 
         analyze()
         val executionEnv = Env(defs,
@@ -70,12 +71,6 @@ class Model(val defs: List<Definition>,
             product.execute(executionEnv, echo, outputPrefix)
         }
     }
-    companion object {
-        var output: (Int, Any?, Boolean) -> Unit = { i: Int, s: Any?, err: Boolean ->
-            System.out.println(s)
-        }
-    }
-
 }
 
 /**
@@ -93,7 +88,7 @@ class Product(val name: String?, val body: List<Expr>, loc: Location): AstNode(l
 
     fun execute(env: Env, echo: (Int, Any?, Boolean) -> Unit,
                 prefix: String) {
-
+        val prefixLastSegment = prefix.substring(prefix.lastIndexOf('/') + 1)
         val results = try {
             body.map { it.evaluateIn(env) }
         } catch (e: Exception) {
@@ -113,7 +108,8 @@ class Product(val name: String?, val body: List<Expr>, loc: Location): AstNode(l
             for (body in bodies.drop(0)) {
                 combined = combined.union(body)
             }
-            echo(1, cyan("Rendering 3d model of ${bodies.size} bodies to $prefix-$name.stl"), false)
+
+            echo(1, cyan("Rendering 3d model of ${bodies.size} bodies to $prefixLastSegment-$name.stl"), false)
             Path("$prefix-$name.stl").writeText(combined.toStlString())
         }
         val others = results.filter { it.valueType != CsgValueType }
@@ -129,12 +125,12 @@ class Product(val name: String?, val body: List<Expr>, loc: Location): AstNode(l
             }
             val textOut = text.toString()
             if (textOut.isNotEmpty()) {
-                echo(1, cyan("Writing text products to $prefix-$name.txt"), false)
+                echo(1, cyan("Writing text products to $prefixLastSegment-$name.txt"), false)
                 Path("$prefix-$name.txt").writeText(textOut)
             }
             val twistOut = twists.toString()
             if (twistOut.isNotEmpty()) {
-                echo(1, cyan("Writing twisted products to $prefix-$name.twist"), false)
+                echo(1, cyan("Writing twisted products to $prefixLastSegment-$name.twist"), false)
                 Path("$prefix-$name.twist").writeText(twistOut)
             }
         }

@@ -1,0 +1,4 @@
+Loading model from ./src/test/resources/scripts/method/method.s3d
+Rendering result
+3.0 4.0
+Writing text products to method-out-result.txt

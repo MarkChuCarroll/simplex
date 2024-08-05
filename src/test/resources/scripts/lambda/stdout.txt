@@ -1,0 +1,6 @@
+Loading model from ./src/test/resources/scripts/lambda/lambda.s3d
+Rendering n
+Factorial of 5 = 120
+Writing text products to lambda-out-n.txt
+Rendering t
+Writing text products to lambda-out-t.txt

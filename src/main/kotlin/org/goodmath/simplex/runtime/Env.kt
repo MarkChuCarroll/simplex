@@ -212,7 +212,7 @@ open class Env(defList: List<Definition>,
                                 it.valueType.name
                             }
                         }.joinToString("")
-                        Model.output(0, brightWhite(result), false)
+                        RootEnv.echo(0, brightWhite(result), false)
                         return StringValue(result)
                     }
                 })
@@ -252,4 +252,12 @@ object RootEnv: Env(emptyList(), null) {
     }
 
     override val id: String = "Root"
+
+    var echo: (level: Int, output: Any?, err: Boolean) -> Unit = { l, o, e ->
+        if (e) {
+            System.err.println(o)
+        } else {
+            System.out.println(o)
+        }
+    }
 }
