@@ -17,7 +17,6 @@ package org.goodmath.simplex.runtime.values.primitives
 
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
-import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.values.MethodSignature
 import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.PrimitiveMethod
@@ -31,11 +30,6 @@ object FloatValueType: ValueType() {
     override val name: String = "Float"
 
     override val asType: Type = Type.FloatType
-
-    init {
-        RootEnv.registerType(name, this)
-    }
-
 
     override fun isTruthy(v: Value): Boolean {
         return assertIsFloat(v) != 0.0

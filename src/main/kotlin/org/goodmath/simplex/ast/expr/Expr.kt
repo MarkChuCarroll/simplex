@@ -297,14 +297,10 @@ class WithExpr(val focus: Expr, val body: List<Expr>, loc: Location) : Expr(loc)
     }
 
     override fun resultType(env: Env): Type {
-        val focusType = focus.resultType(env)
-        if (focusType !is SimpleType) {
-            throw SimplexAnalysisError("With expression focus must be a simple type, not $focusType", loc = loc)
-        }
-        val focusDef = env.getDef(focusType.name)
-        if (focusDef !is TupleDefinition) {
-            throw SimplexAnalysisError("With expression focus must be a tuple type, not $focusDef", loc = loc)
-        }
+        // We know it's a simple type, because validation would have failed otherwise.
+        val focusType = focus.resultType(env) as SimpleType
+        // similarly, we know it's a tuple-def
+        val focusDef = env.getDef(focusType.name) as TupleDefinition
         val localEnv = Env(emptyList(), env)
         for (field in focusDef.fields) {
             localEnv.declareTypeOf(field.name, field.type)

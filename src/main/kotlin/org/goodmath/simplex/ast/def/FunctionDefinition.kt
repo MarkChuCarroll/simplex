@@ -11,6 +11,27 @@ import org.goodmath.simplex.twist.Twist
 import kotlin.collections.last
 import kotlin.collections.map
 
+sealed class InvokableDefinition(name: String, val returnType:Type,
+    val params: List<TypedName>, val body: List<Expr>, loc: Location): Definition(name, loc) {
+
+    fun validateParamsAndBody(localEnv: Env) {
+        for (p in params) {
+            localEnv.declareTypeOf(p.name, p.type)
+        }
+        for (b in body) {
+            b.validate(localEnv)
+        }
+        val actualReturnType = body.last().resultType(localEnv)
+        if (!returnType.matchedBy(actualReturnType)) {
+            throw SimplexTypeError(
+                returnType.toString(), actualReturnType.toString(),
+                location = loc
+            )
+        }
+    }
+
+}
+
 /**
  * A function definition.
  * @param name
@@ -20,12 +41,12 @@ import kotlin.collections.map
  * @param loc the source location.
  */
 class FunctionDefinition(name: String,
-                         val returnType: Type,
-                         val params: List<TypedName>,
+                         returnType: Type,
+                         params: List<TypedName>,
                          val localDefs: List<Definition>,
-                         val body: List<Expr>,
+                          body: List<Expr>,
                          loc: Location
-): Definition(name, loc) {
+): InvokableDefinition(name, returnType, params, body, loc) {
 
     val type = Type.function(params.map { it.type }, returnType)
 
@@ -57,18 +78,6 @@ class FunctionDefinition(name: String,
     override fun validate(env: Env) {
         val functionEnv = Env(localDefs, env)
         functionEnv.installStaticDefinitions()
-        for (p in params) {
-            functionEnv.declareTypeOf(p.name, p.type)
-        }
-        for (b in body) {
-            b.validate(functionEnv)
-        }
-        val actualReturnType = body.last().resultType(functionEnv)
-        if (!returnType.matchedBy(actualReturnType)) {
-            throw SimplexTypeError(
-                returnType.toString(), actualReturnType.toString(),
-                location = loc
-            )
-        }
+        validateParamsAndBody(functionEnv)
     }
 }

@@ -179,7 +179,7 @@ class TwistVal(val name: String, val value: Twist?): Twist() {
             var result = "   ".repeat(indent)
             result += "(val $name\n"
             result += value.cons(indent + 1)
-            return result + ")"
+            return "$result)"
         } else {
             return null
         }

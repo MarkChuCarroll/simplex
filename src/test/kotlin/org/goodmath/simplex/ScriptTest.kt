@@ -2,14 +2,11 @@ package org.goodmath.simplex
 
 import org.antlr.v4.runtime.CharStreams
 import org.goodmath.simplex.parser.SimplexParseListener
-import org.junit.jupiter.api.DisplayNameGenerator
 import org.junit.jupiter.api.Test
-import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.Path
 import kotlin.io.path.readText
-import kotlin.math.exp
 import kotlin.test.assertEquals
 
 
@@ -45,10 +42,8 @@ class TestCase(val name: String) {
         val tmpDir = Files.createTempDirectory("test-$name")
         System.err.println("Tmp = $tmpDir")
         val model = SimplexParseListener().parse("$name.s3d", CharStreams.fromPath(program()))
-        { a, b, c -> Unit }
-        model.execute(null, "$tmpDir/$name-out") { l, st, e ->
-            Unit
-        }
+        { a, b, c ->  }
+        model.execute(null, "$tmpDir/$name-out") { l, st, e -> }
         val exp = expected()
         val act = actual(tmpDir)
         assertEquals(exp.keys, act.keys)

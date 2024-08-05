@@ -31,7 +31,6 @@ import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.StringValue
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
-import kotlin.collections.associateBy
 
 /**
  * The abstract supertype of all values.

@@ -27,7 +27,7 @@ open class SimplexError(
         UndefinedSymbol, UnsupportedOperation,
         InvalidParameter, InvalidIndex,
         IncorrectType, ParameterCount,
-        InvalidValue, Internal, Parser, Analysis;
+        InvalidValue, Evaluation, Internal, Parser, Analysis;
 
         override fun toString(): String {
             return when (this) {
@@ -39,6 +39,7 @@ open class SimplexError(
                 ParameterCount -> "Incorrect number of parameters"
                 InvalidValue -> "Invalid value"
                 Internal -> "Internal execution error"
+                Evaluation -> "Evaluation error"
                 Parser -> "Parsing errors"
                 Analysis -> "Analysis error"
             }
@@ -51,12 +52,12 @@ open class SimplexError(
                 val l = location!!
                 "${l.file}(${l.line}, ${l.col}): "
             } else {
-                "@?: "
+                "Unknown location: "
             }
-            if (cause != null) {
-                return "$prefix $kind: $detail; caused by:\n $cause"
+            return if (cause != null) {
+                "$prefix $kind: $detail; caused by:\n $cause"
             } else {
-                return "$prefix $kind: $detail"
+                "$prefix $kind: $detail"
             }
         }
 }
@@ -80,15 +81,17 @@ class SimplexInvalidParameterError(val callable: String,
 
 class SimplexUndefinedError(val name: String, val symbolKind: String,
     loc: Location? = null) : SimplexError(Kind.UndefinedSymbol,
-    "$symbolKind '$name'", loc)
+    "symbol '$name' of kind $symbolKind", loc)
 
 
 class SimplexUnsupportedOperation(val type: String, val op: String, loc: Location? = null) :
     SimplexError(Kind.UnsupportedOperation, "$op in type $type", location=loc)
 
 class SimplexEvaluationError(msg: String, cause: Throwable? = null,
-    loc: Location?=null) : SimplexError(Kind.Internal,
+    loc: Location?=null) : SimplexError(Kind.Evaluation,
     msg, cause=cause, location = loc)
+
+class SimplexInternalError(msg: String, cause: Throwable? = null): SimplexError(Kind.Internal, msg, cause=cause)
 
 class SimplexTypeError(expected: String, actual: String,
     location: Location? = null): SimplexError(Kind.IncorrectType, "expected a $expected, but received a $actual",

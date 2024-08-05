@@ -172,12 +172,12 @@ class TupleFieldUpdateExpr(val tupleExpr: Expr, val field: String, val value: Ex
         tupleExpr.validate(env)
         val targetType = tupleExpr.resultType(env)
         if (targetType !is SimpleType) {
-            throw SimplexAnalysisError("The type of the target of a tuple field update expr must be a simple type, but received ${targetType}",
+            throw SimplexAnalysisError("The type of the target of a tuple field update expr must be a simple type, but received $targetType",
                 loc=loc)
         }
         val def = env.getDef(targetType.name)
         if (def !is TupleDefinition) {
-            throw SimplexAnalysisError("The type of the target of a tuple field update must be a tuple type, but no tuple def found for ${targetType}",
+            throw SimplexAnalysisError("The type of the target of a tuple field update must be a tuple type, but no tuple def found for $targetType",
                 loc=loc)
         }
         val tupleFieldDef = def.fields.firstOrNull { it.name == field }

@@ -17,7 +17,6 @@ package org.goodmath.simplex.runtime.values.primitives
 
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
-import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.SimplexEvaluationError
 import org.goodmath.simplex.runtime.SimplexTypeError
@@ -36,10 +35,12 @@ class ArrayValueType(
     val elementType: ValueType
 ): ValueType() {
     override fun twist(): Twist {
-        return Twist.obj("ArrayValueType",
+        return Twist.obj(
+            "ArrayValueType",
             Twist.value("elementType", elementType)
         )
     }
+
     override val name: String = "[${elementType.name}]"
 
     override val asType: Type = Type.array(elementType.asType)
@@ -205,10 +206,6 @@ class ArrayValueType(
                 ArrayValueType(t)
             }
         }
-    }
-
-    init {
-        RootEnv.registerType(name, this)
     }
 }
 

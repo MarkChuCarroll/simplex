@@ -16,7 +16,6 @@
 package org.goodmath.simplex.runtime.values.primitives
 
 import org.goodmath.simplex.ast.types.Type
-import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
@@ -25,9 +24,6 @@ import org.goodmath.simplex.twist.Twist
 object BooleanValueType: ValueType() {
     override val name: String = "Boolean"
     override val asType: Type = Type.BooleanType
-    init {
-        RootEnv.registerType(name, this)
-    }
 
     override fun isTruthy(v: Value): Boolean {
         return assertIsBoolean(v)

@@ -36,26 +36,26 @@ class IntValueTypeTest {
 
         val prod = IntegerValueType.applyMethod(v2, "times", listOf(v3), RootEnv)
         prod as IntegerValue
-        val divi = IntegerValueType.applyMethod(v3, "div", listOf(v1), RootEnv)
-        divi as IntegerValue
-        val modi = IntegerValueType.applyMethod(prod, "mod", listOf(sum), RootEnv)
-        modi as IntegerValue
+        val divI = IntegerValueType.applyMethod(v3, "div", listOf(v1), RootEnv)
+        divI as IntegerValue
+        val modI = IntegerValueType.applyMethod(prod, "mod", listOf(sum), RootEnv)
+        modI as IntegerValue
 
         assertEquals(7, sum.i)
         assertEquals(20, prod.i)
-        assertEquals(1, divi.i)
-        assertEquals(6, modi.i)
+        assertEquals(1, divI.i)
+        assertEquals(6, modI.i)
 
-        val eq1 = IntegerValueType.applyMethod(divi, "eq",  listOf(IntegerValue(1)), RootEnv) as BooleanValue
+        val eq1 = IntegerValueType.applyMethod(divI, "eq",  listOf(IntegerValue(1)), RootEnv) as BooleanValue
         assertTrue(eq1.b)
         val eq2 = IntegerValueType.applyMethod(prod, "eq", listOf(IntegerValue(6)), RootEnv) as BooleanValue
         assertFalse(eq2.b)
 
         val eq3 = IntegerValueType.applyMethod(
-            IntegerValueType.applyMethod(modi, "neg", emptyList(), RootEnv),
+            IntegerValueType.applyMethod(modI, "neg", emptyList(), RootEnv),
             "eq",
             listOf(
-                IntegerValueType.applyMethod(IntegerValue(0), "minus", listOf(modi), RootEnv)),
+                IntegerValueType.applyMethod(IntegerValue(0), "minus", listOf(modI), RootEnv)),
             RootEnv) as BooleanValue
 
         assertTrue(eq3.b)

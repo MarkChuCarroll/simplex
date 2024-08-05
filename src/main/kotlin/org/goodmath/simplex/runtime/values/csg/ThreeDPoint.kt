@@ -155,7 +155,7 @@ object ThreeDPointValueType: ValueType() {
                 }
             },
             object: PrimitiveMethod("eq",
-                MethodSignature(asType, listOf(Param("r", asType)), Type.BooleanType)) {
+                MethodSignature(asType, listOf(Param("other", asType)), Type.BooleanType)) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val p1 = assertIs(target).xyz
                     val p2 = assertIs(args[0]).xyz

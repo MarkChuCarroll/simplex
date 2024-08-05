@@ -20,7 +20,6 @@ class TupleDefinition(name: String, val fields: List<TypedName>,
             Twist.array("fields", fields))
 
     override fun installValues(env: Env) {
-        env.registerType(name, valueType)
     }
 
     override fun validate(env: Env) {
@@ -41,5 +40,4 @@ class TupleDefinition(name: String, val fields: List<TypedName>,
         env.registerType(name, tupleType)
         Type.simple(name)
     }
-
 }

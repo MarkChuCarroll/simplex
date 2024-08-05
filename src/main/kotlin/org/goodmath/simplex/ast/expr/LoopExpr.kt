@@ -71,10 +71,7 @@ class LoopExpr(val idxVar: String, val collExpr: Expr, val body: List<Expr>, loc
     }
 
     override fun resultType(env: Env): Type {
-        val collectionType = collExpr.resultType(env)
-        if (collectionType !is ArrayType) {
-            throw SimplexAnalysisError("Target of a loop must be an array, not $collectionType", loc = loc)
-        }
+        val collectionType = collExpr.resultType(env) as ArrayType
         val elementType = collectionType.elementType
         val localEnv = Env(emptyList(), env)
         localEnv.declareTypeOf(idxVar, elementType)

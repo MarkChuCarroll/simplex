@@ -35,6 +35,7 @@ fun Double.cubed() = this * this * this
 fun Double.fourth() = this * this * this * this
 
 
+@Suppress("unused")
 class Cornu {
     companion object {
 
@@ -58,8 +59,6 @@ class Cornu {
          * clear up the implementation to make it slightly let cryptic,
          * but differential equations are always going to be tricky.
          */
-
-
         fun evalCornu(t: Double): Pair<Double, Double> {
             val sqrtPiOver2 = sqrt(PI * .5)
             val (s, c) = fresnel(t / sqrtPiOver2)
@@ -101,7 +100,7 @@ class Cornu {
          *
          * @param x the value of x
          * @param coeff the polynomial represented as a set of coefficients.
-         *   The coefficient of x^index is at coeff[index].
+         *   The coefficient of x^index is at coeff sub index.
          */
         fun evalPolynomial(x: Double, coeff: List<Double>): Double {
             return coeff.reversed()

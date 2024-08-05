@@ -28,7 +28,6 @@ import org.goodmath.simplex.runtime.values.csg.PolygonValueType
 import org.goodmath.simplex.runtime.values.primitives.FloatValueType
 import org.goodmath.simplex.runtime.values.primitives.IntegerValueType
 import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
-import org.goodmath.simplex.runtime.values.primitives.BooleanValueType
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.StringValueType
 import org.goodmath.simplex.twist.Twist
@@ -38,7 +37,6 @@ import com.github.ajalt.mordant.rendering.TextColors.*
 import org.goodmath.simplex.ast.types.ArrayType
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.values.AnyType
-import org.goodmath.simplex.runtime.values.primitives.AbstractFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.StringValue
 
 /**
@@ -66,6 +64,9 @@ open class Env(defList: List<Definition>,
      * Register a new type defined within the scope.
      */
     fun registerType(name: String, valueType: ValueType) {
+        if (valueTypes.containsKey(name)) {
+            throw SimplexInternalError("Type $name is already registered in env $id")
+        }
         valueTypes[name] = valueType
     }
 
@@ -74,10 +75,10 @@ open class Env(defList: List<Definition>,
      * static type's "toString"  method.
      */
     fun getType(name: String): ValueType {
-        if (valueTypes.containsKey(name)) {
-            return valueTypes[name]!!
+        return if (valueTypes.containsKey(name)) {
+            valueTypes[name]!!
         } else if (parentEnv != null) {
-            return parentEnv.getType(name)
+            parentEnv.getType(name)
         } else {
             throw SimplexUndefinedError(name, "type")
         }
@@ -166,7 +167,6 @@ open class Env(defList: List<Definition>,
             d.installValues(this)
         }
         for (t in valueTypes.values) {
-            registerType(t.name, t)
             for (f in t.providesFunctions) {
                 functions[f.name] = f
             }

@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:Suppress("unused")
+
 package org.goodmath.simplex.runtime.values.csg
 
 import org.goodmath.simplex.ast.types.Type
@@ -49,6 +51,7 @@ const val QUALITY = 128
 
 data class Limits2(val xMin: Double, val xMax: Double, val yMin: Double, val yMax: Double)
 
+@Suppress("unused")
 class Polygon(inputs: List<TwoDPoint>): Value {
     override val valueType: ValueType = PolygonValueType
 
@@ -190,7 +193,7 @@ object PolygonValueType: ValueType() {
     }
 
     fun chordedCircle(amount: Double = 0.5): Polygon {
-        // ph: semi-circle and the like
+        // ph: semicircle and the like
         val a1 = PI * (0.5 + amount)
         val a2 = PI * (2.5 - amount)
         return Polygon((0 until QUALITY).map { i ->
@@ -258,7 +261,7 @@ object PolygonValueType: ValueType() {
             val a = ((i + 0.5) / QUALITY - 0.5) * PI
             val x = cos(a) * radius + p0.x
             var y = sin(a) * radius
-            if (y < 0) y += (p0.y + radius) else y += (p1.y - radius)
+            y += if (y < 0) (p0.y + radius) else (p1.y - radius)
             TwoDPoint(x, y)
         }.toMutableList()
         result.add(TwoDPoint(p0.x, p1.y))
@@ -277,6 +280,7 @@ object PolygonValueType: ValueType() {
         return Polygon(result + result.map { (x, y) -> TwoDPoint(-x, -y) }).withCircumference(circumference)
     }
 
+    /*
     fun lens2(amount: Double, circumference: Double = PI): Polygon {
         val turn = PI * 0.5 * amount
         val turn2 = PI - turn * 2
@@ -287,6 +291,7 @@ object PolygonValueType: ValueType() {
         }.toMutableList()
         return Polygon(result + result.map { (x, y) -> TwoDPoint(-x, -y) }).withCircumference(circumference)
     }
+     */
 
 
     override val providesFunctions: List<PrimitiveFunctionValue> by lazy {
@@ -454,7 +459,7 @@ object PolygonValueType: ValueType() {
                 }
             },
             object : PrimitiveMethod(
-                "flipx",
+                "flipX",
                 MethodSignature(asType, emptyList(), asType)
             ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
@@ -463,7 +468,7 @@ object PolygonValueType: ValueType() {
                 }
             },
             object : PrimitiveMethod(
-                "flipy",
+                "flipY",
                 MethodSignature(asType, emptyList(), asType)
             ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {

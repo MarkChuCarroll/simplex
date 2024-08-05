@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:Suppress("unused")
+
 package org.goodmath.simplex.runtime.values.csg
 
 import org.goodmath.simplex.runtime.csg.TwoDPoint
@@ -167,7 +169,8 @@ class Mask(val bounds: Bounds, val init: (x: Int, y: Int) -> Boolean) {
     fun shift(newX: Int, newY: Int): Mask {
         return Mask(Bounds(
             bounds.x + newX, bounds.y + newY, bounds.width, bounds.height
-        ), { x, y -> data[x, y] })
+        )
+        ) { x, y -> data[x, y] }
     }
 
     fun clip(clipBounds: Bounds): Mask {
@@ -273,10 +276,10 @@ class Mask(val bounds: Bounds, val init: (x: Int, y: Int) -> Boolean) {
         var result: Mask? = null
         for ((y: Int, x1: Int, x2: Int) in mask.spans()) {
             val span = getSpan(x2 - x1).shift(x1, y)
-            if (result == null) {
-                result = span
+            result = if (result == null) {
+                span
             } else {
-                result = op(result, span)
+                op(result, span)
             }
         }
         return result!!

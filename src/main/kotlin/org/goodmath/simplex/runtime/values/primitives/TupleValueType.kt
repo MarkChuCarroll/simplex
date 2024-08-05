@@ -18,7 +18,6 @@ package org.goodmath.simplex.runtime.values.primitives
 import org.goodmath.simplex.ast.def.TupleDefinition
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
-import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.values.MethodSignature
 import org.goodmath.simplex.runtime.values.Param
@@ -97,9 +96,6 @@ class TupleValueType(val tupleDef: TupleDefinition) : ValueType() {
         }
     }
 
-    init {
-        RootEnv.registerType(name, this)
-    }
 }
 
 class TupleValue(override val valueType: TupleValueType, val fields: MutableList<Value>): Value {

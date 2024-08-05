@@ -32,7 +32,6 @@ import kotlin.collections.binarySearch
 import kotlin.collections.filter
 import kotlin.collections.last
 import kotlin.collections.map
-import kotlin.collections.maxOf
 import kotlin.collections.plus
 import kotlin.collections.reversed
 import kotlin.collections.sorted
@@ -151,9 +150,6 @@ data class ExtrusionProfile(val slices: List<ProfileSlice>): Value {
         return (1.0 - t) * slices[i - 1].highDiam + t * slices[i].lowDiam
     }
 
-    fun maximum(): Double = max(
-        slices.maxOf { it.lowDiam },
-        slices.maxOf { it.highDiam })
 
     /**
      * Combine two profiles.
@@ -175,9 +171,6 @@ data class ExtrusionProfile(val slices: List<ProfileSlice>): Value {
         )
         return morph(otherProfile, op)
     }
-
-
-    fun maxWith(other: ExtrusionProfile): ExtrusionProfile = morph(other) { a, b -> max(a, b) }
 
     operator fun plus(other: ExtrusionProfile): ExtrusionProfile = morph(other) { a, b -> a + b }
 
@@ -369,7 +362,7 @@ object ExtrusionProfileType: ValueType() {
             },
             object : PrimitiveMethod(
                 "plus",
-                MethodSignature(asType, listOf(Param("r", asType)), asType)
+                MethodSignature(asType, listOf(Param("other", asType)), asType)
             ) {
                 override fun execute(
                     target: Value,
@@ -383,7 +376,7 @@ object ExtrusionProfileType: ValueType() {
             },
             object : PrimitiveMethod(
                 "minus",
-                MethodSignature(asType, listOf(Param("r", asType)), asType)
+                MethodSignature(asType, listOf(Param("other", asType)), asType)
             ) {
                 override fun execute(
                     target: Value,
