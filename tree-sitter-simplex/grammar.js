@@ -214,13 +214,11 @@ module.exports = grammar({
     ),
     letExpr: $ => seq(
       'let',
-      '(',
-      $.bindings,
-      ')',
-      'in',
-      '{',
-      repeat1($._expr),
-      '}'
+      $.id,
+      ':',
+      $._type,
+      '=',
+      $._expr
     ),
     loop: $ => seq(
       'for',

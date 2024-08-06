@@ -78,8 +78,10 @@ class VarTests {
 
     @Test
     fun testUpdateInLet() {
-        val letExpr = LetExpr(listOf(Binding("a", Type.IntType, LiteralExpr(31415, mockLoc()), mockLoc())),
+        val letExpr = LetExpr("a", Type.IntType, LiteralExpr(31415, mockLoc()), mockLoc())
+        val block = BlockExpr(
             listOf(
+                letExpr,
                 AssignmentExpr("a",
                     OperatorExpr(Operator.Times, listOf(
                         VarRefExpr("a", mockLoc()),
@@ -87,7 +89,7 @@ class VarTests {
                         mockLoc()), mockLoc()),
                 VarRefExpr("a", mockLoc())),
             mockLoc())
-        val result = letExpr.evaluateIn(env)
+        val result = block.evaluateIn(env)
         assertEquals(31415 * 31415, (result as IntegerValue).i)
     }
 }

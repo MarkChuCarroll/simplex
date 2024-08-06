@@ -5,9 +5,8 @@ function with let
 
 // comment
 fun test(x: Float, y: Int): String {
-  let (local: String = x + x) in {
-    print([local, y2])
-  }
+  let local: String = x + x
+  print([local, y2])
 }
 
 produce("str") {
@@ -15,24 +14,22 @@ produce("str") {
 }
 ---
 (source_file
-  (comment)
-  (definition
-    (funDef
-      (id)
-      (params
-        (param
+      (comment)
+      (definition
+        (funDef
           (id)
+          (params
+            (param
+              (id)
+              (simpleType
+                (id)))
+            (param
+              (id)
+              (simpleType
+                (id))))
           (simpleType
-            (id)))
-        (param
-          (id)
-          (simpleType
-            (id))))
-      (simpleType
-        (id))
-      (letExpr
-        (bindings
-          (binding
+            (id))
+          (letExpr
             (id)
             (simpleType
               (id))
@@ -41,22 +38,22 @@ produce("str") {
                 (id))
               (addOp)
               (ref
-                (id)))))
+                (id))))
+          (funCall
+            (ref
+              (id))
+            (exprs
+              (array
+                (exprs
+                  (ref
+                    (id))
+                  (ref
+                    (id))))))))
+      (product
+        (litStr)
         (funCall
           (ref
             (id))
           (exprs
-            (array
-              (exprs
-                (ref
-                  (id))
-                (ref
-                  (id)))))))))
-  (product
-    (litStr)
-    (funCall
-      (ref
-        (id))
-      (exprs
-        (litStr)
-        (litInt)))))
+            (litStr)
+            (litInt)))))

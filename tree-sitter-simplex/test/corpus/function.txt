@@ -68,7 +68,7 @@ produce("result") {
    print([3->f(), use_meth(4)])
 }
 ------
-  (source_file
+    (source_file
       (definition
         (funDef
           (id)
@@ -110,3 +110,4 @@ produce("result") {
                     (id))
                   (exprs
                     (litInt)))))))))
+

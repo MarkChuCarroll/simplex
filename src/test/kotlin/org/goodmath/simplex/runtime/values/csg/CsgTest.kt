@@ -36,11 +36,10 @@ class CsgTest {
    }
 
    fun compoundShape(size: Float): Csg {
-      let (cyl: Csg = cylinder(size * 3.0, size, size),
-          brick: Csg = block(size*2.0, size*3.0, size*4.0)->rot(90.0, 45.0, 0.0)) in {
-          brick + cyl + cone(size*2.0, size*3.0)->move(0.0, 20.0, 0.0) -
-             cone(size, size)
-       }
+      let cyl: Csg = cylinder(size * 3.0, size, size)
+      let brick: Csg = block(size*2.0, size*3.0, size*4.0)->rot(90.0, 45.0, 0.0)
+      brick + cyl + cone(size*2.0, size*3.0)->move(0.0, 20.0, 0.0) -
+          cone(size, size)
    }
 
 produce("shape") {

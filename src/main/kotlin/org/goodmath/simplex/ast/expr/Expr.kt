@@ -89,44 +89,31 @@ data class Binding(val name: String, val type: Type, val value: Expr, override v
     }
 }
 
-class LetExpr(val bindings: List<Binding>, val body: List<Expr>, loc: Location) : Expr(loc) {
+class LetExpr(val name: String, val type: Type, val value: Expr, loc: Location): Expr(loc) {
+
     override fun twist(): Twist =
         Twist.obj(
             "LetExpr",
-            Twist.array("bindings", bindings),
-            Twist.array("body", body)
-        )
+            Twist.attr("name", name),
+            Twist.attr("type", type.toString()),
+            Twist.value("value", value))
 
     override fun evaluateIn(env: Env): Value {
-        val localEnv = Env(emptyList(), env)
-        for ((name, _, expr) in bindings) {
-            val v = expr.evaluateIn(localEnv)
-            localEnv.addVariable(name, v)
-        }
-        var result: Value = IntegerValue(0)
-        for (e in body) {
-            result = e.evaluateIn(localEnv)
-        }
+        val result = value.evaluateIn(env)
+        env.addVariable(name, result)
         return result
     }
 
     override fun resultType(env: Env): Type {
-        val localEnv = Env(emptyList(), env)
-        for ((name, type, _) in bindings) {
-            localEnv.declareTypeOf(name, type)
-        }
-        return body.last().resultType(localEnv)
+        return value.resultType(env)
     }
 
     override fun validate(env: Env) {
-        val localEnv = Env(emptyList(), env)
-        for ((name, type, expr) in bindings) {
-            localEnv.declareTypeOf(name, type)
-            if (!type.matchedBy(expr.resultType(localEnv))) {
-                throw SimplexTypeError(type.toString(), expr.resultType(localEnv).toString(), location = expr.loc)
-            }
+        env.declareTypeOf(name, type)
+        if (!type.matchedBy(value.resultType(env))) {
+            throw SimplexTypeError(type.toString(), value.resultType(env).toString(), location = loc)
         }
-        body.forEach { expr -> expr.validate(localEnv) }
+        value.validate(env)
     }
 }
 

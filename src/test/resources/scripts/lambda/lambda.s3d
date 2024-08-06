@@ -1,9 +1,8 @@
 
 // Make sure lambda works correctly.
 fun test_lambda(a: Int): Int {
-  let (x : (Int,Int):Int = lambda:Int(a: Int, b: Int) { a+b }) in {
-     x(a, 8)
-   }
+  let x : (Int,Int):Int = lambda:Int(a: Int, b: Int) { a+b }
+  x(a, 8)
 }
 
 val t: Int = test_lambda(3)/2

@@ -104,9 +104,7 @@ expr:
 ;
 
 complex:
-  'let' '(' bindings ')' 'in' '{'
-      expr+
-      '}' #complexLetExpr
+  'let' ID ':' type '=' expr #complexLet
 | 'if' condClause ( 'elif' condClause )* 'else' expr  #complexCondExpr
 | 'for' ID 'in' expr '{' expr+ '}' #complexForExpr
 | '{' expr+ '}'  #complexDoExpr

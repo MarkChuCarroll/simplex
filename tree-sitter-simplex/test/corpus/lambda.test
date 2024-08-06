@@ -3,9 +3,8 @@ Test a model using a lambda function
 ===================
 // Make sure lambda works correctly.
 fun test_lambda(a: Int): Int {
-  let (x : (Int,Int):Int = lambda:Int(a: Int, b: Int) { a+b }) in {
-     x(a, 8)
-   }
+  let x : (Int,Int):Int = lambda:Int(a: Int, b: Int) { a+b }
+  x(a, 8)
 }
 
 val t: Int = test_lambda(3)/2
@@ -28,8 +27,7 @@ produce("t") {
    t
 }
 ----
-
-    (source_file
+ (source_file
       (comment)
       (definition
         (funDef
@@ -42,42 +40,40 @@ produce("t") {
           (simpleType
             (id))
           (letExpr
-            (bindings
-              (binding
-                (id)
-                (funType
-                  (types
-                    (simpleType
-                      (id))
-                    (simpleType
-                      (id)))
+            (id)
+            (funType
+              (types
+                (simpleType
+                  (id))
+                (simpleType
+                  (id)))
+              (simpleType
+                (id)))
+            (lambda
+              (simpleType
+                (id))
+              (params
+                (param
+                  (id)
                   (simpleType
                     (id)))
-                (lambda
+                (param
+                  (id)
                   (simpleType
-                    (id))
-                  (params
-                    (param
-                      (id)
-                      (simpleType
-                        (id)))
-                    (param
-                      (id)
-                      (simpleType
-                        (id))))
-                  (add
-                    (ref
-                      (id))
-                    (addOp)
-                    (ref
-                      (id))))))
-            (funCall
-              (ref
-                (id))
-              (exprs
+                    (id))))
+              (add
                 (ref
                   (id))
-                (litInt))))))
+                (addOp)
+                (ref
+                  (id)))))
+          (funCall
+            (ref
+              (id))
+            (exprs
+              (ref
+                (id))
+              (litInt)))))
       (definition
         (varDef
           (id)
@@ -141,3 +137,4 @@ produce("t") {
         (litStr)
         (ref
           (id))))
+

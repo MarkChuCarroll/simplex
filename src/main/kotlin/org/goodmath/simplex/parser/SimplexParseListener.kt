@@ -393,13 +393,14 @@ class SimplexParseListener: SimplexListener {
         setValueFor(ctx, FieldRefExpr(e, n, loc(ctx)))
     }
 
-    override fun enterComplexLetExpr(ctx: SimplexParser.ComplexLetExprContext) {
+    override fun enterComplexLet(ctx: SimplexParser.ComplexLetContext) {
     }
 
-    override fun exitComplexLetExpr(ctx: SimplexParser.ComplexLetExprContext) {
-        val bindings = getValueFor(ctx.bindings()) as List<Binding>
-        val body = ctx.expr().map { getValueFor(it) as Expr }
-        setValueFor(ctx, LetExpr(bindings, body, loc(ctx)))
+    override fun exitComplexLet(ctx: SimplexParser.ComplexLetContext) {
+        val name = ctx.ID().text
+        val type = getValueFor(ctx.type()) as Type
+        val value = getValueFor(ctx.expr()) as Expr
+        setValueFor(ctx, LetExpr(name, type, value, loc(ctx)))
     }
 
     override fun enterComplexCondExpr(ctx: SimplexParser.ComplexCondExprContext) {

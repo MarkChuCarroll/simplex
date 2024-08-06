@@ -420,21 +420,6 @@
     }
   },
   {
-    "type": "bindings",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "binding",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "block",
     "named": true,
     "fields": {},
@@ -1643,11 +1628,11 @@
           "named": true
         },
         {
-          "type": "assignment",
+          "type": "arrayType",
           "named": true
         },
         {
-          "type": "bindings",
+          "type": "assignment",
           "named": true
         },
         {
@@ -1668,6 +1653,14 @@
         },
         {
           "type": "funCall",
+          "named": true
+        },
+        {
+          "type": "funType",
+          "named": true
+        },
+        {
+          "type": "id",
           "named": true
         },
         {
@@ -1703,6 +1696,10 @@
           "named": true
         },
         {
+          "type": "methType",
+          "named": true
+        },
+        {
           "type": "methodCall",
           "named": true
         },
@@ -1720,6 +1717,10 @@
         },
         {
           "type": "ref",
+          "named": true
+        },
+        {
+          "type": "simpleType",
           "named": true
         },
         {

@@ -104,14 +104,14 @@ class TupleTests {
         val createTwo = TupleExpr("TestTupleTwo", listOf(
             createOne, LiteralExpr("oops", mockLoc())), mockLoc())
 
-        val letExpr = LetExpr(
-            listOf(Binding("two", Type.simple("TestTupleTwo"), createTwo, mockLoc())),
-            listOf(TupleFieldUpdateExpr(
+        val letExpr = LetExpr("two", Type.simple("TestTupleTwo"), createTwo, mockLoc())
+        val update = TupleFieldUpdateExpr(
                 VarRefExpr("two", mockLoc()),
                 "oops",
-                LiteralExpr("yikes", mockLoc()), mockLoc())),
-            mockLoc())
-        val result = letExpr.evaluateIn(env)
+                LiteralExpr("yikes", mockLoc()), mockLoc())
+        val block = BlockExpr(listOf(letExpr, update), mockLoc())
+
+        val result = block.evaluateIn(env)
 
 
         assertIs<TupleValue>(result)

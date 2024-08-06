@@ -979,35 +979,24 @@
           "value": "let"
         },
         {
+          "type": "SYMBOL",
+          "name": "id"
+        },
+        {
           "type": "STRING",
-          "value": "("
+          "value": ":"
         },
         {
           "type": "SYMBOL",
-          "name": "bindings"
+          "name": "_type"
         },
         {
           "type": "STRING",
-          "value": ")"
+          "value": "="
         },
         {
-          "type": "STRING",
-          "value": "in"
-        },
-        {
-          "type": "STRING",
-          "value": "{"
-        },
-        {
-          "type": "REPEAT1",
-          "content": {
-            "type": "SYMBOL",
-            "name": "_expr"
-          }
-        },
-        {
-          "type": "STRING",
-          "value": "}"
+          "type": "SYMBOL",
+          "name": "_expr"
         }
       ]
     },
