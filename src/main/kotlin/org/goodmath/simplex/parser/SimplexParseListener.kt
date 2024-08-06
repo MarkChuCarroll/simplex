@@ -108,7 +108,7 @@ class SimplexParseListener: SimplexListener {
     }
 
     override fun exitProduct(ctx: SimplexParser.ProductContext) {
-        val name = ctx.ID()?.let { it.text }
+        val name = ctx.LIT_STRING().text.drop(1).dropLast(1)
         val exprs = ctx.expr().map { getValueFor(it) as Expr }
         setValueFor(ctx, Product(name, exprs, loc(ctx)))
     }

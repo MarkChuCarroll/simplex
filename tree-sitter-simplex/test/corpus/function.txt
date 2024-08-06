@@ -1,17 +1,17 @@
 =================================
 recursive function definition
 =================================
-fun fact(n: Int): Int do
-  if n == 0 then
+fun fact(n: Int): Int {
+  if (n == 0) {
     1
-  else
+  } else {
     n * fact(n-1)
-  end
-end
+  }
+}
 
-produce(it) do
+produce("it") {
   fact(5)
-end
+}
 ------
  (source_file
       (definition
@@ -30,8 +30,8 @@ end
                 (ref
                   (id))
                 (compOp)
-                (litint))
-              (litint))
+                (litInt))
+              (litInt))
             (multiply
               (ref
                 (id))
@@ -44,29 +44,29 @@ end
                     (ref
                       (id))
                     (addOp)
-                    (litint))))))))
+                    (litInt))))))))
       (product
-        (id)
+        (litStr)
         (funCall
           (ref
             (id))
           (exprs
-            (litint)))))
+            (litInt)))))
 
 =================================
 function call with method call
 =================================
-fun use_meth(x: Int): Float do
+fun use_meth(x: Int): Float {
    x->f()
-end
+}
 
-meth Int->f(): Float do
+meth Int->f(): Float {
    self->float()
-end
+}
 
-produce(result) do
+produce("result") {
    print([3->f(), use_meth(4)])
-end
+}
 ------
   (source_file
       (definition
@@ -95,7 +95,7 @@ end
               (id))
             (id))))
       (product
-        (id)
+        (litStr)
         (funCall
           (ref
             (id))
@@ -103,10 +103,10 @@ end
             (array
               (exprs
                 (methodCall
-                  (litint)
+                  (litInt)
                   (id))
                 (funCall
                   (ref
                     (id))
                   (exprs
-                    (litint)))))))))
+                    (litInt)))))))))

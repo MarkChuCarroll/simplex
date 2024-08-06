@@ -170,7 +170,7 @@ condClause:
 ;
 
 product:
-   'produce' '(' ID ')' '{' expr+
+   'produce' '(' LIT_STRING ')' '{' expr+
    '}'
 ;
 

@@ -2,29 +2,31 @@
 Test a model using a lambda function
 ===================
 // Make sure lambda works correctly.
-fun test_lambda(a: Int): Int do
-  let x : (Int,Int):Int = lambda:Int(a: Int, b: Int) do a+b end in
+fun test_lambda(a: Int): Int {
+  let (x : (Int,Int):Int = lambda:Int(a: Int, b: Int) { a+b }) in {
      x(a, 8)
-   end
-end
+   }
+}
 
 val t: Int = test_lambda(3)/2
 
 // And check that recursion in functions works.
-fun fact(n: Int): Int do
-  if n == 0 then 1
-  else n * fact(n - 1)
-  end
-end
+fun fact(n: Int): Int {
+  if (n == 0) {
+     1
+  } else {
+     n * fact(n - 1)
+  }
+}
 
-produce(n) do
+produce("n") {
   print(["Factorial of 5 = ", fact(5)])
-end
+}
 
 
-produce(t) do
+produce("t") {
    t
-end
+}
 ----
 
     (source_file
@@ -75,7 +77,7 @@ end
               (exprs
                 (ref
                   (id))
-                (litint))))))
+                (litInt))))))
       (definition
         (varDef
           (id)
@@ -86,9 +88,9 @@ end
               (ref
                 (id))
               (exprs
-                (litint)))
+                (litInt)))
             (multOp)
-            (litint))))
+            (litInt))))
       (comment)
       (definition
         (funDef
@@ -106,8 +108,8 @@ end
                 (ref
                   (id))
                 (compOp)
-                (litint))
-              (litint))
+                (litInt))
+              (litInt))
             (multiply
               (ref
                 (id))
@@ -120,22 +122,22 @@ end
                     (ref
                       (id))
                     (addOp)
-                    (litint))))))))
+                    (litInt))))))))
       (product
-        (id)
+        (litStr)
         (funCall
           (ref
             (id))
           (exprs
             (array
               (exprs
-                (litstr)
+                (litStr)
                 (funCall
                   (ref
                     (id))
                   (exprs
-                    (litint))))))))
+                    (litInt))))))))
       (product
-        (id)
+        (litStr)
         (ref
           (id))))

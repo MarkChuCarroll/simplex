@@ -11,7 +11,7 @@ fun make_a_bunch(): [Csg] {
 
 val list: [Csg] = make_a_bunch()
 
-produce(a) {
+produce("a") {
    list[0]
    list[1]
    list[2]

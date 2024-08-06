@@ -4,16 +4,15 @@ function with let
 
 
 // comment
-fun test(x: Float, y: Int): String do
-  let local: String = x + x
-  in
+fun test(x: Float, y: Int): String {
+  let (local: String = x + x) in {
     print([local, y2])
-  end
-end
+  }
+}
 
-produce(str) do
+produce("str") {
    testfun("abc", 27)
-end
+}
 ---
 (source_file
   (comment)
@@ -54,10 +53,10 @@ end
                 (ref
                   (id)))))))))
   (product
-    (id)
+    (litStr)
     (funCall
       (ref
         (id))
       (exprs
-        (litstr)
-        (litint)))))
+        (litStr)
+        (litInt)))))

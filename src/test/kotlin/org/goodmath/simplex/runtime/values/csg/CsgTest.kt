@@ -43,7 +43,7 @@ class CsgTest {
        }
    }
 
-produce(shape) {
+produce("shape") {
   compoundShape(30.0)
 }
 """.trimIndent()

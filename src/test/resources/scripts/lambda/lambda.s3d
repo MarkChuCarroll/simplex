@@ -17,11 +17,11 @@ fun fact(n: Int): Int {
   }
 }
 
-produce(n) {
+produce("n") {
   print(["Factorial of 5 = ", fact(5)])
 }
 
 
-produce(t) {
+produce("t") {
    t
 }

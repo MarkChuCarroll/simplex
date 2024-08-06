@@ -4,6 +4,6 @@ meth Int->f(): Float {
    self->float()
 }
 
-produce(result) {
+produce("result") {
    print([3->f(), " ", 4->f()])
 }

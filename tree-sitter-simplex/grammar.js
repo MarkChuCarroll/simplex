@@ -26,10 +26,10 @@ module.exports = grammar({
       ,')',
       ':',
       field('type', $._type),
-      'do',
+      '{',
       field('localDefs', repeat($.definition)),
       field('body', repeat($._expr)),
-      'end'
+      '}'
     ),
     tupDef: $ => seq(
       'tup',
@@ -47,9 +47,9 @@ module.exports = grammar({
       ')',
       ':',
       $._type,
-      'do',
+      '{',
       repeat1($._expr),
-      'end'
+      '}'
     ),
     params: $ => seq(
       $.param,
@@ -152,12 +152,26 @@ module.exports = grammar({
       $._expr,
       ')'
     )),
+    field: $ => prec.left(8, seq(
+      $._expr,
+      '.',
+      $.id
+    )),
+    update: $ => prec.left(9, seq(
+      $._expr,
+      '.',
+      $.id,
+      ':=',
+      $._expr
+    )),
     _expr:$ => choice(
       $.paren,
       prec(9, $._primary),
       prec(9, $._complex),
       $.methodCall,
       $.subscript,
+      $.field,
+      $.update,
       $.funCall,
       $.unary,
       $.power,
@@ -172,9 +186,9 @@ module.exports = grammar({
         'elif',
         $.condClause
       )),
-      'else',
+      'else', '{',
       $._expr,
-      'end'
+      '}'
     ),
     lambda: $ => seq(
       'lambda',
@@ -183,36 +197,39 @@ module.exports = grammar({
       '(',
       $.params,
       ')',
-      'do',
+      '{',
       repeat1($._expr),
-      'end'),
+      '}'),
     block: $ => seq(
-      'do',
+      '{',
       repeat1($._expr),
-      'end'
+      '}'
     ),
     with: $ => seq(
       'with',
       $._expr,
-      'do',
+      '{',
       repeat1($._expr),
-      'end'
+      '}'
     ),
     letExpr: $ => seq(
       'let',
+      '(',
       $.bindings,
+      ')',
       'in',
+      '{',
       repeat1($._expr),
-      'end'
+      '}'
     ),
     loop: $ => seq(
       'for',
       $.id,
       'in',
       $._expr,
-      'do',
+      '{',
       repeat1($._expr),
-      'end'
+      '}'
     ),
     _complex: $ => choice(
       $.letExpr,
@@ -245,12 +262,12 @@ module.exports = grammar({
       $.ref,
       $.array,
       $.tuple,
-      $.litint,
-      $.litfloat,
-      $.litstr,
-      $.litbool
+      $.litInt,
+      $.litFloat,
+      $.litStr,
+      $.litBool
     ),
-    litbool: $ => choice(
+    litBool: $ => choice(
       'true',
       'false'
     ),
@@ -295,18 +312,21 @@ module.exports = grammar({
       '-'
     ),
     condClause: $ => seq(
+      '(',
       $._expr,
-      'then',
-      $._expr
+      ')',
+      '{',
+      repeat1($._expr),
+      '}'
     ),
     product: $ => seq(
       'produce',
       '(',
-      $.id,
+      $.litStr,
       ')',
-      'do',
+      '{',
       repeat1($._expr),
-      'end'
+      '}'
     ),
     exprs: $ => seq(
       $._expr,
@@ -316,9 +336,9 @@ module.exports = grammar({
       ))
     ),
     id: $ => /[A-Za-z_][A-Za-z_0-9]*/,
-    litint: $ => /[0-9]+/,
-    litfloat: $ => /[0-9]+\.[0-9]*([eE]-?[0-9]+)?/,
-    litstr: $ => /".*"/,
+    litInt: $ => /[0-9]+/,
+    litFloat: $ => /[0-9]+\.[0-9]*([eE]-?[0-9]+)?/,
+    litStr: $ => /".*"/,
     _whitespace: $ => /\s+/,
     comment: $ => seq(
       '//',

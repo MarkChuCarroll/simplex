@@ -16,7 +16,7 @@ fun goof (base: Csg, radius: Float): Csg {
      sphere(radius)->move_to(0.0, 0.0, 50.0)
 }
 
-produce(conic) {
+produce("conic") {
    goof(conic, 10.0)->move_to(0.0, 0.0, 0.0)
    print(["bounds = ", conic->bounds()])
 }
