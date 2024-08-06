@@ -43,16 +43,16 @@ dependencies {
     antlr("org.antlr:antlr4:$antlrVersion") // use ANTLR version 4
     implementation("org.jcommander:jcommander:1.83")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
-    // https://mvnrepository.com/artifact/org.antlr/antlr4
     implementation("org.antlr:antlr4:$antlrVersion") // use ANTLR version 4
     implementation("org.antlr:antlr4-runtime:$antlrVersion")
     implementation("com.github.ajalt.clikt:clikt:$cliktVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
+
     testImplementation(kotlin("test"))
     implementation("eu.mihosoft.vrl.jcsg:jcsg:0.5.7")
     implementation("com.github.ajalt.clikt:clikt:$cliktVersion")
     implementation("com.github.ajalt.mordant:mordant:2.7.1")
-    // https://mvnrepository.com/artifact/org.eclipse.lsp4j/org.eclipse.lsp4j
     implementation("org.eclipse.lsp4j:org.eclipse.lsp4j:0.23.1")
 }
 
