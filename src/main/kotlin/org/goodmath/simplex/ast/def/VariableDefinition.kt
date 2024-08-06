@@ -10,9 +10,7 @@ import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.twist.Twist
 
 class VariableDefinition(name: String, val type: Type,
-                         val initialValue: Expr, loc: Location
-):
-        Definition(name, loc) {
+                         val initialValue: Expr, loc: Location): Definition(name, loc) {
     override fun twist(): Twist =
         Twist.obj("VariableDefinition",
             Twist.attr("name", name),
