@@ -1,5 +1,4 @@
 "tup" @definition
-"val" @variable
 "fun" @function
 "meth" @definition
 "let" @definer

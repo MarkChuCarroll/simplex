@@ -94,15 +94,20 @@ object CsgScaleMethod: PrimitiveMethod(
         env: Env
     ): Value {
         val csg = CsgValueType.assertIsCsg(target)
-        if (args.size == 1) {
-            val factor = CsgValueType.assertIsFloat(args[0])
-            return CsgValue(csg.transformed(Transform().scale(factor)))
-        } else { // args.size == 3
-            val xFactor = CsgValueType.assertIsFloat(args[0])
-            val yFactor = CsgValueType.assertIsFloat(args[1])
-            val zFactor = CsgValueType.assertIsFloat(args[2])
-            return CsgValue(csg.transformed(Transform().scale(xFactor, yFactor, zFactor)))
-        }
+        val factor = CsgValueType.assertIsFloat(args[0])
+        return CsgValue(csg.transformed(Transform().scale(factor)))
+    }
+}
+object CsgScaleThree: PrimitiveMethod(
+    "scale3",
+    MethodSignature(Type.CsgType, listOf(Param("x", Type.FloatType),
+        Param("y", Type.FloatType), Param("z", Type.FloatType)), Type.CsgType)) {
+    override fun execute(target: Value, args: List<Value>, env: Env): Value {
+        val csg = CsgValueType.assertIsCsg(target)
+        val xFactor = CsgValueType.assertIsFloat(args[0])
+        val yFactor = CsgValueType.assertIsFloat(args[1])
+        val zFactor = CsgValueType.assertIsFloat(args[2])
+        return CsgValue(csg.transformed(Transform().scale(xFactor, yFactor, zFactor)))
     }
 }
 

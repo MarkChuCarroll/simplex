@@ -7,7 +7,7 @@ fun test_lambda(a: Int): Int {
   x(a, 8)
 }
 
-val t: Int = test_lambda(3)/2
+let t: Int = test_lambda(3)/2
 
 // And check that recursion in functions works.
 fun fact(n: Int): Int {

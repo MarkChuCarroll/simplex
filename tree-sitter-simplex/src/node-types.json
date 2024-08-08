@@ -1396,7 +1396,7 @@
         "required": false,
         "types": [
           {
-            "type": "definition",
+            "type": "funDef",
             "named": true
           }
         ]
@@ -3741,10 +3741,6 @@
   },
   {
     "type": "tup",
-    "named": false
-  },
-  {
-    "type": "val",
     "named": false
   },
   {

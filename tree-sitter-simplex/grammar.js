@@ -11,7 +11,7 @@ module.exports = grammar({
       $.tupDef,
       $.methDef),
     varDef: $ => seq(
-      'val',
+      'let',
       field('name', $.id),
       ':',
       field('type', $._type),
@@ -27,7 +27,7 @@ module.exports = grammar({
       ':',
       field('type', $._type),
       '{',
-      field('localDefs', repeat($.definition)),
+      field('localDefs', repeat($.funDef)),
       field('body', repeat($._expr)),
       '}'
     ),

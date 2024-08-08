@@ -71,7 +71,7 @@ object CsgValueType: ValueType() {
 
     override val providesPrimitiveMethods: List<PrimitiveMethod> by lazy {
         listOf(
-            CsgScaleMethod, CsgMoveMethod, CsgRotateMethod,
+            CsgScaleMethod, CsgScaleThree, CsgMoveMethod, CsgRotateMethod,
             object: PrimitiveMethod("bounds",
                 MethodSignature(
                     Type.CsgType,

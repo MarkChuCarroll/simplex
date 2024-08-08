@@ -35,7 +35,7 @@ import kotlin.let
 enum class Operator {
     Plus, Minus, Times, Div, Mod, Pow,
     Eq, Neq, Gt, Ge, Lt, Le,
-    Not, And, Or,
+    Uminus, Not, And, Or,
     Subscript;
 
     fun toMethod(): String? {
@@ -55,6 +55,7 @@ enum class Operator {
             Not -> "not"
             And -> null
             Or -> null
+            Uminus -> "neg"
             Subscript -> "sub"
         }
     }
@@ -73,6 +74,9 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location) : Expr
             val target = args[0].evaluateIn(env)
             val methodName = op.toMethod()
             if (methodName != null) {
+                if (methodName == "neg") {
+                    return target.valueType.applyMethod(target, methodName, emptyList(), env)
+                }
                 return target.valueType.applyMethod(target, methodName, listOf(args[1].evaluateIn(env)), env)
             } else {
                 return when (op) {
@@ -85,7 +89,6 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location) : Expr
                         ) as BooleanValue
                         BooleanValue(!truthy.b)
                     }
-
                     Operator.Gt -> {
                         val c = target.valueType.applyMethod(target, "compare", listOf(args[1].evaluateIn(env)), env)
                         BooleanValue((c as IntegerValue).i > 0)
@@ -207,6 +210,7 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location) : Expr
             Operator.And -> Type.simple("Boolean")
             Operator.Or -> Type.simple("Boolean")
             Operator.Subscript -> targetType.getMethod("sub")?.returnType
+            Operator.Uminus -> targetType.getMethod("neg")?.returnType
         } ?: throw SimplexUnsupportedOperation(targetType.toString(), op.toString(), loc = loc)
     }
 }

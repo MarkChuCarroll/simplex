@@ -41,7 +41,7 @@ params:
 ;
 
 varDef:
-  'val' ID  ':' type  '=' expr
+  'let' ID  ':' type  '=' expr
 ;
 
 funDef:

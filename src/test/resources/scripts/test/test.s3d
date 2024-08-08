@@ -8,7 +8,7 @@ fun dbl(radius: Float, height: Float): Csg {
   c + c->rot(0.0, 180.0, 0.0)->move(0.0, 0.0, 25.0)
 }
 
-val conic: Csg = dbl(50.0, 30.0)
+let conic: Csg = dbl(50.0, 30.0)
 
 fun goof (base: Csg, radius: Float): Csg {
    (base + sphere(radius)->move_to(0.0, 0.0, 30.0)) -

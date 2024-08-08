@@ -344,7 +344,8 @@ class SimplexParseListener: SimplexListener {
 
     override fun exitExprUnary(ctx: SimplexParser.ExprUnaryContext) {
         val op = getValueFor(ctx.unaryOp()) as Operator
-        setValueFor(ctx, op)
+        val target = getValueFor(ctx.expr()) as Expr
+        setValueFor(ctx, OperatorExpr(op, listOf(target), loc(ctx)))
     }
 
     override fun enterExprLogic(ctx: SimplexParser.ExprLogicContext) {
@@ -659,7 +660,7 @@ class SimplexParseListener: SimplexListener {
     }
 
     override fun exitOpUnaryNeg(ctx: SimplexParser.OpUnaryNegContext) {
-        setValueFor(ctx, Operator.Minus)
+        setValueFor(ctx, Operator.Uminus)
     }
 
     override fun enterCondClause(ctx: SimplexParser.CondClauseContext) {

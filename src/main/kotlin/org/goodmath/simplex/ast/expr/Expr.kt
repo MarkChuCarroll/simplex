@@ -37,7 +37,6 @@ import org.goodmath.simplex.runtime.values.primitives.StringValue
 import org.goodmath.simplex.runtime.values.primitives.TupleValue
 import org.goodmath.simplex.twist.Twist
 import kotlin.collections.first
-import kotlin.collections.forEach
 import kotlin.collections.last
 import kotlin.collections.map
 import kotlin.collections.toSet
