@@ -41,7 +41,7 @@ params:
 ;
 
 varDef:
-  'let' ID  ':' type  '=' expr
+  'let' ID  (':' type)?  '=' expr
 ;
 
 funDef:
@@ -104,7 +104,7 @@ expr:
 ;
 
 complex:
-  'let' ID ':' type '=' expr #complexLet
+  'let' ID (':' type)? '=' expr #complexLet
 | 'if' condClause ( 'elif' condClause )* 'else' expr  #complexCondExpr
 | 'for' ID 'in' expr '{' expr+ '}' #complexForExpr
 | '{' expr+ '}'  #complexDoExpr

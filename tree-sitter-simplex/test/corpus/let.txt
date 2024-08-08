@@ -1,8 +1,6 @@
 ====================
 function with let
 ====================
-
-
 // comment
 fun test(x: Float, y: Int): String {
   let local: String = x + x
@@ -10,50 +8,106 @@ fun test(x: Float, y: Int): String {
 }
 
 produce("str") {
-   testfun("abc", 27)
+   test_fun("abc", 27)
 }
 ---
 (source_file
-      (comment)
-      (definition
-        (funDef
-          (id)
-          (params
-            (param
-              (id)
-              (simpleType
-                (id)))
-            (param
-              (id)
-              (simpleType
-                (id))))
-          (simpleType
-            (id))
-          (letExpr
+  (comment)
+  (definition
+    (funDef
+      (id)
+        (params
+          (param
             (id)
             (simpleType
-              (id))
-            (add
-              (ref
-                (id))
-              (addOp)
-              (ref
-                (id))))
-          (funCall
+              (id)))
+          (param
+            (id)
+            (simpleType
+              (id))))
+        (simpleType
+          (id))
+        (letExpr
+          (id)
+          (simpleType
+            (id))
+          (add
             (ref
               (id))
-            (exprs
-              (array
-                (exprs
-                  (ref
-                    (id))
-                  (ref
-                    (id))))))))
-      (product
-        (litStr)
+            (addOp)
+            (ref
+              (id))))
         (funCall
           (ref
             (id))
           (exprs
-            (litStr)
-            (litInt)))))
+            (array
+              (exprs
+                (ref
+                  (id))
+                (ref
+                  (id))))))))
+  (product
+    (litStr)
+    (funCall
+      (ref
+        (id))
+      (exprs
+        (litStr)
+        (litInt)))))
+
+====================================
+Function with let inferred types
+====================================
+// comment
+fun test(x: Float, y: Int): String {
+  let local = x + x
+  print([local, y2])
+}
+
+produce("str") {
+   test_fun("abc", 27)
+}
+-------
+(source_file
+  (comment)
+  (definition
+    (funDef
+      (id)
+      (params
+        (param
+          (id)
+          (simpleType
+            (id)))
+        (param
+          (id)
+          (simpleType
+            (id))))
+      (simpleType
+        (id))
+      (letExpr
+        (id)
+        (add
+          (ref
+            (id))
+          (addOp)
+          (ref
+            (id))))
+      (funCall
+        (ref
+          (id))
+        (exprs
+          (array
+            (exprs
+              (ref
+                (id))
+              (ref
+                (id))))))))
+  (product
+    (litStr)
+    (funCall
+      (ref
+        (id))
+      (exprs
+        (litStr)
+        (litInt)))))

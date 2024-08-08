@@ -88,7 +88,7 @@ data class Binding(val name: String, val type: Type, val value: Expr, override v
     }
 }
 
-class LetExpr(val name: String, val type: Type, val value: Expr, loc: Location): Expr(loc) {
+class LetExpr(val name: String, val type: Type?, val value: Expr, loc: Location): Expr(loc) {
 
     override fun twist(): Twist =
         Twist.obj(
@@ -108,14 +108,16 @@ class LetExpr(val name: String, val type: Type, val value: Expr, loc: Location):
     }
 
     override fun validate(env: Env) {
-        env.declareTypeOf(name, type)
-        if (!type.matchedBy(value.resultType(env))) {
+        value.validate(env)
+        val declareType = type ?: value.resultType(env)
+        env.declareTypeOf(name, declareType)
+
+        if (type != null && !type.matchedBy(value.resultType(env))) {
             throw SimplexTypeError(type.toString(), value.resultType(env).toString(), location = loc)
         }
         value.validate(env)
     }
 }
-
 
 class LiteralExpr<T>(val v: T, loc: Location) : Expr(loc) {
     override fun twist(): Twist =

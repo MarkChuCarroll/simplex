@@ -9,7 +9,7 @@ import org.goodmath.simplex.runtime.SimplexEvaluationError
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.twist.Twist
 
-class VariableDefinition(name: String, val type: Type,
+class VariableDefinition(name: String, val type: Type?,
                          val initialValue: Expr, loc: Location): Definition(name, loc) {
     override fun twist(): Twist =
         Twist.obj("VariableDefinition",
@@ -18,7 +18,8 @@ class VariableDefinition(name: String, val type: Type,
             Twist.value("value", initialValue))
 
     override fun installStatic(env: Env) {
-        env.declareTypeOf(name, type)
+        val declareType = type ?: initialValue.resultType(env)
+        env.declareTypeOf(name, declareType)
     }
 
     override fun installValues(env: Env) {
@@ -42,8 +43,9 @@ class VariableDefinition(name: String, val type: Type,
     }
 
     override fun validate(env: Env) {
+        initialValue.validate(env)
         val actualType = initialValue.resultType(env)
-        if (!type.matchedBy(actualType)) {
+        if (type != null && !type.matchedBy(actualType)) {
             throw SimplexTypeError(type.toString(), actualType.toString(), location = loc)
         }
     }

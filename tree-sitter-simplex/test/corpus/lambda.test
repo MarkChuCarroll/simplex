@@ -3,7 +3,7 @@ Test a model using a lambda function
 ===================
 // Make sure lambda works correctly.
 fun test_lambda(a: Int): Int {
-  let x : (Int,Int):Int = lambda:Int(a: Int, b: Int) { a+b }
+  let x = lambda:Int(a: Int, b: Int) { a+b }
   x(a, 8)
 }
 
@@ -27,114 +27,105 @@ produce("t") {
    t
 }
 ----
- (source_file
-      (comment)
-      (definition
-        (funDef
+(source_file
+  (comment)
+  (definition
+    (funDef
+      (id)
+      (params
+        (param
           (id)
+          (simpleType
+            (id))))
+      (simpleType
+        (id))
+      (letExpr
+        (id)
+        (lambda
+          (simpleType
+            (id))
           (params
             (param
               (id)
-              (simpleType
-                (id))))
-          (simpleType
-            (id))
-          (letExpr
-            (id)
-            (funType
-              (types
-                (simpleType
-                  (id))
-                (simpleType
-                  (id)))
               (simpleType
                 (id)))
-            (lambda
-              (simpleType
-                (id))
-              (params
-                (param
-                  (id)
-                  (simpleType
-                    (id)))
-                (param
-                  (id)
-                  (simpleType
-                    (id))))
-              (add
-                (ref
-                  (id))
-                (addOp)
-                (ref
-                  (id)))))
-          (funCall
-            (ref
-              (id))
-            (exprs
-              (ref
-                (id))
-              (litInt)))))
-      (definition
-        (varDef
-          (id)
-          (simpleType
-            (id))
-          (multiply
-            (funCall
-              (ref
-                (id))
-              (exprs
-                (litInt)))
-            (multOp)
-            (litInt))))
-      (comment)
-      (definition
-        (funDef
-          (id)
-          (params
             (param
               (id)
               (simpleType
                 (id))))
-          (simpleType
+          (add
+            (ref
+              (id))
+            (addOp)
+            (ref
+              (id)))))
+      (funCall
+        (ref
+          (id))
+        (exprs
+          (ref
             (id))
-          (cond
-            (condClause
-              (compare
-                (ref
-                  (id))
-                (compOp)
-                (litInt))
-              (litInt))
-            (multiply
-              (ref
-                (id))
-              (multOp)
-              (funCall
-                (ref
-                  (id))
-                (exprs
-                  (add
-                    (ref
-                      (id))
-                    (addOp)
-                    (litInt))))))))
-      (product
-        (litStr)
+          (litInt)))))
+  (definition
+    (varDef
+      (id)
+      (simpleType
+        (id))
+      (multiply
         (funCall
           (ref
             (id))
           (exprs
-            (array
+            (litInt)))
+        (multOp)
+        (litInt))))
+  (comment)
+  (definition
+    (funDef
+      (id)
+      (params
+        (param
+          (id)
+          (simpleType
+            (id))))
+      (simpleType
+        (id))
+      (cond
+        (condClause
+          (compare
+            (ref
+              (id))
+            (compOp)
+            (litInt))
+          (litInt))
+        (multiply
+          (ref
+            (id))
+          (multOp)
+          (funCall
+            (ref
+              (id))
+            (exprs
+              (add
+                (ref
+                  (id))
+                (addOp)
+                (litInt))))))))
+  (product
+    (litStr)
+    (funCall
+      (ref
+        (id))
+      (exprs
+        (array
+          (exprs
+            (litStr)
+            (funCall
+              (ref
+                (id))
               (exprs
-                (litStr)
-                (funCall
-                  (ref
-                    (id))
-                  (exprs
-                    (litInt))))))))
-      (product
-        (litStr)
-        (ref
-          (id))))
-
+                (litInt))))))))
+  (product
+    (litStr)
+    (ref
+      (id))))

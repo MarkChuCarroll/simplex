@@ -4,11 +4,11 @@ fun cone(radius: Float, height: Float): Csg {
 }
 
 fun dbl(radius: Float, height: Float): Csg {
-  let c:Csg = cone(height, radius)
+  let c = cone(height, radius)
   c + c->rot(0.0, 180.0, 0.0)->move(0.0, 0.0, 25.0)
 }
 
-let conic: Csg = dbl(50.0, 30.0)
+let conic = dbl(50.0, 30.0)
 
 fun goof (base: Csg, radius: Float): Csg {
    (base + sphere(radius)->move_to(0.0, 0.0, 30.0)) -

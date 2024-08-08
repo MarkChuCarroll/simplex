@@ -13,8 +13,11 @@ module.exports = grammar({
     varDef: $ => seq(
       'let',
       field('name', $.id),
-      ':',
-      field('type', $._type),
+      optional(seq(
+        ':',
+          field('type', $._type)
+        )
+      ),
       '=',
       field('value', $._expr)
     ),
@@ -215,8 +218,10 @@ module.exports = grammar({
     letExpr: $ => seq(
       'let',
       $.id,
-      ':',
-      $._type,
+      optional(seq(
+        ':',
+          $._type
+      )),
       '=',
       $._expr
     ),

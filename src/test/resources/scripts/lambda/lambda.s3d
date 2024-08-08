@@ -1,11 +1,11 @@
 
 // Make sure lambda works correctly.
 fun test_lambda(a: Int): Int {
-  let x : (Int,Int):Int = lambda:Int(a: Int, b: Int) { a+b }
+  let x = lambda:Int(a: Int, b: Int) { a+b }
   x(a, 8)
 }
 
-let t: Int = test_lambda(3)/2
+let t = test_lambda(3)/2
 
 // And check that recursion in functions works.
 fun fact(n: Int): Int {

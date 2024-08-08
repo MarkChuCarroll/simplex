@@ -13,46 +13,45 @@ produce("it") {
   fact(5)
 }
 ------
- (source_file
-      (definition
-        (funDef
+(source_file
+  (definition
+    (funDef
+      (id)
+      (params
+        (param
           (id)
-          (params
-            (param
-              (id)
-              (simpleType
-                (id))))
           (simpleType
-            (id))
-          (cond
-            (condClause
-              (compare
-                (ref
-                  (id))
-                (compOp)
-                (litInt))
-              (litInt))
-            (multiply
-              (ref
-                (id))
-              (multOp)
-              (funCall
-                (ref
-                  (id))
-                (exprs
-                  (add
-                    (ref
-                      (id))
-                    (addOp)
-                    (litInt))))))))
-      (product
-        (litStr)
-        (funCall
+            (id))))
+      (simpleType
+        (id))
+      (cond
+        (condClause
+          (compare
+            (ref
+              (id))
+            (compOp)
+            (litInt))
+          (litInt))
+        (multiply
           (ref
             (id))
-          (exprs
-            (litInt)))))
-
+          (multOp)
+          (funCall
+            (ref
+              (id))
+            (exprs
+              (add
+                (ref
+                  (id))
+                (addOp)
+                  (litInt))))))))
+  (product
+    (litStr)
+    (funCall
+      (ref
+        (id))
+      (exprs
+        (litInt)))))
 =================================
 function call with method call
 =================================
@@ -68,46 +67,45 @@ produce("result") {
    print([3->f(), use_meth(4)])
 }
 ------
-    (source_file
-      (definition
-        (funDef
-          (id)
-          (params
-            (param
-              (id)
-              (simpleType
-                (id))))
-          (simpleType
-            (id))
-          (methodCall
-            (ref
-              (id))
-            (id))))
-      (definition
-        (methDef
-          (simpleType
-            (id))
+(source_file
+  (definition
+    (funDef
+      (id)
+      (params
+        (param
           (id)
           (simpleType
-            (id))
-          (methodCall
-            (ref
-              (id))
             (id))))
-      (product
-        (litStr)
-        (funCall
-          (ref
-            (id))
+      (simpleType
+        (id))
+      (methodCall
+        (ref
+          (id))
+        (id))))
+  (definition
+    (methDef
+      (simpleType
+        (id))
+      (id)
+      (simpleType
+        (id))
+      (methodCall
+        (ref
+          (id))
+        (id))))
+  (product
+    (litStr)
+    (funCall
+      (ref
+        (id))
+      (exprs
+        (array
           (exprs
-            (array
+            (methodCall
+              (litInt)
+              (id))
+            (funCall
+              (ref
+                (id))
               (exprs
-                (methodCall
-                  (litInt)
-                  (id))
-                (funCall
-                  (ref
-                    (id))
-                  (exprs
-                    (litInt)))))))))
-
+                (litInt)))))))))

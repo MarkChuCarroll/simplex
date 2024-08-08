@@ -163,7 +163,7 @@ class SimplexParseListener: SimplexListener {
 
     override fun exitVarDef(ctx: SimplexParser.VarDefContext) {
         val name = ctx.ID().text
-        val type = getValueFor(ctx.type()) as Type
+        val type = ctx.type()?.let { getValueFor(it) as Type }
         val initValue = getValueFor(ctx.expr()) as Expr
         setValueFor(ctx, VariableDefinition(name, type, initValue, loc(ctx)))
     }
@@ -399,7 +399,7 @@ class SimplexParseListener: SimplexListener {
 
     override fun exitComplexLet(ctx: SimplexParser.ComplexLetContext) {
         val name = ctx.ID().text
-        val type = getValueFor(ctx.type()) as Type
+        val type = ctx.type()?.let { getValueFor(it) as Type }
         val value = getValueFor(ctx.expr()) as Expr
         setValueFor(ctx, LetExpr(name, type, value, loc(ctx)))
     }

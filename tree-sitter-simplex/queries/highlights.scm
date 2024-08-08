@@ -13,6 +13,8 @@
 (litStr) @string
 (comment) @comment
 
+(varDef name:(id) @variable)
+
 (funDef name: (id) @function)
 
 (methDef name: (id) @function.method)

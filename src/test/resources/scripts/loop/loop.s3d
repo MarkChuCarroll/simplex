@@ -9,7 +9,7 @@ fun make_a_bunch(): [Csg] {
   }
 }
 
-let list: [Csg] = make_a_bunch()
+let list = make_a_bunch()
 
 produce("a") {
    list[0]
