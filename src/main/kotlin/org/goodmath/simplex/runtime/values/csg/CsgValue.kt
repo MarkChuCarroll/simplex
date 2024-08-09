@@ -113,6 +113,19 @@ object CsgValueType: ValueType() {
                     return CsgValue(csg.hull())
                 }
             },
+            object: PrimitiveMethod("move",
+                MethodSignature(asType, listOf(Param("x", Type.FloatType),
+                    Param("y", Type.FloatType), Param("z", Type.FloatType)),
+                    Type.CsgType)) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val target = assertIsCsg(target)
+                    val x = assertIsFloat(args[0])
+                    val y = assertIsFloat(args[1])
+                    val z = assertIsFloat(args[2])
+                    return CsgValue(target.transformed(Transform()
+                        .translate(x, y, z)))
+                }
+            },
             object: PrimitiveMethod("move_to",
                 MethodSignature(asType,
                     listOf(Param("x", Type.FloatType), Param("y", Type.FloatType), Param("z", Type.FloatType)),
@@ -171,10 +184,7 @@ object CsgValueType: ValueType() {
                     return BooleanValue(c1 == c2)
                 }
             })
-
     }
-
-
 }
 
 class CsgValue(val csgValue: CSG): Value {
