@@ -21,7 +21,6 @@ package org.goodmath.simplex.parser;
 
 model:
     d=def+
-
     product+
 ;
 
@@ -33,7 +32,7 @@ def:
 ;
 
 tupleDef:
-   'tup' ID '(' params ')'
+   'data' ID '{' params '}'
 ;
 
 params:
@@ -45,6 +44,7 @@ varDef:
 ;
 
 funDef:
+
    'fun' ID '(' params? ')' ':' type '{'
     funDef*
     expr*
@@ -66,8 +66,8 @@ types:
 ;
 
 type:
-   ID #optSimpleType
-|  '[' type ']' #optVectorType
+  ID #optSimpleType
+| '[' type ']' #optVectorType
 | '(' types? ')' ':' type # optFunType
 | target=type '->' '(' types? ')' ':' result=type #optMethodType
 ;
@@ -75,7 +75,6 @@ type:
 bindings:
    binding ( ',' binding )*
 ;
-
 
 exprs:
   expr (',' expr)*
@@ -91,15 +90,10 @@ expr:
 | expr '.' ID  #exprField
 | target=expr '.' ID ':=' value=expr #exprUpdate
 | unaryOp  expr #exprUnary
-
 | l=expr expOp r=expr #exprPow
-
 | l=expr multOp r=expr #exprMult
-
 | l=expr addOp r=expr #exprAdd
-
 | l=expr compareOp r=expr #exprCompare
-
 | l=expr logicOp r=expr #exprLogic
 ;
 
@@ -198,4 +192,3 @@ fragment EXP :   [Ee] [+\-]? INT ;
 COMMENT : '/*' .*? '*/' -> channel(HIDDEN) ;
 LINE_COMMENT : '//' ~'\n'* '\n' -> channel(HIDDEN) ;
 WS : [ \t\n\r]+ -> channel(HIDDEN) ;
-
