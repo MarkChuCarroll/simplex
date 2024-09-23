@@ -39,6 +39,7 @@ repositories {
 }
 
 dependencies {
+    implementation("net.java.dev.jna:jna:5.15.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     antlr("org.antlr:antlr4:$antlrVersion") // use ANTLR version 4
     implementation("org.jcommander:jcommander:1.83")
