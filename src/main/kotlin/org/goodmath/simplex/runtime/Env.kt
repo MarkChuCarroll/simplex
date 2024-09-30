@@ -15,54 +15,54 @@
  */
 package org.goodmath.simplex.runtime
 
+import com.github.ajalt.mordant.rendering.TextColors.*
+import java.util.UUID
 import org.goodmath.simplex.ast.def.Definition
-import org.goodmath.simplex.ast.Model
-import org.goodmath.simplex.runtime.values.csg.CsgValueType
-import org.goodmath.simplex.runtime.csg.TwoDPointValueType
+import org.goodmath.simplex.ast.types.ArrayType
+import org.goodmath.simplex.ast.types.Type
+import org.goodmath.simplex.runtime.values.AnyType
 import org.goodmath.simplex.runtime.values.FunctionSignature
 import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
-import org.goodmath.simplex.runtime.values.csg.ThreeDPointValueType
-import org.goodmath.simplex.runtime.values.csg.PolygonValueType
+import org.goodmath.simplex.runtime.values.manifold.RGBAType
+import org.goodmath.simplex.runtime.values.manifold.BoundingBoxType
+import org.goodmath.simplex.runtime.values.manifold.SliceType
+import org.goodmath.simplex.runtime.values.manifold.SMaterialType
+import org.goodmath.simplex.runtime.values.manifold.SMeshGLType
+import org.goodmath.simplex.runtime.values.manifold.SPolygonType
+import org.goodmath.simplex.runtime.values.manifold.BoundingRectType
+import org.goodmath.simplex.runtime.values.manifold.SolidType
+import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
 import org.goodmath.simplex.runtime.values.primitives.FloatValueType
 import org.goodmath.simplex.runtime.values.primitives.IntegerValueType
-import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
+import org.goodmath.simplex.runtime.values.primitives.NoneType
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
+import org.goodmath.simplex.runtime.values.primitives.StringValue
 import org.goodmath.simplex.runtime.values.primitives.StringValueType
+import org.goodmath.simplex.runtime.values.primitives.Vec2Type
+import org.goodmath.simplex.runtime.values.primitives.Vec3Type
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
-import java.util.UUID
-import com.github.ajalt.mordant.rendering.TextColors.*
-import org.goodmath.simplex.ast.types.ArrayType
-import org.goodmath.simplex.ast.types.Type
-import org.goodmath.simplex.runtime.values.AnyType
-import org.goodmath.simplex.runtime.values.primitives.StringValue
 
 /**
- * An environment, which contains the definitions, types, variables,
- * functions, and methods available in a static scope of the program.
+ * An environment, which contains the definitions, types, variables, functions, and methods
+ * available in a static scope of the program.
+ *
  * @param defList a list of the definitions local to the scope.
- * @param parentEnv the static scope that encloses this environment,
- *    if any.
+ * @param parentEnv the static scope that encloses this environment, if any.
  */
-open class Env(defList: List<Definition>,
-    val parentEnv: Env?): Twistable {
+open class Env(defList: List<Definition>, val parentEnv: Env?) : Twistable {
     val defs = defList.associateBy { it.name }.toMutableMap()
     val vars = HashMap<String, Value>()
     val declaredTypes = HashMap<String, Type>()
     open val valueTypes = HashMap<String, ValueType>()
     val functions = HashMap<String, PrimitiveFunctionValue>()
 
-    /**
-     * A unique identifier for a scope. Used only for debugging
-     * purposes.
-     */
+    /** A unique identifier for a scope. Used only for debugging purposes. */
     open val id: String = UUID.randomUUID().toString()
 
-    /**
-     * Register a new type defined within the scope.
-     */
+    /** Register a new type defined within the scope. */
     fun registerType(name: String, valueType: ValueType) {
         if (valueTypes.containsKey(name)) {
             throw SimplexInternalError("Type $name is already registered in env $id")
@@ -71,8 +71,7 @@ open class Env(defList: List<Definition>,
     }
 
     /**
-     * Get a type in the scope. The key is the string returned by a
-     * static type's "toString"  method.
+     * Get a type in the scope. The key is the string returned by a static type's "toString" method.
      */
     fun getType(name: String): ValueType {
         return if (valueTypes.containsKey(name)) {
@@ -84,10 +83,7 @@ open class Env(defList: List<Definition>,
         }
     }
 
-
-    /**
-     * Declare the static type of a new variable name in the scope.
-     */
+    /** Declare the static type of a new variable name in the scope. */
     fun declareTypeOf(name: String, t: Type) {
         if (declaredTypes.containsKey(name) && declaredTypes[name] != t) {
             throw SimplexAnalysisError("Type of $name is already defined")
@@ -95,10 +91,7 @@ open class Env(defList: List<Definition>,
         declaredTypes[name] = t
     }
 
-    /**
-     * Get the statically declared type of a name in the scope,
-     * or any of its parent scopes.
-     */
+    /** Get the statically declared type of a name in the scope, or any of its parent scopes. */
     fun getDeclaredTypeOf(name: String): Type {
         return if (declaredTypes.containsKey(name)) {
             declaredTypes[name]!!
@@ -110,8 +103,8 @@ open class Env(defList: List<Definition>,
     }
 
     /**
-     * Get the value associated with a name. Can only be called during
-     * execution, not during the analysis phase.
+     * Get the value associated with a name. Can only be called during execution, not during the
+     * analysis phase.
      */
     fun getValue(name: String): Value {
         return if (vars.containsKey(name)) {
@@ -123,9 +116,7 @@ open class Env(defList: List<Definition>,
         }
     }
 
-    /**
-     * Get a definition declared within the scope.
-     */
+    /** Get a definition declared within the scope. */
     fun getDef(name: String): Definition {
         return if (defs.containsKey(name)) {
             defs[name]!!
@@ -137,8 +128,8 @@ open class Env(defList: List<Definition>,
     }
 
     /**
-     * For use during analysis: Iterate through the definitions in this scope, and register
-     * their static types and methods with the environment.
+     * For use during analysis: Iterate through the definitions in this scope, and register their
+     * static types and methods with the environment.
      */
     fun installStaticDefinitions() {
         for (t in valueTypes.values) {
@@ -159,8 +150,8 @@ open class Env(defList: List<Definition>,
     }
 
     /**
-     * For use during execution when entering a scope: register the runtime values
-     * of symbols, functions, and methods provided by the scope's definitions.
+     * For use during execution when entering a scope: register the runtime values of symbols,
+     * functions, and methods provided by the scope's definitions.
      */
     fun installDefinitionValues() {
         for (d in defs.values) {
@@ -189,33 +180,42 @@ open class Env(defList: List<Definition>,
     }
 
     override fun twist(): Twist =
-        Twist.obj("Environment",
+        Twist.obj(
+            "Environment",
             Twist.attr("id", id),
             Twist.attr("parent", parentEnv?.id),
             Twist.array("definitions", defs.values.toList()),
-            Twist.array("variables",
-                vars.map { (k, _) -> Twist.attr("name", k) }
-            ))
+            Twist.array("variables", vars.map { (k, _) -> Twist.attr("name", k) }),
+        )
 
     companion object {
 
         val rootFunctions: List<PrimitiveFunctionValue> by lazy {
             listOf(
-                object: PrimitiveFunctionValue("print",
-                    FunctionSignature(listOf(Param("values", ArrayType(AnyType.asType))), StringValueType.asType)) {
+                object :
+                    PrimitiveFunctionValue(
+                        "print",
+                        FunctionSignature.simple(
+                            listOf(Param("values", ArrayType(AnyType.asType))),
+                            StringValueType.asType,
+                        ),
+                    ) {
                     override fun execute(args: List<Value>): Value {
                         val arr = ArrayValueType.of(AnyType).assertIsArray(args[0])
-                        val result = arr.map {
-                            if (it.valueType.supportsText) {
-                                it.valueType.toText(it)
-                            } else {
-                                it.valueType.name
-                            }
-                        }.joinToString("")
+                        val result =
+                            arr.map {
+                                    if (it.valueType.supportsText) {
+                                        it.valueType.toText(it)
+                                    } else {
+                                        it.valueType.name
+                                    }
+                                }
+                                .joinToString("")
                         RootEnv.echo(0, brightWhite(result), false)
                         return StringValue(result)
                     }
-                })
+                }
+            )
         }
 
         fun createRootEnv(): Env {
@@ -229,11 +229,8 @@ open class Env(defList: List<Definition>,
     }
 }
 
-/**
- * The root scope of a model. This is the scope where builtins are
- * defined and installed.
- */
-object RootEnv: Env(emptyList(), null) {
+/** The root scope of a model. This is the scope where builtins are defined and installed. */
+object RootEnv : Env(emptyList(), null) {
     fun addDefinition(def: Definition) {
         defs[def.name] = def
     }
@@ -243,10 +240,17 @@ object RootEnv: Env(emptyList(), null) {
             "Int" to IntegerValueType,
             "Float" to FloatValueType,
             "String" to StringValueType,
-            "CSG" to CsgValueType,
-            "TwoDPoint" to TwoDPointValueType,
-            "ThreeDPoint" to ThreeDPointValueType,
-            "Polygon" to PolygonValueType,
+            "Polygon" to SPolygonType,
+            "Solid" to SolidType,
+            "CrossSection" to SliceType,
+            "Box" to BoundingBoxType,
+            "Rect" to BoundingRectType,
+            "Material" to SMaterialType,
+            "MeshGL" to SMeshGLType,
+            "Vec2" to Vec2Type,
+            "Vec3" to Vec3Type,
+            "RGBA" to RGBAType,
+            "None" to NoneType,
             "Any" to AnyType,
         )
     }

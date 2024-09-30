@@ -15,37 +15,26 @@
  */
 package org.goodmath.simplex.ast.expr
 
+import kotlin.collections.first
+import kotlin.collections.map
+import kotlin.collections.toMutableSet
 import org.goodmath.simplex.ast.Location
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexAnalysisError
 import org.goodmath.simplex.runtime.values.Value
-import org.goodmath.simplex.twist.Twistable
 import org.goodmath.simplex.twist.Twist
-import kotlin.collections.first
-import kotlin.collections.map
-import kotlin.collections.toMutableSet
+import org.goodmath.simplex.twist.Twistable
 
 data class Condition(val cond: Expr, val value: Expr) : Twistable {
     override fun twist(): Twist =
-        Twist.obj(
-            "Condition",
-            Twist.value("if", cond),
-            Twist.value("then", value)
-        )
+        Twist.obj("Condition", Twist.value("if", cond), Twist.value("then", value))
 }
 
-class CondExpr(
-    val conds: List<Condition>, val elseClause: Expr,
-    loc: Location
-) : Expr(loc) {
+class CondExpr(val conds: List<Condition>, val elseClause: Expr, loc: Location) : Expr(loc) {
 
     override fun twist(): Twist =
-        Twist.obj(
-            "IfExpr",
-            Twist.array("cond_clauses", conds),
-            Twist.value("else", elseClause)
-        )
+        Twist.obj("IfExpr", Twist.array("cond_clauses", conds), Twist.value("else", elseClause))
 
     override fun evaluateIn(env: Env): Value {
         for (cond in conds) {
@@ -68,7 +57,7 @@ class CondExpr(
     }
 
     override fun validate(env: Env) {
-        for (cond in conds){
+        for (cond in conds) {
             cond.cond.validate(env)
             cond.cond.validate(env)
         }
@@ -76,7 +65,10 @@ class CondExpr(
         val resultTypes = conds.map { it.value.resultType(env) }.toMutableSet()
         resultTypes.add(elseClause.resultType(env))
         if (resultTypes.size > 1) {
-            throw SimplexAnalysisError("Cond clauses do not return the same type: $resultTypes", loc = loc)
+            throw SimplexAnalysisError(
+                "Cond clauses do not return the same type: $resultTypes",
+                loc = loc,
+            )
         }
     }
 }

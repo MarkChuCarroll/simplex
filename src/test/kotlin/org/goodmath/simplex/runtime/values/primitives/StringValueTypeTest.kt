@@ -15,13 +15,13 @@
  */
 package org.goodmath.simplex.runtime.values.primitives
 
+import kotlin.math.PI
+import kotlin.test.assertEquals
 import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.SimplexError
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import kotlin.math.PI
-import kotlin.test.assertEquals
 
 class StringValueTypeTest {
 
@@ -34,11 +34,9 @@ class StringValueTypeTest {
         val s2 = StringValue("STRING TWO")
         val s3 = StringValue(PI.toString())
 
-
         val a = StringValueType.applyMethod(s1, "plus", listOf(s2), RootEnv)
         a as StringValue
-        assertEquals("string oneSTRING TWO",
-            a.s)
+        assertEquals("string oneSTRING TWO", a.s)
 
         assertThrows<SimplexError> { StringValueType.applyMethod(s3, "minus", listOf(s2), RootEnv) }
 

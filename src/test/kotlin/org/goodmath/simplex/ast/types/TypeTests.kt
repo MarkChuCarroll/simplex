@@ -1,8 +1,8 @@
 package org.goodmath.simplex.ast.types
 
-import org.junit.jupiter.api.Assertions.assertFalse
 import kotlin.test.Test
 import kotlin.test.assertTrue
+import org.junit.jupiter.api.Assertions.assertFalse
 
 class TypeTests {
     @Test
@@ -35,33 +35,41 @@ class TypeTests {
 
     @Test
     fun testMethodTypes() {
-        val same1 = Type.method(
-            Type.simple("Test"), listOf(Type.IntType, Type.array(Type.FloatType)),
-            Type.StringType
-        )
+        val same1 =
+            Type.simpleMethod(
+                Type.simple("Test"),
+                listOf(Type.IntType, Type.array(Type.FloatType)),
+                Type.StringType,
+            )
 
-        val same2 = Type.method(
-            Type.simple("Test"), listOf(Type.simple("Int"), Type.array(Type.FloatType)),
-            Type.simple("String")
-        )
+        val same2 =
+            Type.simpleMethod(
+                Type.simple("Test"),
+                listOf(Type.simple("Int"), Type.array(Type.FloatType)),
+                Type.simple("String"),
+            )
 
-        val diff1 = Type.method(
-            Type.StringType, listOf(Type.simple("Int"), Type.array(Type.FloatType)),
-            Type.simple("String")
-        )
-        val diff2 = Type.method(
-            Type.simple("Test"), listOf(Type.simple("Int"), Type.array(Type.IntType)),
-            Type.simple("String")
-        )
-        val diff3 = Type.method(
-            Type.simple("Test"), listOf(Type.simple("Int"), Type.array(Type.FloatType)),
-            Type.FloatType
-        )
+        val diff1 =
+            Type.simpleMethod(
+                Type.StringType,
+                listOf(Type.simple("Int"), Type.array(Type.FloatType)),
+                Type.simple("String"),
+            )
+        val diff2 =
+            Type.simpleMethod(
+                Type.simple("Test"),
+                listOf(Type.simple("Int"), Type.array(Type.IntType)),
+                Type.simple("String"),
+            )
+        val diff3 =
+            Type.simpleMethod(
+                Type.simple("Test"),
+                listOf(Type.simple("Int"), Type.array(Type.FloatType)),
+                Type.FloatType,
+            )
         assertTrue(same1.matchedBy(same2))
         assertFalse(same1.matchedBy(diff1))
         assertFalse(same1.matchedBy(diff2))
         assertFalse(same1.matchedBy(diff3))
     }
 }
-
-

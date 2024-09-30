@@ -15,9 +15,11 @@
  */
 package org.goodmath.simplex.runtime.values.primitives
 
+import kotlin.collections.forEach
+import kotlin.collections.zip
 import org.goodmath.simplex.ast.def.Definition
-import org.goodmath.simplex.ast.expr.Expr
 import org.goodmath.simplex.ast.def.FunctionDefinition
+import org.goodmath.simplex.ast.expr.Expr
 import org.goodmath.simplex.ast.types.FunctionType
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.ast.types.TypedName
@@ -25,14 +27,11 @@ import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexEvaluationError
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.values.FunctionSignature
-import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.twist.Twist
-import kotlin.collections.forEach
-import kotlin.collections.zip
 
-abstract class AbstractFunctionValue: Value {
+abstract class AbstractFunctionValue : Value {
     abstract fun applyTo(args: List<Value>): Value
 }
 
@@ -42,18 +41,19 @@ class FunctionValue(
     val localDefs: List<Definition>,
     val body: List<Expr>,
     val staticScope: Env,
-    val def: FunctionDefinition? = null
-): AbstractFunctionValue() {
-    override val valueType: ValueType = FunctionValueType(Type.function(params.map { it.type}, returnType))
+    val def: FunctionDefinition? = null,
+) : AbstractFunctionValue() {
+    override val valueType: ValueType =
+        FunctionValueType(Type.function(listOf(params.map { it.type }), returnType))
 
     override fun applyTo(args: List<Value>): Value {
         val localEnv = Env(localDefs, staticScope)
         if (params.size != args.size) {
-            throw SimplexEvaluationError("Incorrect number of args: expected ${params.size}, but found ${args.size}")
+            throw SimplexEvaluationError(
+                "Incorrect number of args: expected ${params.size}, but found ${args.size}"
+            )
         }
-        params.zip(args).forEach { (param, value) ->
-            localEnv.addVariable(param.name, value)
-        }
+        params.zip(args).forEach { (param, value) -> localEnv.addVariable(param.name, value) }
         var result: Value = IntegerValue(0)
         for (b in body) {
             result = b.evaluateIn(localEnv)
@@ -62,12 +62,10 @@ class FunctionValue(
     }
 
     override fun twist(): Twist =
-        Twist.obj("FunctionValue",
-            Twist.value("def", def),
-            Twist.value("scope", staticScope))
+        Twist.obj("FunctionValue", Twist.value("def", def), Twist.value("scope", staticScope))
 }
 
-class FunctionValueType(val type: FunctionType): ValueType() {
+class FunctionValueType(val type: FunctionType) : ValueType() {
     override val name: String = "Function($type)"
 
     override val asType: Type = type
@@ -76,10 +74,11 @@ class FunctionValueType(val type: FunctionType): ValueType() {
         return true
     }
 
-
     override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()
 
     override val providesPrimitiveMethods: List<PrimitiveMethod> = emptyList()
+    override val providesVariables: Map<String, Value> = emptyMap()
+
     override fun assertIs(v: Value): FunctionValue {
         if (v is FunctionValue) {
             return v
@@ -89,7 +88,7 @@ class FunctionValueType(val type: FunctionType): ValueType() {
     }
 }
 
-object PrimitiveFunctionValueType: ValueType() {
+object PrimitiveFunctionValueType : ValueType() {
     override val name: String = "PrimitiveFunction"
     override val asType: Type = Type.simple("PrimitiveFunction")
 
@@ -99,6 +98,8 @@ object PrimitiveFunctionValueType: ValueType() {
 
     override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()
     override val providesPrimitiveMethods: List<PrimitiveMethod> = emptyList()
+    override val providesVariables: Map<String, Value> = emptyMap()
+
     override fun assertIs(v: Value): PrimitiveFunctionValue {
         if (v is PrimitiveFunctionValue) {
             return v
@@ -108,22 +109,30 @@ object PrimitiveFunctionValueType: ValueType() {
     }
 }
 
-abstract class PrimitiveFunctionValue(
-    val name: String,
-    val signature: FunctionSignature
-): AbstractFunctionValue() {
+/**
+ * To keep the syntax of the manifold bindings clean, Simplex needs to support some form of
+ * overloading on function signatures. To keep them as simple as possible, I'm opting to allow a
+ * primitive function to support multiple parameter lists, but it must always return the same value
+ * type.
+ */
+abstract class PrimitiveFunctionValue(val name: String, val signature: FunctionSignature) :
+    AbstractFunctionValue() {
+
+    val resultType: Type = signature.returnType
+
     abstract fun execute(args: List<Value>): Value
 
     override val valueType = PrimitiveFunctionValueType
 
     override fun twist(): Twist =
-        Twist.obj("PrimitiveFunctionValue",
+        Twist.obj(
+            "PrimitiveFunctionValue",
             Twist.attr("name", name),
             Twist.attr("resultType", name),
-            Twist.value("signature", signature))
+            Twist.value("signature", signature),
+        )
 
     override fun applyTo(args: List<Value>): Value {
         return execute(args)
     }
 }
-

@@ -15,18 +15,17 @@
  */
 package org.goodmath.simplex.runtime.values.primitives
 
+import kotlin.text.indexOf
+import kotlin.text.isNotEmpty
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
-import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.values.MethodSignature
 import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.twist.Twist
-import kotlin.text.indexOf
-import kotlin.text.isNotEmpty
 
-object StringValueType: ValueType() {
+object StringValueType : ValueType() {
     override val name: String = "String"
     override val asType: Type = Type.StringType
 
@@ -48,67 +47,70 @@ object StringValueType: ValueType() {
         }
     }
 
-
-
     override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()
     override val providesPrimitiveMethods: List<PrimitiveMethod> by lazy {
         listOf(
-            object : PrimitiveMethod("length",
-                MethodSignature(asType, emptyList(), Type.IntType)) {
+            object :
+                PrimitiveMethod(
+                    "length",
+                    MethodSignature.simple(asType, emptyList<Param>(), Type.IntType),
+                ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     return IntegerValue(assertIsString(target).length)
                 }
             },
-            object : PrimitiveMethod("find",
-                MethodSignature(
-                    asType,
-                    listOf(Param("s", asType)), Type.IntType)) {
+            object :
+                PrimitiveMethod(
+                    "find",
+                    MethodSignature.simple(asType, listOf(Param("s", asType)), Type.IntType),
+                ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val pat = assertIsString(args[0])
                     return IntegerValue(assertIsString(target).indexOf(pat))
                 }
             },
-            object: PrimitiveMethod("plus",
-                MethodSignature(
-                    asType, listOf(Param("r", asType)),
-                    asType)) {
+            object :
+                PrimitiveMethod(
+                    "plus",
+                    MethodSignature.simple(asType, listOf(Param("r", asType)), asType),
+                ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val l = assertIs(target).s
                     val r = assertIs(args[0]).s
                     return StringValue(l + r)
                 }
             },
-            object: PrimitiveMethod("eq",
-                MethodSignature(
-                    asType, listOf(Param("r", asType)),
-                    Type.BooleanType
-                )) {
+            object :
+                PrimitiveMethod(
+                    "eq",
+                    MethodSignature.simple(asType, listOf(Param("r", asType)), Type.BooleanType),
+                ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val l = assertIs(target).s
                     val r = assertIs(args[0]).s
                     return BooleanValue(l == r)
                 }
             },
-            object: PrimitiveMethod("compare",
-                MethodSignature(
-                    asType, listOf(Param("r", asType)),
-                    Type.IntType)) {
+            object :
+                PrimitiveMethod(
+                    "compare",
+                    MethodSignature.simple(asType, listOf(Param("r", asType)), Type.IntType),
+                ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val l = assertIs(target).s
                     val r = assertIs(args[0]).s
                     return IntegerValue(l.compareTo(r))
                 }
-            }
+            },
         )
     }
+    override val providesVariables: Map<String, Value> = emptyMap()
 }
 
-class StringValue(val s: String): Value {
+class StringValue(val s: String) : Value {
     override val valueType: ValueType = StringValueType
 
     override fun twist(): Twist {
-        return Twist.obj("StringValue",
-            Twist.attr("value", s))
+        return Twist.obj("StringValue", Twist.attr("value", s))
     }
-
 }

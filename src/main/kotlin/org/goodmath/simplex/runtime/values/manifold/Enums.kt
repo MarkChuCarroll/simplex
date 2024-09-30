@@ -13,22 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.goodmath.simplex.ast.def
+package org.goodmath.simplex.runtime.values.manifold
 
-import org.goodmath.simplex.ast.AstNode
-import org.goodmath.simplex.ast.Location
-import org.goodmath.simplex.runtime.Env
-
-/**
- * The supertype of all declarations.
- *
- * @param name the name of the declarations.
- * @param loc the source location
- */
-abstract class Definition(val name: String, loc: Location) : AstNode(loc) {
-    abstract fun installStatic(env: Env)
-
-    abstract fun installValues(env: Env)
-
-    abstract fun validate(env: Env)
+enum class ManifoldOpType(val opCode: Int) {
+    Add(0),
+    Subtract(1),
+    Intersect(2),
 }

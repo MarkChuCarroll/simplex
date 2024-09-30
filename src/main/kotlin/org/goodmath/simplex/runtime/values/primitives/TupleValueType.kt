@@ -21,11 +21,9 @@ import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.values.MethodSignature
 import org.goodmath.simplex.runtime.values.Param
-import org.goodmath.simplex.runtime.values.PrimitiveMethod
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.twist.Twist
-
 
 class TupleValueType(val tupleDef: TupleDefinition) : ValueType() {
     override val name: String = tupleDef.name
@@ -39,14 +37,18 @@ class TupleValueType(val tupleDef: TupleDefinition) : ValueType() {
         val sb = StringBuilder()
         sb.append("#${tup.valueType.name}(")
 
-        sb.append(tup.valueType.tupleDef.fields.map { field ->
-            val fieldValue = tup.fields[tup.valueType.tupleDef.indexOf(field.name)]
-            if (fieldValue.valueType.supportsText) {
-                "${field.name}=${fieldValue.valueType.toText(fieldValue)}"
-            } else {
-                "${field.name}:${fieldValue.valueType.name}"
-            }
-        }.joinToString(", "))
+        sb.append(
+            tup.valueType.tupleDef.fields
+                .map { field ->
+                    val fieldValue = tup.fields[tup.valueType.tupleDef.indexOf(field.name)]
+                    if (fieldValue.valueType.supportsText) {
+                        "${field.name}=${fieldValue.valueType.toText(fieldValue)}"
+                    } else {
+                        "${field.name}:${fieldValue.valueType.name}"
+                    }
+                }
+                .joinToString(", ")
+        )
         sb.append(")")
         return sb.toString()
     }
@@ -60,33 +62,33 @@ class TupleValueType(val tupleDef: TupleDefinition) : ValueType() {
 
     override val providesPrimitiveMethods: List<PrimitiveMethod> by lazy {
         listOf(
-            object: PrimitiveMethod("eq", MethodSignature(asType, listOf(Param("other", asType)),
-            Type.BooleanType)) {
-            override fun execute(
-                target: Value,
-                args: List<Value>,
-                env: Env
-            ): Value {
-                val self = assertIs(target)
-                return if (args[0].valueType != self.valueType) {
-                    BooleanValue(false)
-                } else {
-                    val other = args[0] as TupleValue
-                    if (self.fields.size != other.fields.size) {
+            object :
+                PrimitiveMethod(
+                    "eq",
+                    MethodSignature.simple(asType, listOf(Param("other", asType)), Type.BooleanType),
+                ) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val self = assertIs(target)
+                    return if (args[0].valueType != self.valueType) {
                         BooleanValue(false)
                     } else {
-                        BooleanValue(self.fields.zip(other.fields).all { (l, r) ->
-                            val result = l.valueType.applyMethod(l, "eq", listOf(r), env)
-                            result.valueType.isTruthy(result)
-                        })
+                        val other = args[0] as TupleValue
+                        if (self.fields.size != other.fields.size) {
+                            BooleanValue(false)
+                        } else {
+                            BooleanValue(
+                                self.fields.zip(other.fields).all { (l, r) ->
+                                    val result = l.valueType.applyMethod(l, "eq", listOf(r), env)
+                                    result.valueType.isTruthy(result)
+                                }
+                            )
+                        }
                     }
                 }
             }
-            }
         )
     }
-
-
+    override val providesVariables: Map<String, Value> = emptyMap()
 
     override fun assertIs(v: Value): TupleValue {
         if (v.valueType is TupleValueType) {
@@ -95,14 +97,10 @@ class TupleValueType(val tupleDef: TupleDefinition) : ValueType() {
             throw SimplexTypeError(v.valueType.asType.toString(), this.toString())
         }
     }
-
 }
 
-class TupleValue(override val valueType: TupleValueType, val fields: MutableList<Value>): Value {
+class TupleValue(override val valueType: TupleValueType, val fields: MutableList<Value>) : Value {
 
     override fun twist(): Twist =
-        Twist.obj("TupleValue",
-            Twist.attr("name", valueType.name),
-            Twist.array("fields", fields))
-
+        Twist.obj("TupleValue", Twist.attr("name", valueType.name), Twist.array("fields", fields))
 }

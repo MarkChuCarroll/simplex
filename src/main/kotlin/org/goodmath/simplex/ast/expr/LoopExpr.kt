@@ -15,8 +15,11 @@
  */
 package org.goodmath.simplex.ast.expr
 
-import org.goodmath.simplex.ast.types.ArrayType
+import java.util.ArrayList
+import kotlin.collections.first
+import kotlin.collections.last
 import org.goodmath.simplex.ast.Location
+import org.goodmath.simplex.ast.types.ArrayType
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexAnalysisError
@@ -27,17 +30,15 @@ import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
 import org.goodmath.simplex.runtime.values.primitives.BooleanValue
 import org.goodmath.simplex.runtime.values.primitives.IntegerValue
 import org.goodmath.simplex.twist.Twist
-import java.util.ArrayList
-import kotlin.collections.first
-import kotlin.collections.last
 
-class LoopExpr(val idxVar: String, val collExpr: Expr, val body: List<Expr>, loc: Location) : Expr(loc) {
+class LoopExpr(val idxVar: String, val collExpr: Expr, val body: List<Expr>, loc: Location) :
+    Expr(loc) {
     override fun twist(): Twist =
         Twist.obj(
             "LoopExpr",
             Twist.attr("idxVar", idxVar),
             Twist.value("collection", collExpr),
-            Twist.array("body", body)
+            Twist.array("body", body),
         )
 
     override fun evaluateIn(env: Env): Value {
@@ -45,7 +46,7 @@ class LoopExpr(val idxVar: String, val collExpr: Expr, val body: List<Expr>, loc
         if (collValue.valueType !is ArrayValueType) {
             throw SimplexEvaluationError(
                 "Loops can only iterate over arrays, not ${collValue.valueType.name}",
-                loc = loc
+                loc = loc,
             )
         }
         collValue as ArrayValue
@@ -65,9 +66,7 @@ class LoopExpr(val idxVar: String, val collExpr: Expr, val body: List<Expr>, loc
             result.add(iterationResult)
         }
         // TODO this should be better.
-        return ArrayValue(
-            result[0].valueType, result
-        )
+        return ArrayValue(result[0].valueType, result)
     }
 
     override fun resultType(env: Env): Type {
@@ -81,7 +80,10 @@ class LoopExpr(val idxVar: String, val collExpr: Expr, val body: List<Expr>, loc
     override fun validate(env: Env) {
         val collectionType = collExpr.resultType(env)
         if (collectionType !is ArrayType) {
-            throw SimplexAnalysisError("Target of a loop must be an array, not $collectionType", loc = loc)
+            throw SimplexAnalysisError(
+                "Target of a loop must be an array, not $collectionType",
+                loc = loc,
+            )
         }
         val elementType = collectionType.elementType
         val localEnv = Env(emptyList(), env)
@@ -92,7 +94,7 @@ class LoopExpr(val idxVar: String, val collExpr: Expr, val body: List<Expr>, loc
     }
 }
 
-class WhileExpr(val cond: Expr, val body: List<Expr>, loc: Location): Expr(loc) {
+class WhileExpr(val cond: Expr, val body: List<Expr>, loc: Location) : Expr(loc) {
     override fun evaluateIn(env: Env): Value {
         var condValue = cond.evaluateIn(env)
         var result: Value = BooleanValue(false)
@@ -117,8 +119,5 @@ class WhileExpr(val cond: Expr, val body: List<Expr>, loc: Location): Expr(loc) 
     }
 
     override fun twist(): Twist =
-        Twist.obj("WhileStmt",
-            Twist.value("condition", cond),
-            Twist.array("body", body))
-
+        Twist.obj("WhileStmt", Twist.value("condition", cond), Twist.array("body", body))
 }

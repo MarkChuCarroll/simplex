@@ -20,32 +20,33 @@ import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.twist.Twist
 
-object BooleanValueType : ValueType() {
-    override val name: String = "Boolean"
-    override val asType: Type = Type.BooleanType
+object NoneValue : Value {
+    override val valueType: ValueType = NoneType
+
+    override fun twist(): Twist {
+        return Twist.obj("None")
+    }
+}
+
+object NoneType : ValueType() {
+    override val name: String = "None"
+
+    override val asType: Type = Type.simple(name)
 
     override fun isTruthy(v: Value): Boolean {
-        return assertIsBoolean(v)
+        return false
     }
 
     override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()
 
-    override val providesPrimitiveMethods: List<PrimitiveMethod> = listOf()
-    override val providesVariables: Map<String, Value> by lazy {
-        mapOf("true" to BooleanValue(true), "false" to BooleanValue(false))
-    }
+    override val providesPrimitiveMethods: List<PrimitiveMethod> = emptyList()
+    override val providesVariables: Map<String, Value> by lazy { mapOf("none" to NoneValue) }
 
-    override fun assertIs(v: Value): BooleanValue {
-        if (v is BooleanValue) {
-            return v
+    override fun assertIs(v: Value): Value {
+        return if (v == NoneValue) {
+            v
         } else {
             throwTypeError(v)
         }
     }
-}
-
-class BooleanValue(val b: Boolean) : Value {
-    override val valueType: ValueType = BooleanValueType
-
-    override fun twist(): Twist = Twist.obj("BooleanValue", Twist.attr("value", b.toString()))
 }

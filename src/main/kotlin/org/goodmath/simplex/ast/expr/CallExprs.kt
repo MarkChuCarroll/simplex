@@ -15,31 +15,34 @@
  */
 package org.goodmath.simplex.ast.expr
 
-import org.goodmath.simplex.ast.types.FunctionType
 import org.goodmath.simplex.ast.Location
+import org.goodmath.simplex.ast.types.FunctionType
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexAnalysisError
 import org.goodmath.simplex.runtime.SimplexEvaluationError
+import org.goodmath.simplex.runtime.SimplexParameterCountError
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.SimplexUndefinedError
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.primitives.AbstractFunctionValue
 import org.goodmath.simplex.twist.Twist
 
-
 class FunCallExpr(val funExpr: Expr, val argExprs: List<Expr>, loc: Location) : Expr(loc) {
     override fun twist(): Twist =
         Twist.obj(
             "FunCallExpr",
             Twist.value("functionExpr", funExpr),
-            Twist.array("args", argExprs)
+            Twist.array("args", argExprs),
         )
 
     override fun evaluateIn(env: Env): Value {
         val funVal = funExpr.evaluateIn(env)
         if (funVal !is AbstractFunctionValue) {
-            throw SimplexEvaluationError("Only a function can be invoked, not ${funVal.valueType.name}", loc = loc)
+            throw SimplexEvaluationError(
+                "Only a function can be invoked, not ${funVal.valueType.name}",
+                loc = loc,
+            )
         }
         val args = argExprs.map { it.evaluateIn(env) }
         return funVal.applyTo(args)
@@ -48,10 +51,7 @@ class FunCallExpr(val funExpr: Expr, val argExprs: List<Expr>, loc: Location) : 
     override fun resultType(env: Env): Type {
         val funType = funExpr.resultType(env)
         if (funType !is FunctionType) {
-            throw SimplexAnalysisError(
-                "Function expression isn't a function",
-                loc = loc
-            )
+            throw SimplexAnalysisError("Function expression isn't a function", loc = loc)
         } else {
             return funType.returnType
         }
@@ -60,32 +60,31 @@ class FunCallExpr(val funExpr: Expr, val argExprs: List<Expr>, loc: Location) : 
     override fun validate(env: Env) {
         val funType = funExpr.resultType(env)
         if (funType !is FunctionType) {
-            throw SimplexAnalysisError(
-                "Function expression isn't a function",
-                loc = loc
-            )
-        }
-        if (funType.args.size != argExprs.size) {
-            throw SimplexAnalysisError(
-                "Function call expected ${funType.args.size} args, but received ${argExprs.size}",
-                loc = loc
-            )
-        }
-        funType.args.zip(argExprs).forEach { (type, expr) ->
-            if (!type.matchedBy(expr.resultType(env))) {
-                throw SimplexTypeError(type.toString(), expr.resultType(env).toString(), location = expr.loc)
-            }
+            throw SimplexAnalysisError("Function expression isn't a function", loc = loc)
         }
 
+        if (funType.argLists.none { it.size == argExprs.size }) {
+            throw SimplexParameterCountError(
+                "Function call",
+                funType.argLists.map { it.size },
+                argExprs.size,
+                loc,
+            )
+        }
+        if (
+            funType.argLists.none { expectedArgs ->
+                expectedArgs.zip(argExprs).all { (type, expr) ->
+                    type.matchedBy(expr.resultType(env))
+                }
+            }
+        ) {
+            throw SimplexAnalysisError("No function signatures matched", loc = loc)
+        }
     }
 }
 
-
-
-class MethodCallExpr(
-    val target: Expr, val name: String, val args: List<Expr>,
-    loc: Location
-) : Expr(loc) {
+class MethodCallExpr(val target: Expr, val name: String, val args: List<Expr>, loc: Location) :
+    Expr(loc) {
     override fun evaluateIn(env: Env): Value {
         val targetValue = target.evaluateIn(env)
         val argValues = args.map { it.evaluateIn(env) }
@@ -95,39 +94,41 @@ class MethodCallExpr(
 
     override fun resultType(env: Env): Type {
         val targetType = target.resultType(env)
-        return targetType.getMethod(name)?.returnType ?: throw SimplexUndefinedError(
-            name,
-            "method of ${this.name}",
-            loc = loc
-        )
+        return targetType.getMethod(name)?.returnType
+            ?: throw SimplexUndefinedError(name, "method of ${this.name}", loc = loc)
     }
 
     override fun validate(env: Env) {
         val targetType = target.resultType(env)
-        val methodType = targetType.getMethod(name) ?: throw SimplexUndefinedError(
-            name,
-            "method of $targetType",
-            loc = loc
-        )
-        if (args.size != methodType.args.size) {
-            throw SimplexAnalysisError(
-                "Method $name expected ${methodType.args.size} arguments, but received ${args.size}",
-                loc = loc
-            )
+        val methodType =
+            targetType.getMethod(name)
+                ?: throw SimplexUndefinedError(name, "method of $targetType", loc = loc)
+
+        // TODO: update this so that we search for a signature with the correct
+        // number of parameters - then we match that.
+        if (methodType.argSets.all { methodArgs ->
+                args.size != methodArgs.size }) {
+            throw SimplexParameterCountError("Method $name",
+                methodType.argSets.map { it.size },
+                args.size,
+                location = loc)
         }
-        methodType.args.zip(args).forEach { (expected, expr) ->
-            if (!expected.matchedBy(expr.resultType(env))) {
-                throw SimplexTypeError(expected.toString(), expr.resultType(env).toString(), location = expr.loc)
-            }
+        if (methodType.argSets.none { methodArgs ->
+                methodArgs.size != args.size &&
+                        methodArgs.zip(args).all { (expected, expr) ->
+                            expected.matchedBy(expr.resultType(env))
+                        }
+            }) {
+            throw SimplexAnalysisError("Method $name does not accept an argument list of ${args.map { it.resultType(env).toString()}.joinToString(", ")}")
         }
     }
+
 
     override fun twist(): Twist =
         Twist.obj(
             "MethodExpr",
             Twist.value("target", target),
             Twist.attr("name", name),
-            Twist.array("args", args)
+            Twist.array("args", args),
         )
 }
-

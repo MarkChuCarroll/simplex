@@ -15,12 +15,12 @@
  */
 package org.goodmath.simplex.runtime.values.primitives
 
-import org.goodmath.simplex.runtime.RootEnv
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Test
 import kotlin.math.sqrt
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import org.goodmath.simplex.runtime.RootEnv
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Test
 
 class FloatValueTypeTest {
     @Test
@@ -60,7 +60,8 @@ class FloatValueTypeTest {
         assertEquals(0, cmp3.i)
 
         assertTrue(FloatValueType.isTruthy(c))
-        assertFalse(FloatValueType.isTruthy(FloatValueType.applyMethod(c, "minus", listOf(c), RootEnv)))
-
+        assertFalse(
+            FloatValueType.isTruthy(FloatValueType.applyMethod(c, "minus", listOf(c), RootEnv))
+        )
     }
 }

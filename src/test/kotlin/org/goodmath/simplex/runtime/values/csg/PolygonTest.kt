@@ -15,19 +15,21 @@
  */
 package org.goodmath.simplex.runtime.values.csg
 
-import org.goodmath.simplex.runtime.csg.TwoDPoint
+import org.goodmath.simplex.runtime.values.manifold.Slice
+import org.goodmath.simplex.runtime.values.manifold.SliceType
+import org.goodmath.simplex.runtime.values.primitives.BooleanValue
+import kotlin.test.assertEquals
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
 import org.junit.jupiter.api.Test
-import kotlin.test.assertEquals
 
- class PolygonTest {
+class PolygonTest {
     @Test
     fun testPolygonCreators() {
-        val rect = PolygonValueType.providesFunctions.first { it.name == "rectangle"}
-        val r = rect.execute(listOf(TwoDPoint(20.0, 20.0),
-            FloatValue(10.0), FloatValue(16.0)))
-        r as Polygon
-        assertEquals("""(obj PolygonValue
+        val rect = SliceType.providesFunctions.first { it.name == "square" }
+        val r = rect.execute(listOf(FloatValue(20.0),FloatValue(10.0), BooleanValue(true)))
+        r as Slice
+        assertEquals(
+            """(obj PolygonValue
                        |   [array points
                        |      (obj Point2D
                        |         (x '15.0')
@@ -41,7 +43,9 @@ import kotlin.test.assertEquals
                        |      (obj Point2D
                        |         (x '15.0')
                        |         (y '28.0'))])
-                       |""".trimMargin(), r.twist().consStr())
+                       |"""
+                .trimMargin(),
+            r.twist().consStr(),
+        )
     }
-
 }

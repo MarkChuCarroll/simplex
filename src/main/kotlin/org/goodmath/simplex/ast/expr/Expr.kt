@@ -15,10 +15,15 @@
  */
 package org.goodmath.simplex.ast.expr
 
+import kotlin.collections.first
+import kotlin.collections.last
+import kotlin.collections.map
+import kotlin.collections.toSet
+import kotlin.toString
 import org.goodmath.simplex.ast.AstNode
 import org.goodmath.simplex.ast.Location
-import org.goodmath.simplex.ast.types.SimpleType
 import org.goodmath.simplex.ast.def.TupleDefinition
+import org.goodmath.simplex.ast.types.SimpleType
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.ast.types.TypedName
 import org.goodmath.simplex.runtime.Env
@@ -36,24 +41,17 @@ import org.goodmath.simplex.runtime.values.primitives.IntegerValue
 import org.goodmath.simplex.runtime.values.primitives.StringValue
 import org.goodmath.simplex.runtime.values.primitives.TupleValue
 import org.goodmath.simplex.twist.Twist
-import kotlin.collections.first
-import kotlin.collections.last
-import kotlin.collections.map
-import kotlin.collections.toSet
-import kotlin.toString
 
 abstract class Expr(loc: Location) : AstNode(loc) {
     abstract fun evaluateIn(env: Env): Value
+
     abstract fun resultType(env: Env): Type
+
     abstract fun validate(env: Env)
 }
 
 class BlockExpr(val body: List<Expr>, loc: Location) : Expr(loc) {
-    override fun twist(): Twist =
-        Twist.obj(
-            "Block",
-            Twist.array("body", body)
-        )
+    override fun twist(): Twist = Twist.obj("Block", Twist.array("body", body))
 
     override fun evaluateIn(env: Env): Value {
         val localEnv = Env(emptyList(), env)
@@ -73,29 +71,29 @@ class BlockExpr(val body: List<Expr>, loc: Location) : Expr(loc) {
             expr.validate(env)
         }
     }
-
 }
 
-
-data class Binding(val name: String, val type: Type, val value: Expr, override val loc: Location) : AstNode(loc) {
+data class Binding(val name: String, val type: Type, val value: Expr, override val loc: Location) :
+    AstNode(loc) {
     override fun twist(): Twist {
         return Twist.obj(
             "binding",
             Twist.attr("name", name),
             Twist.value("type", type),
-            Twist.value("value", value)
+            Twist.value("value", value),
         )
     }
 }
 
-class LetExpr(val name: String, val type: Type?, val value: Expr, loc: Location): Expr(loc) {
+class LetExpr(val name: String, val type: Type?, val value: Expr, loc: Location) : Expr(loc) {
 
     override fun twist(): Twist =
         Twist.obj(
             "LetExpr",
             Twist.attr("name", name),
             Twist.attr("type", type.toString()),
-            Twist.value("value", value))
+            Twist.value("value", value),
+        )
 
     override fun evaluateIn(env: Env): Value {
         val result = value.evaluateIn(env)
@@ -113,18 +111,18 @@ class LetExpr(val name: String, val type: Type?, val value: Expr, loc: Location)
         env.declareTypeOf(name, declareType)
 
         if (type != null && !type.matchedBy(value.resultType(env))) {
-            throw SimplexTypeError(type.toString(), value.resultType(env).toString(), location = loc)
+            throw SimplexTypeError(
+                type.toString(),
+                value.resultType(env).toString(),
+                location = loc,
+            )
         }
         value.validate(env)
     }
 }
 
 class LiteralExpr<T>(val v: T, loc: Location) : Expr(loc) {
-    override fun twist(): Twist =
-        Twist.obj(
-            "LiteralExpr",
-            Twist.attr("value", v.toString())
-        )
+    override fun twist(): Twist = Twist.obj("LiteralExpr", Twist.attr("value", v.toString()))
 
     override fun evaluateIn(env: Env): Value {
         return if (v is Int) {
@@ -144,7 +142,7 @@ class LiteralExpr<T>(val v: T, loc: Location) : Expr(loc) {
         return if (v is Int) {
             Type.IntType
         } else if (v is Double) {
-           Type.FloatType
+            Type.FloatType
         } else if (v is String) {
             Type.StringType
         } else if (v is Boolean) {
@@ -154,8 +152,7 @@ class LiteralExpr<T>(val v: T, loc: Location) : Expr(loc) {
         }
     }
 
-    override fun validate(env: Env) {
-    }
+    override fun validate(env: Env) {}
 }
 
 class AssignmentExpr(val target: String, val expr: Expr, loc: Location) : Expr(loc) {
@@ -178,21 +175,11 @@ class AssignmentExpr(val target: String, val expr: Expr, loc: Location) : Expr(l
     }
 
     override fun twist(): Twist =
-        Twist.obj(
-            "AssignmentExpr",
-            Twist.attr("variable", target),
-            Twist.value("value", expr)
-        )
+        Twist.obj("AssignmentExpr", Twist.attr("variable", target), Twist.value("value", expr))
 }
 
-
-
 class VarRefExpr(val name: String, loc: Location) : Expr(loc) {
-    override fun twist(): Twist =
-        Twist.obj(
-            "VariableExpr",
-            Twist.attr("name", name)
-        )
+    override fun twist(): Twist = Twist.obj("VariableExpr", Twist.attr("name", name))
 
     override fun evaluateIn(env: Env): Value {
         try {
@@ -224,20 +211,17 @@ class VarRefExpr(val name: String, loc: Location) : Expr(loc) {
 }
 
 class ArrayExpr(val elements: List<Expr>, loc: Location) : Expr(loc) {
-    override fun twist(): Twist =
-        Twist.obj(
-            "Array",
-            Twist.array("elements", elements)
-        )
+    override fun twist(): Twist = Twist.obj("Array", Twist.array("elements", elements))
 
     override fun evaluateIn(env: Env): Value {
         val elementValues = elements.map { it.evaluateIn(env) }
         val elementTypes = elementValues.map { it.valueType }.toSet()
-        val elementType = if (elementTypes.size > 1) {
-            AnyType
-        } else {
-            elementTypes.first()
-        }
+        val elementType =
+            if (elementTypes.size > 1) {
+                AnyType
+            } else {
+                elementTypes.first()
+            }
         return ArrayValue(elementType, elementValues)
     }
 
@@ -256,16 +240,11 @@ class ArrayExpr(val elements: List<Expr>, loc: Location) : Expr(loc) {
             e.validate(env)
         }
     }
-
 }
 
 class WithExpr(val focus: Expr, val body: List<Expr>, loc: Location) : Expr(loc) {
     override fun twist(): Twist =
-        Twist.obj(
-            "WithExpr",
-            Twist.value("focus", focus),
-            Twist.array("body", body)
-        )
+        Twist.obj("WithExpr", Twist.value("focus", focus), Twist.array("body", body))
 
     override fun evaluateIn(env: Env): Value {
         val focusVal = focus.evaluateIn(env)
@@ -299,11 +278,17 @@ class WithExpr(val focus: Expr, val body: List<Expr>, loc: Location) : Expr(loc)
     override fun validate(env: Env) {
         val focusType = focus.resultType(env)
         if (focusType !is SimpleType) {
-            throw SimplexAnalysisError("With expression focus must be a simple type, not $focusType", loc = loc)
+            throw SimplexAnalysisError(
+                "With expression focus must be a simple type, not $focusType",
+                loc = loc,
+            )
         }
         val focusDef = env.getDef(focusType.name)
         if (focusDef !is TupleDefinition) {
-            throw SimplexAnalysisError("With expression focus must be a tuple type, not $focusDef", loc = loc)
+            throw SimplexAnalysisError(
+                "With expression focus must be a tuple type, not $focusDef",
+                loc = loc,
+            )
         }
         val localEnv = Env(emptyList(), env)
         for (field in focusDef.fields) {
@@ -319,17 +304,14 @@ class LambdaExpr(
     val declaredResultType: Type,
     val params: List<TypedName>,
     val body: List<Expr>,
-    loc: Location
+    loc: Location,
 ) : Expr(loc) {
     override fun evaluateIn(env: Env): Value {
-        return FunctionValue(
-            declaredResultType, params, emptyList(),
-            body, env
-        )
+        return FunctionValue(declaredResultType, params, emptyList(), body, env)
     }
 
     override fun resultType(env: Env): Type {
-        return Type.function(params.map { it.type }, declaredResultType)
+        return Type.function(listOf(params.map { it.type }), declaredResultType)
     }
 
     override fun validate(env: Env) {
@@ -345,7 +327,7 @@ class LambdaExpr(
             throw SimplexTypeError(
                 declaredResultType.toString(),
                 actualResultType.toString(),
-                location = body.last().loc
+                location = body.last().loc,
             )
         }
     }
@@ -355,8 +337,6 @@ class LambdaExpr(
             "LambdaExpr",
             Twist.value("resultType", declaredResultType),
             Twist.array("params", params),
-            Twist.array("body", body)
+            Twist.array("body", body),
         )
 }
-
-

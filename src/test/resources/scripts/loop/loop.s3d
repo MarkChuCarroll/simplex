@@ -1,6 +1,6 @@
 // Simple test of iteration.
 fun cubish(length: Float, width: Float, height: Float, x: Float): Csg {
-    block(length, width, height)->move_to(x, x, x*2.0)
+    brick(length, width, height)->move(x, x, x*2.0)
 }
 
 fun make_a_bunch(): [Csg] {

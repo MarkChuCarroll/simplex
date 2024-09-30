@@ -15,11 +15,16 @@
  */
 package org.goodmath.simplex.ast.expr
 
+import kotlin.collections.drop
+import kotlin.collections.forEach
+import kotlin.collections.zip
+import kotlin.let
 import org.goodmath.simplex.ast.Location
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexError
 import org.goodmath.simplex.runtime.SimplexEvaluationError
+import org.goodmath.simplex.runtime.SimplexParameterCountError
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.SimplexUndefinedError
 import org.goodmath.simplex.runtime.SimplexUnsupportedOperation
@@ -27,15 +32,24 @@ import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.primitives.BooleanValue
 import org.goodmath.simplex.runtime.values.primitives.IntegerValue
 import org.goodmath.simplex.twist.Twist
-import kotlin.collections.drop
-import kotlin.collections.forEach
-import kotlin.collections.zip
-import kotlin.let
 
 enum class Operator {
-    Plus, Minus, Times, Div, Mod, Pow,
-    Eq, Neq, Gt, Ge, Lt, Le,
-    Uminus, Not, And, Or,
+    Plus,
+    Minus,
+    Times,
+    Div,
+    Mod,
+    Pow,
+    Eq,
+    Neq,
+    Gt,
+    Ge,
+    Lt,
+    Le,
+    Uminus,
+    Not,
+    And,
+    Or,
     Subscript;
 
     fun toMethod(): String? {
@@ -63,11 +77,7 @@ enum class Operator {
 
 class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location) : Expr(loc) {
     override fun twist(): Twist =
-        Twist.obj(
-            "OperatorExpr",
-            Twist.attr("op", op.toString()),
-            Twist.array("args", args)
-        )
+        Twist.obj("OperatorExpr", Twist.attr("op", op.toString()), Twist.array("args", args))
 
     override fun evaluateIn(env: Env): Value {
         try {
@@ -77,35 +87,66 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location) : Expr
                 if (methodName == "neg") {
                     return target.valueType.applyMethod(target, methodName, emptyList(), env)
                 }
-                return target.valueType.applyMethod(target, methodName, listOf(args[1].evaluateIn(env)), env)
+                return target.valueType.applyMethod(
+                    target,
+                    methodName,
+                    listOf(args[1].evaluateIn(env)),
+                    env,
+                )
             } else {
                 return when (op) {
                     Operator.Neq -> {
-                        val truthy = target.valueType.applyMethod(
-                            target,
-                            "eq",
-                            listOf(args[1].evaluateIn(env)),
-                            env
-                        ) as BooleanValue
+                        val truthy =
+                            target.valueType.applyMethod(
+                                target,
+                                "eq",
+                                listOf(args[1].evaluateIn(env)),
+                                env,
+                            ) as BooleanValue
                         BooleanValue(!truthy.b)
                     }
+
                     Operator.Gt -> {
-                        val c = target.valueType.applyMethod(target, "compare", listOf(args[1].evaluateIn(env)), env)
+                        val c =
+                            target.valueType.applyMethod(
+                                target,
+                                "compare",
+                                listOf(args[1].evaluateIn(env)),
+                                env,
+                            )
                         BooleanValue((c as IntegerValue).i > 0)
                     }
 
                     Operator.Ge -> {
-                        val c = target.valueType.applyMethod(target, "compare", listOf(args[1].evaluateIn(env)), env)
+                        val c =
+                            target.valueType.applyMethod(
+                                target,
+                                "compare",
+                                listOf(args[1].evaluateIn(env)),
+                                env,
+                            )
                         BooleanValue((c as IntegerValue).i >= 0)
                     }
 
                     Operator.Lt -> {
-                        val c = target.valueType.applyMethod(target, "compare", listOf(args[1].evaluateIn(env)), env)
+                        val c =
+                            target.valueType.applyMethod(
+                                target,
+                                "compare",
+                                listOf(args[1].evaluateIn(env)),
+                                env,
+                            )
                         BooleanValue((c as IntegerValue).i < 0)
                     }
 
                     Operator.Le -> {
-                        val c = target.valueType.applyMethod(target, "compare", listOf(args[1].evaluateIn(env)), env)
+                        val c =
+                            target.valueType.applyMethod(
+                                target,
+                                "compare",
+                                listOf(args[1].evaluateIn(env)),
+                                env,
+                            )
                         BooleanValue((c as IntegerValue).i < 0)
                     }
 
@@ -128,11 +169,12 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location) : Expr
                         }
                     }
 
-                    else -> throw SimplexUnsupportedOperation(
-                        target.valueType.asType.toString(),
-                        op.toString(),
-                        loc = args[0].loc
-                    )
+                    else ->
+                        throw SimplexUnsupportedOperation(
+                            target.valueType.asType.toString(),
+                            op.toString(),
+                            loc = args[0].loc,
+                        )
                 }
             }
         } catch (t: Throwable) {
@@ -142,10 +184,7 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location) : Expr
                 }
                 throw t
             } else {
-                throw SimplexEvaluationError(
-                    "Error evaluating expression", cause = t,
-                    loc = loc
-                )
+                throw SimplexEvaluationError("Error evaluating expression", cause = t, loc = loc)
             }
         }
     }
@@ -155,37 +194,46 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location) : Expr
         for (arg in args) {
             arg.validate(env)
         }
-        val methodName = op.toMethod() ?: (when (op) {
-            Operator.Neq -> "eq"
-            Operator.Gt -> "compare"
-            Operator.Ge -> "compare"
-            Operator.Lt -> "compare"
-            Operator.Le -> "compare"
-            Operator.Not -> "isTruthy"
-            Operator.And -> "isTruthy"
-            Operator.Or -> "isTruthy"
-            else -> throw SimplexEvaluationError("undefined operator $op", loc = loc)
-        })
+        val methodName =
+            op.toMethod()
+                ?: (when (op) {
+                    Operator.Neq -> "eq"
+                    Operator.Gt -> "compare"
+                    Operator.Ge -> "compare"
+                    Operator.Lt -> "compare"
+                    Operator.Le -> "compare"
+                    Operator.Not -> "isTruthy"
+                    Operator.And -> "isTruthy"
+                    Operator.Or -> "isTruthy"
+                    else -> throw SimplexEvaluationError("undefined operator $op", loc = loc)
+                })
         if (methodName == "isTruthy") {
             if (args.size != 1) {
-                throw SimplexEvaluationError("Operator $op expected 1 arg, received ${args.size}", loc = loc)
-            }
-        } else {
-            val methodType = target.getMethod(methodName) ?: throw SimplexUndefinedError(
-                methodName,
-                "method",
-                loc = loc
-            )
-            val realArgs = args.drop(1)
-            if (methodType.args.size != realArgs.size) {
                 throw SimplexEvaluationError(
-                    "Method $methodName expected ${methodType.args.size} arguments, but received ${realArgs.size}",
-                    loc = loc
+                    "Operator $op expected 1 arg, received ${args.size}",
+                    loc = loc,
                 )
             }
-            methodType.args.zip(realArgs).forEach { (t, a) ->
+        } else {
+            val methodType =
+                target.getMethod(methodName)
+                    ?: throw SimplexUndefinedError(methodName, "method", loc = loc)
+            val realArgs = args.drop(1)
+            val methodArgSet = methodType.argSets.firstOrNull { args -> args.size == realArgs.size }
+            if (methodArgSet == null) {
+                throw SimplexParameterCountError(
+                    "Method $methodName", methodType.argSets.map { it.size},
+                    realArgs.size,
+                    location = loc,
+                )
+            }
+            methodArgSet.zip(realArgs).forEach { (t, a) ->
                 if (!t.matchedBy(a.resultType(env))) {
-                    throw SimplexTypeError(t.toString(), a.resultType(env).toString(), location = a.loc)
+                    throw SimplexTypeError(
+                        t.toString(),
+                        a.resultType(env).toString(),
+                        location = a.loc,
+                    )
                 }
             }
         }

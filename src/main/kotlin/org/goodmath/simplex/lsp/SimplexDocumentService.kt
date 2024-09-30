@@ -7,7 +7,7 @@ import org.eclipse.lsp4j.DidSaveTextDocumentParams
 import org.eclipse.lsp4j.TextDocumentItem
 import org.eclipse.lsp4j.services.TextDocumentService
 
-class SimplexDocumentService: TextDocumentService {
+class SimplexDocumentService : TextDocumentService {
     val openDocuments = HashMap<String, TextDocumentItem>()
 
     override fun didOpen(openParams: DidOpenTextDocumentParams) {
@@ -20,11 +20,8 @@ class SimplexDocumentService: TextDocumentService {
         val changedFile = change.textDocument.uri
         if (openDocuments.containsKey(changedFile)) {
             val doc = openDocuments.get(changedFile)!!
-            for (ch in change.contentChanges) {
-
-            }
+            for (ch in change.contentChanges) {}
         }
-
     }
 
     override fun didClose(closeParams: DidCloseTextDocumentParams) {

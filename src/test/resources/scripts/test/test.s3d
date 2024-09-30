@@ -5,17 +5,17 @@ fun cone(radius: Float, height: Float): Csg {
 
 fun dbl(radius: Float, height: Float): Csg {
   let c = cone(height, radius)
-  c + c->rot(0.0, 180.0, 0.0)->move(0.0, 0.0, 25.0)
+  c + c->rotate(0.0, 180.0, 0.0)->move(0.0, 0.0, 25.0)
 }
 
 let conic = dbl(50.0, 30.0)
 
 fun goof (base: Csg, radius: Float): Csg {
-   (base + sphere(radius)->move_to(0.0, 0.0, 30.0)) -
-     sphere(radius)->move_to(0.0, 0.0, 50.0)
+   (base + sphere(radius)->move(0.0, 0.0, 30.0)) -
+     sphere(radius)->move(0.0, 0.0, 50.0)
 }
 
 produce("conic") {
-   goof(conic, 10.0)->move_to(0.0, 0.0, 0.0)
+   goof(conic, 10.0)->move(0.0, 0.0, 0.0)
    print(["bounds = ", conic->bounds()])
 }

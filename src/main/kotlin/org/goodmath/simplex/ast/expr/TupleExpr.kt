@@ -15,9 +15,13 @@
  */
 package org.goodmath.simplex.ast.expr
 
+import kotlin.collections.firstOrNull
+import kotlin.collections.forEach
+import kotlin.collections.map
+import kotlin.collections.zip
 import org.goodmath.simplex.ast.Location
-import org.goodmath.simplex.ast.types.SimpleType
 import org.goodmath.simplex.ast.def.TupleDefinition
+import org.goodmath.simplex.ast.types.SimpleType
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexAnalysisError
@@ -28,31 +32,23 @@ import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.primitives.TupleValue
 import org.goodmath.simplex.runtime.values.primitives.TupleValueType
 import org.goodmath.simplex.twist.Twist
-import kotlin.collections.firstOrNull
-import kotlin.collections.forEach
-import kotlin.collections.map
-import kotlin.collections.zip
 
 class TupleExpr(val tupleType: String, val args: List<Expr>, loc: Location) : Expr(loc) {
     override fun twist(): Twist =
-        Twist.obj(
-            "TupleExpr",
-            Twist.attr("tupleType", tupleType),
-            Twist.array("args", args)
-        )
+        Twist.obj("TupleExpr", Twist.attr("tupleType", tupleType), Twist.array("args", args))
 
     override fun evaluateIn(env: Env): Value {
         val tupleDef = env.getDef(tupleType)
         if (tupleDef !is TupleDefinition) {
             throw SimplexEvaluationError(
                 "Cannot create a non-tuple type like $tupleType with a tuple expression",
-                loc = loc
+                loc = loc,
             )
         }
         if (args.size != tupleDef.fields.size) {
             throw SimplexEvaluationError(
                 "Invalid expression: tuple takes ${tupleDef.fields.size} fields, but only given ${args.size}",
-                loc = loc
+                loc = loc,
             )
         }
         val fieldValues = args.map { it.evaluateIn(env) }.toMutableList()
@@ -68,14 +64,14 @@ class TupleExpr(val tupleType: String, val args: List<Expr>, loc: Location) : Ex
         if (tupleDef !is TupleDefinition) {
             throw SimplexEvaluationError(
                 "Cannot create a non-tuple type like $tupleType with a tuple expression",
-                loc = loc
+                loc = loc,
             )
         }
         val fieldTypes = tupleDef.fields.map { it.type }
         if (fieldTypes.size != args.size) {
             throw SimplexEvaluationError(
                 "Tuple type ${tupleDef.name} expects ${fieldTypes.size} field values, but received ${args.size}",
-                loc = loc
+                loc = loc,
             )
         }
         fieldTypes.zip(args).forEach { (t, a) ->
@@ -87,14 +83,12 @@ class TupleExpr(val tupleType: String, val args: List<Expr>, loc: Location) : Ex
     }
 }
 
-
-class FieldRefExpr(val tupleExpr: Expr, val fieldName: String, loc: Location) :
-    Expr(loc) {
+class FieldRefExpr(val tupleExpr: Expr, val fieldName: String, loc: Location) : Expr(loc) {
     override fun twist(): Twist =
         Twist.obj(
             "FieldRefExpr",
             Twist.value("tupleExpr", tupleExpr),
-            Twist.attr("fieldName", fieldName)
+            Twist.attr("fieldName", fieldName),
         )
 
     override fun evaluateIn(env: Env): Value {
@@ -119,16 +113,10 @@ class FieldRefExpr(val tupleExpr: Expr, val fieldName: String, loc: Location) :
                     throw SimplexUndefinedError(fieldName, "tuple field name", loc = loc)
                 }
             } else {
-                throw SimplexAnalysisError(
-                    "Tuple field target is not a tuple",
-                    loc = loc
-                )
+                throw SimplexAnalysisError("Tuple field target is not a tuple", loc = loc)
             }
         } else {
-            throw SimplexAnalysisError(
-                "Tuple field target is not a tuple",
-                loc = loc
-            )
+            throw SimplexAnalysisError("Tuple field target is not a tuple", loc = loc)
         }
     }
 
@@ -137,26 +125,30 @@ class FieldRefExpr(val tupleExpr: Expr, val fieldName: String, loc: Location) :
         if (tupleType !is SimpleType) {
             throw SimplexAnalysisError(
                 "Field reference target must have a simple tuple type, not $tupleType",
-                loc = loc
+                loc = loc,
             )
         }
         val tupleDef = env.getDef(tupleType.name)
         if (tupleDef !is TupleDefinition) {
-            throw SimplexAnalysisError("Field reference target must be a tuple type, not $tupleDef", loc = loc)
+            throw SimplexAnalysisError(
+                "Field reference target must be a tuple type, not $tupleDef",
+                loc = loc,
+            )
         }
-        tupleDef.fields.firstOrNull { it.name == fieldName } ?: throw SimplexUndefinedError(
-            fieldName,
-            "tuple field",
-            loc = loc
-        )
+        tupleDef.fields.firstOrNull { it.name == fieldName }
+            ?: throw SimplexUndefinedError(fieldName, "tuple field", loc = loc)
     }
 }
 
-class TupleFieldUpdateExpr(val tupleExpr: Expr, val field: String, val value: Expr, loc: Location): Expr(loc) {
+class TupleFieldUpdateExpr(val tupleExpr: Expr, val field: String, val value: Expr, loc: Location) :
+    Expr(loc) {
     override fun evaluateIn(env: Env): Value {
         val tuple = tupleExpr.evaluateIn(env)
         if (tuple !is TupleValue) {
-            throw SimplexEvaluationError("Target of a tuple field update must be a tuple, not ${tuple.valueType.name}", loc = loc)
+            throw SimplexEvaluationError(
+                "Target of a tuple field update must be a tuple, not ${tuple.valueType.name}",
+                loc = loc,
+            )
         }
         val idx = tuple.valueType.tupleDef.indexOf(field)
         val newValue = value.evaluateIn(env)
@@ -172,13 +164,17 @@ class TupleFieldUpdateExpr(val tupleExpr: Expr, val field: String, val value: Ex
         tupleExpr.validate(env)
         val targetType = tupleExpr.resultType(env)
         if (targetType !is SimpleType) {
-            throw SimplexAnalysisError("The type of the target of a tuple field update expr must be a simple type, but received $targetType",
-                loc=loc)
+            throw SimplexAnalysisError(
+                "The type of the target of a tuple field update expr must be a simple type, but received $targetType",
+                loc = loc,
+            )
         }
         val def = env.getDef(targetType.name)
         if (def !is TupleDefinition) {
-            throw SimplexAnalysisError("The type of the target of a tuple field update must be a tuple type, but no tuple def found for $targetType",
-                loc=loc)
+            throw SimplexAnalysisError(
+                "The type of the target of a tuple field update must be a tuple type, but no tuple def found for $targetType",
+                loc = loc,
+            )
         }
         val tupleFieldDef = def.fields.firstOrNull { it.name == field }
         if (tupleFieldDef == null) {
@@ -187,15 +183,19 @@ class TupleFieldUpdateExpr(val tupleExpr: Expr, val field: String, val value: Ex
         value.validate(env)
         val newValueType = value.resultType(env)
         if (!tupleFieldDef.type.matchedBy(newValueType)) {
-            throw SimplexTypeError(tupleFieldDef.type.toString(), newValueType.toString(),
-                location = value.loc)
+            throw SimplexTypeError(
+                tupleFieldDef.type.toString(),
+                newValueType.toString(),
+                location = value.loc,
+            )
         }
     }
 
     override fun twist(): Twist =
-        Twist.obj("TupleFieldUpdateExpr",
+        Twist.obj(
+            "TupleFieldUpdateExpr",
             Twist.value("target", tupleExpr),
             Twist.attr("field", field),
-            Twist.value("newValue", value))
-
+            Twist.value("newValue", value),
+        )
 }

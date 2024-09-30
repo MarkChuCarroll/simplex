@@ -21,32 +21,34 @@ import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.split
 import com.github.ajalt.clikt.parameters.types.int
-import org.antlr.v4.runtime.CharStreams
-import org.goodmath.simplex.parser.SimplexParseListener
-import org.goodmath.simplex.runtime.SimplexError
 import com.github.ajalt.mordant.rendering.TextColors.*
-import org.goodmath.simplex.ast.Model
 import kotlin.io.path.Path
 import kotlin.io.path.exists
 import kotlin.system.exitProcess
+import org.antlr.v4.runtime.CharStreams
+import org.goodmath.simplex.parser.SimplexParseListener
+import org.goodmath.simplex.runtime.SimplexError
 
-/**
- * The simplex command line!
- */
-class Simplex: CliktCommand(help="Evaluate a Simplex model") {
-    val input: String by argument(help="The path to the input file. The pathname must end in .s3d")
-    val prefix: String? by option("--prefix", help="Prefix for all output files")
-    val renders: List<String>? by option("--render", help="The names of product blocks to render").split(Regex(","))
-    val verbosity: Int by option("--verbosity", help="How chatty the execution of the model should be.").int().default(1)
+/** The simplex command line! */
+class Simplex : CliktCommand(help = "Evaluate a Simplex model") {
+    val input: String by
+        argument(help = "The path to the input file. The pathname must end in .s3d")
+    val prefix: String? by option("--prefix", help = "Prefix for all output files")
+    val renders: List<String>? by
+        option("--render", help = "The names of product blocks to render").split(Regex(","))
+    val verbosity: Int by
+        option("--verbosity", help = "How chatty the execution of the model should be.")
+            .int()
+            .default(1)
 
     override fun run() {
         if (!input.endsWith(".s3d")) {
-            echo("input must be an s3d file", err=true)
+            echo("input must be an s3d file", err = true)
             exitProcess(1)
         }
         val inputPath = Path(input)
         if (!inputPath.exists()) {
-            echo("input file $input doesn't exist", err=true)
+            echo("input file $input doesn't exist", err = true)
         }
 
         val pre = prefix ?: "${input.toString().dropLast(4)}-out"
@@ -64,11 +66,9 @@ class Simplex: CliktCommand(help="Evaluate a Simplex model") {
             val result = SimplexParseListener().parse(input, stream, captiveEcho)
             result.execute(renders?.toSet(), pre, captiveEcho)
         } catch (e: SimplexError) {
-            echo(e.message, err=true)
+            echo(e.message, err = true)
         }
-
     }
 }
 
 fun main(args: Array<String>) = Simplex().main(args)
-

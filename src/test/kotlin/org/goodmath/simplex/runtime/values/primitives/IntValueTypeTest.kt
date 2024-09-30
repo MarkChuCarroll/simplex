@@ -15,11 +15,11 @@
  */
 package org.goodmath.simplex.runtime.values.primitives
 
-import org.goodmath.simplex.runtime.RootEnv
-import org.junit.jupiter.api.Assertions.assertTrue
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import org.goodmath.simplex.runtime.RootEnv
+import org.junit.jupiter.api.Assertions.assertTrue
 
 class IntValueTypeTest {
     @Test
@@ -46,27 +46,54 @@ class IntValueTypeTest {
         assertEquals(1, divI.i)
         assertEquals(6, modI.i)
 
-        val eq1 = IntegerValueType.applyMethod(divI, "eq",  listOf(IntegerValue(1)), RootEnv) as BooleanValue
+        val eq1 =
+            IntegerValueType.applyMethod(divI, "eq", listOf(IntegerValue(1)), RootEnv)
+                as BooleanValue
         assertTrue(eq1.b)
-        val eq2 = IntegerValueType.applyMethod(prod, "eq", listOf(IntegerValue(6)), RootEnv) as BooleanValue
+        val eq2 =
+            IntegerValueType.applyMethod(prod, "eq", listOf(IntegerValue(6)), RootEnv)
+                as BooleanValue
         assertFalse(eq2.b)
 
-        val eq3 = IntegerValueType.applyMethod(
-            IntegerValueType.applyMethod(modI, "neg", emptyList(), RootEnv),
-            "eq",
-            listOf(
-                IntegerValueType.applyMethod(IntegerValue(0), "minus", listOf(modI), RootEnv)),
-            RootEnv) as BooleanValue
+        val eq3 =
+            IntegerValueType.applyMethod(
+                IntegerValueType.applyMethod(modI, "neg", emptyList(), RootEnv),
+                "eq",
+                listOf(
+                    IntegerValueType.applyMethod(IntegerValue(0), "minus", listOf(modI), RootEnv)
+                ),
+                RootEnv,
+            ) as BooleanValue
 
         assertTrue(eq3.b)
 
-        val cmp1 = IntegerValueType.applyMethod(IntegerValue(-1), "compare", listOf(IntegerValue(-2)), RootEnv) as IntegerValue
-        val cmp2 = IntegerValueType.applyMethod(IntegerValue(-1), "compare", listOf(IntegerValue(2)), RootEnv) as IntegerValue
-        val cmp3 = IntegerValueType.applyMethod(IntegerValue(13), "compare", listOf(IntegerValue(13)), RootEnv) as IntegerValue
+        val cmp1 =
+            IntegerValueType.applyMethod(
+                IntegerValue(-1),
+                "compare",
+                listOf(IntegerValue(-2)),
+                RootEnv,
+            ) as IntegerValue
+        val cmp2 =
+            IntegerValueType.applyMethod(
+                IntegerValue(-1),
+                "compare",
+                listOf(IntegerValue(2)),
+                RootEnv,
+            ) as IntegerValue
+        val cmp3 =
+            IntegerValueType.applyMethod(
+                IntegerValue(13),
+                "compare",
+                listOf(IntegerValue(13)),
+                RootEnv,
+            ) as IntegerValue
         assertEquals(1, cmp1.i)
         assertEquals(-1, cmp2.i)
         assertEquals(0, cmp3.i)
-        val p = IntegerValueType.applyMethod(IntegerValue(3), "pow", listOf(IntegerValue(4)), RootEnv) as IntegerValue
+        val p =
+            IntegerValueType.applyMethod(IntegerValue(3), "pow", listOf(IntegerValue(4)), RootEnv)
+                as IntegerValue
 
         assertEquals(81, p.i)
     }

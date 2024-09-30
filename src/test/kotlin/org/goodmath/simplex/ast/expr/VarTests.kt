@@ -15,6 +15,11 @@
  */
 package org.goodmath.simplex.ast.expr
 
+import manifold3d.manifold.CrossSection
+import kotlin.math.PI
+import kotlin.math.sqrt
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import org.goodmath.simplex.ast.Location
 import org.goodmath.simplex.ast.def.VariableDefinition
 import org.goodmath.simplex.ast.types.Type
@@ -23,16 +28,13 @@ import org.goodmath.simplex.runtime.values.primitives.FloatValue
 import org.goodmath.simplex.runtime.values.primitives.IntegerValue
 import org.goodmath.simplex.runtime.values.primitives.StringValue
 import org.junit.jupiter.api.BeforeEach
-import kotlin.math.PI
-import kotlin.math.sqrt
-import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class VarTests {
     val rootEnv = Env.createRootEnv()
     lateinit var env: Env
 
     var idx = 0
+
     fun mockLoc(): Location {
         idx++
         return Location("test", idx, 0)
@@ -40,11 +42,15 @@ class VarTests {
 
     @BeforeEach
     fun setupEnvironment() {
-        var varDefOne = VariableDefinition("one", Type.FloatType, LiteralExpr(PI, mockLoc()), mockLoc())
-        var varDefTwo = VariableDefinition("two", Type.StringType, LiteralExpr("PI", mockLoc()), mockLoc())
+        var varDefOne =
+            VariableDefinition("one", Type.FloatType, LiteralExpr(PI, mockLoc()), mockLoc())
+        var varDefTwo =
+            VariableDefinition("two", Type.StringType, LiteralExpr("PI", mockLoc()), mockLoc())
         env = Env(listOf(varDefOne, varDefTwo), rootEnv)
         env.installStaticDefinitions()
         env.installDefinitionValues()
+        val c = CrossSection.Square(10.0, 20.0)
+        System.err.println("ARea = ${c.area()}")
     }
 
     @Test
@@ -59,17 +65,16 @@ class VarTests {
     fun testVarUpdate() {
         val v = VarRefExpr("one", mockLoc()).evaluateIn(env)
         assertEquals(PI, (v as FloatValue).d)
-        val a = AssignmentExpr(
-            "one",
-            OperatorExpr(
-                Operator.Times,
-                listOf(
-                    VarRefExpr("one", mockLoc()),
-                    LiteralExpr(sqrt(2.0), mockLoc())
-                ), mockLoc()
-            ),
-            mockLoc()
-        )
+        val a =
+            AssignmentExpr(
+                "one",
+                OperatorExpr(
+                    Operator.Times,
+                    listOf(VarRefExpr("one", mockLoc()), LiteralExpr(sqrt(2.0), mockLoc())),
+                    mockLoc(),
+                ),
+                mockLoc(),
+            )
         val r1 = a.evaluateIn(env)
         assertEquals(4.443, (r1 as FloatValue).d, 0.01)
         val r2 = VarRefExpr("one", mockLoc()).evaluateIn(env)
@@ -79,16 +84,23 @@ class VarTests {
     @Test
     fun testUpdateInLet() {
         val letExpr = LetExpr("a", Type.IntType, LiteralExpr(31415, mockLoc()), mockLoc())
-        val block = BlockExpr(
-            listOf(
-                letExpr,
-                AssignmentExpr("a",
-                    OperatorExpr(Operator.Times, listOf(
-                        VarRefExpr("a", mockLoc()),
-                        VarRefExpr("a", mockLoc())),
-                        mockLoc()), mockLoc()),
-                VarRefExpr("a", mockLoc())),
-            mockLoc())
+        val block =
+            BlockExpr(
+                listOf(
+                    letExpr,
+                    AssignmentExpr(
+                        "a",
+                        OperatorExpr(
+                            Operator.Times,
+                            listOf(VarRefExpr("a", mockLoc()), VarRefExpr("a", mockLoc())),
+                            mockLoc(),
+                        ),
+                        mockLoc(),
+                    ),
+                    VarRefExpr("a", mockLoc()),
+                ),
+                mockLoc(),
+            )
         val result = block.evaluateIn(env)
         assertEquals(31415 * 31415, (result as IntegerValue).i)
     }

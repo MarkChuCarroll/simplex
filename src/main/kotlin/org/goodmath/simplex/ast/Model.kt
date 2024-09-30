@@ -15,31 +15,29 @@
  */
 package org.goodmath.simplex.ast
 
-import org.goodmath.simplex.runtime.values.csg.CsgValue
-import org.goodmath.simplex.runtime.values.csg.CsgValueType
-import org.goodmath.simplex.runtime.Env
-import org.goodmath.simplex.twist.Twist
-import org.goodmath.simplex.twist.plus
+import com.github.ajalt.mordant.rendering.TextColors.*
 import kotlin.io.path.Path
 import kotlin.io.path.writeText
-import com.github.ajalt.mordant.rendering.TextColors.*
 import org.goodmath.simplex.ast.def.Definition
 import org.goodmath.simplex.ast.expr.Expr
+import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.SimplexError
 import org.goodmath.simplex.runtime.SimplexEvaluationError
+import org.goodmath.simplex.runtime.values.manifold.SMaterial
+import org.goodmath.simplex.runtime.values.manifold.Solid
+import org.goodmath.simplex.runtime.values.manifold.SolidType
+import org.goodmath.simplex.twist.Twist
+import org.goodmath.simplex.twist.plus
 
 /**
  * A 3d model for execution in simplex.
+ *
  * @param defs the list of all top-level definitions in the model.
  * @param loc the location of the model declaration in the source file.
  */
-class Model(val defs: List<Definition>,
-            val products: List<Product>,
-            loc: Location): AstNode(loc) {
-    override fun twist(): Twist =
-        Twist.obj("Model",
-            Twist.array("defs", defs))
+class Model(val defs: List<Definition>, val products: List<Product>, loc: Location) : AstNode(loc) {
+    override fun twist(): Twist = Twist.obj("Model", Twist.array("defs", defs))
 
     fun analyze() {
         for (d in defs) {
@@ -51,21 +49,23 @@ class Model(val defs: List<Definition>,
         }
     }
 
-    fun execute(renderNames: Set<String>?,
-                outputPrefix: String,
-                echo: (Int, Any?, Boolean) -> Unit) {
+    fun execute(
+        renderNames: Set<String>?,
+        outputPrefix: String,
+        echo: (Int, Any?, Boolean) -> Unit,
+    ) {
         val rootEnv = Env.createRootEnv()
         RootEnv.echo = echo
 
         analyze()
-        val executionEnv = Env(defs,
-            rootEnv)
+        val executionEnv = Env(defs, rootEnv)
         executionEnv.installDefinitionValues()
-        val toRender = if (renderNames == null) {
-            products
-        } else {
-            products.filter { renderNames.contains(it.name) }
-        }
+        val toRender =
+            if (renderNames == null) {
+                products
+            } else {
+                products.filter { renderNames.contains(it.name) }
+            }
         for (product in toRender) {
             echo(1, cyan("Rendering ${product.name}"), false)
             product.execute(executionEnv, echo, outputPrefix)
@@ -74,45 +74,46 @@ class Model(val defs: List<Definition>,
 }
 
 /**
- * A product block, which specifies a list of expressions to evaluate,
- * and then render the outputs.
+ * A product block, which specifies a list of expressions to evaluate, and then render the outputs.
+ *
  * @param name the name of the product block
  * @param body a list of the expressions to evaluate and render.
  * @param loc the source location of the render block.
  */
-class Product(val name: String?, val body: List<Expr>, loc: Location): AstNode(loc) {
+class Product(val name: String?, val body: List<Expr>, loc: Location) : AstNode(loc) {
     override fun twist(): Twist =
-        Twist.obj("Product",
-            Twist.attr("name", name),
-            Twist.array("body", body))
+        Twist.obj("Product", Twist.attr("name", name), Twist.array("body", body))
 
-    fun execute(env: Env, echo: (Int, Any?, Boolean) -> Unit,
-                prefix: String) {
+    fun execute(env: Env, echo: (Int, Any?, Boolean) -> Unit, prefix: String) {
         val prefixLastSegment = prefix.substring(prefix.lastIndexOf('/') + 1)
-        val results = try {
-            body.map { it.evaluateIn(env) }
-        } catch (e: Exception) {
-            if (e is SimplexError) {
-                if (e.location == null) {
-                    e.location = loc
+        val results =
+            try {
+                body.map { it.evaluateIn(env) }
+            } catch (e: Exception) {
+                if (e is SimplexError) {
+                    if (e.location == null) {
+                        e.location = loc
+                    }
+                    throw e
+                } else {
+                    throw SimplexEvaluationError("Error evaluating model", cause = e, loc = loc)
                 }
-                throw e
-            } else {
-                throw SimplexEvaluationError("Error evaluating model", cause=e, loc=loc)
             }
-        }
-        val bodies = results.filter { it is CsgValue }.map { it as CsgValue }
-            .map { it.csgValue }
+        val bodies = results.filter { it is Solid }.map { it as Solid }
         if (bodies.isNotEmpty()) {
             var combined = bodies.first()
             for (body in bodies.drop(0)) {
-                combined = combined.union(body)
+                combined = combined + body
             }
 
-            echo(1, cyan("Rendering 3d model of ${bodies.size} bodies to $prefixLastSegment-$name.stl"), false)
-            Path("$prefix-$name.stl").writeText(combined.toStlString())
+            echo(
+                1,
+                cyan("Rendering 3d model of ${bodies.size} bodies to $prefixLastSegment-$name.stl"),
+                false,
+            )
+            combined.export("$prefix-$name.stl", SMaterial.smoothGray)
         }
-        val others = results.filter { it.valueType != CsgValueType }
+        val others = results.filter { it.valueType != SolidType }
         if (others.isNotEmpty()) {
             val text = StringBuilder()
             val twists = StringBuilder()

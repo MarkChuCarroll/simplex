@@ -23,48 +23,61 @@ import org.goodmath.simplex.twist.Twistable
 /**
  * Signatures for invokable values.
  *
- * These are almost the same as the static types - except that they
- * carry a bit of extra information that helps generate better error
- * messages when there's a type error in the model.
+ * These are almost the same as the static types - except that they carry a bit of extra information
+ * that helps generate better error messages when there's a type error in the model.
  */
-abstract class Signature: Twistable {
+abstract class Signature : Twistable {
     abstract fun toStaticType(): Type
 }
 
-data class FunctionSignature(
-    val params: List<Param>,
-    val returnType: Type
-): Signature() {
+class FunctionSignature private constructor(val params: List<List<Param>>, val returnType: Type) : Signature() {
+
     override fun twist(): Twist =
-        Twist.obj("FunctionSignature",
-            Twist.array("params", params),
-            Twist.value("resultType", returnType)
+        Twist.obj(
+            "FunctionSignature",
+            Twist.array("params", params.map { Twist.array("option", it) }),
+            Twist.value("resultType", returnType),
         )
 
-    override fun toStaticType(): Type =
-        Type.function(params.map { it.type }, returnType)
+    override fun toStaticType(): Type = Type.function(params.map { it.map { it.type } }, returnType)
 
+    companion object {
+        fun simple(params: List<Param>, returnType: Type): FunctionSignature {
+            return FunctionSignature(listOf(params), returnType)
+        }
+
+        fun multi(params: List<List<Param>>, returnType: Type): FunctionSignature {
+            return FunctionSignature(params, returnType)
+        }
+    }
 }
 
-data class Param(val name: String, val type: Type): Twistable {
+data class Param(val name: String, val type: Type) : Twistable {
     override fun twist(): Twist =
-        Twist.obj("Param",
-            Twist.attr("name", name),
-            Twist.attr("type", type.toString()))
+        Twist.obj("Param", Twist.attr("name", name), Twist.attr("type", type.toString()))
 }
 
-data class MethodSignature(
-    val self: Type,
-    val params: List<Param>,
-    val returnType: Type,
-): Signature() {
+class MethodSignature private constructor(val self: Type, val paramSets: List<List<Param>>, val returnType: Type) :
+    Signature() {
+
     override fun twist(): Twist =
-        Twist.obj("MethodSig",
+        Twist.obj(
+            "MethodSig",
             Twist.value("selfType", self),
-            Twist.array("params", params),
-            Twist.value("returnType", returnType))
+            Twist.array("params", paramSets.map { Twist.array("option", it) }),
+            Twist.value("returnType", returnType),
+        )
 
-    override fun toStaticType(): MethodType =
-        Type.method(self, params.map { it.type }, returnType)
+    override fun toStaticType(): MethodType = Type.multiMethod(self,
+        paramSets.map { alt -> alt.map { it.type } }, returnType)
 
+    companion object {
+        fun simple(target: Type, params: List<Param>, returnType: Type): MethodSignature {
+            return MethodSignature(target, listOf(params), returnType)
+        }
+
+        fun multi(target: Type, paramSets: List<List<Param>>, returnType: Type): MethodSignature {
+            return MethodSignature(target, paramSets, returnType)
+        }
+    }
 }

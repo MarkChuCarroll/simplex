@@ -15,8 +15,6 @@
  */
 package org.goodmath.simplex.ast.types
 
-import org.goodmath.simplex.twist.Twist
-import org.goodmath.simplex.twist.Twistable
 import java.util.HashMap
 import kotlin.collections.all
 import kotlin.collections.joinToString
@@ -24,8 +22,10 @@ import kotlin.collections.map
 import kotlin.collections.set
 import kotlin.collections.toList
 import kotlin.collections.zip
+import org.goodmath.simplex.twist.Twist
+import org.goodmath.simplex.twist.Twistable
 
-abstract class Type: Twistable {
+abstract class Type : Twistable {
 
     abstract fun matchedBy(t: Type): Boolean
 
@@ -34,17 +34,21 @@ abstract class Type: Twistable {
         val IntType = simple("Int")
         val FloatType = simple("Float")
         val StringType = simple("String")
-        val CsgType = simple("Csg")
-        val TwoDPointType = simple("TwoDPoint")
-        val ThreeDPointType = simple("ThreeDPoint")
-        val ExtrusionProfileType = simple("ExtrusionProfile")
-        val ProfileSliceType = simple("ProfileSlice")
         val PolygonType = simple("Polygon")
         val BooleanType = simple("Boolean")
         val AnyType = simple("Any")
+        val SolidType = simple("Solid")
+        val SliceType = simple("Slice")
+        val Vec2Type = simple("Vec2")
+        val Vec3Type = simple("Vec3")
+        val RGBAType = simple("RGBA")
+        val BoundingRectType = simple("BoundingRect")
+        val BoundingBoxType = simple("BoundingBox")
+        val MeshType = simple("Mesh")
+        val MaterialType = simple("Material")
+        val NoneType = simple("None")
 
-        operator fun get(name: String): Type? =
-            types[name]
+        operator fun get(name: String): Type? = types[name]
 
         fun all(): List<Type> {
             return types.values.toList()
@@ -59,14 +63,27 @@ abstract class Type: Twistable {
             return types.computeIfAbsent(name) { n -> ArrayType(baseType) } as ArrayType
         }
 
-        fun method(target: Type, args: List<Type>, result: Type): MethodType {
-            val name = "$target->(${args.map{it.toString()}.joinToString(",")}):$result"
-            return types.computeIfAbsent(name) { _ -> MethodType(target, args, result) } as MethodType
+        fun simpleMethod(target: Type, args: List<Type>, result: Type): MethodType {
+            return multiMethod(target, listOf(args), result)
         }
 
-        fun function(args: List<Type>, result: Type): FunctionType {
-            val name = "(${args.map{it.toString()}.joinToString(",")}):$result"
-            return types.computeIfAbsent(name) { _ -> FunctionType(args, result) } as FunctionType
+        fun multiMethod(target: Type, argSets: List<List<Type>>, result: Type): MethodType {
+            val argsStr = argSets.map { argSet ->
+                argSet.map { arg -> arg.toString() }.joinToString(", ")
+            }.joinToString("|")
+            val name = "$target->($argsStr):$result"
+            return types.computeIfAbsent(name) { _ -> MethodType(target, argSets, result) }
+                    as MethodType
+        }
+
+        fun function(argOptions: List<List<Type>>, result: Type): FunctionType {
+            val argOptStrings =
+                argOptions
+                    .map { args -> args.map { it.toString() }.joinToString(",") }
+                    .joinToString("|")
+            val name = "($argOptStrings):$result"
+            return types.computeIfAbsent(name) { _ -> FunctionType(argOptions, result) }
+                as FunctionType
         }
     }
 
@@ -78,13 +95,11 @@ abstract class Type: Twistable {
         return methods[name]
     }
 
-    val  methods = HashMap<String, MethodType>()
+    val methods = HashMap<String, MethodType>()
 }
 
-class SimpleType internal constructor(val name: String): Type() {
-    override fun twist(): Twist =
-        Twist.obj("SimpleType",
-            Twist.attr("name", name))
+class SimpleType internal constructor(val name: String) : Type() {
+    override fun twist(): Twist = Twist.obj("SimpleType", Twist.attr("name", name))
 
     override fun toString(): String {
         return name
@@ -101,10 +116,8 @@ class SimpleType internal constructor(val name: String): Type() {
     }
 }
 
-class ArrayType internal constructor(val elementType: Type): Type() {
-    override fun twist(): Twist =
-        Twist.obj("ArrayType",
-            Twist.value("elementType", elementType))
+class ArrayType internal constructor(val elementType: Type) : Type() {
+    override fun twist(): Twist = Twist.obj("ArrayType", Twist.value("elementType", elementType))
 
     override fun toString(): String {
         return "[$elementType]"
@@ -119,37 +132,57 @@ class ArrayType internal constructor(val elementType: Type): Type() {
     }
 }
 
-class FunctionType internal constructor(val args: List<Type>, val returnType: Type): Type() {
+class FunctionType internal constructor(val argLists: List<List<Type>>, val returnType: Type) :
+    Type() {
+
+    private data class ArgTypeList(val argList: List<Type>) : Twistable {
+        override fun twist(): Twist {
+            return Twist.array("ArgList", argList)
+        }
+    }
+
     override fun twist(): Twist =
-        Twist.obj("FunctionType",
+        Twist.obj(
+            "FunctionType",
             Twist.value("return", returnType),
-            Twist.array("args", args ))
+            Twist.array("args", argLists.map { ArgTypeList(it) }),
+        )
 
     override fun toString(): String {
-        var argStr = args.map { it.toString() }.joinToString(", ")
-        return "($argStr):$returnType"
+        val argOptStrings =
+            argLists.map { args -> args.map { it.toString() }.joinToString(",") }.joinToString("|")
+        return "($argOptStrings):$returnType"
     }
 
     override fun matchedBy(t: Type): Boolean {
         return if (t is FunctionType) {
-            (t.args.size == args.size) &&
-                args.zip(t.args).all { (l, r) -> l.matchedBy(r) } &&
-                        returnType.matchedBy(t.returnType)
+            returnType == t.returnType &&
+                argLists.all { myArgOption ->
+                    t.argLists.any { theirArgOption ->
+                        myArgOption.size == theirArgOption.size &&
+                            myArgOption.zip(theirArgOption).all { (l, r) -> l.matchedBy(r) }
+                    }
+                }
         } else {
             false
         }
     }
 }
 
-class MethodType internal constructor(val target: Type, val args: List<Type>, val returnType: Type): Type() {
+class MethodType
+internal constructor(val target: Type, val argSets: List<List<Type>>, val returnType: Type) : Type() {
     override fun twist(): Twist =
-        Twist.obj("MethodType",
+        Twist.obj(
+            "MethodType",
             Twist.value("target", target),
             Twist.value("return", returnType),
-            Twist.array("args", args))
+            Twist.array("args", argSets.map { Twist.array("option", it) }),
+        )
 
     override fun toString(): String {
-        val argStr = args.map { it.toString() }.joinToString(", ")
+        val argStr = argSets.map { argSet ->
+            argSet.map { arg -> arg.toString() }.joinToString(", ")
+        }.joinToString("|")
         val resultStr = returnType.toString()
         val targetStr = target.toString()
         return "$targetStr->($argStr):$resultStr"
@@ -157,9 +190,16 @@ class MethodType internal constructor(val target: Type, val args: List<Type>, va
 
     override fun matchedBy(t: Type): Boolean {
         return if (t is MethodType) {
-            target.matchedBy(t.target) && (args.size == t.args.size) &&
-                    args.zip(t.args).all { (l, r) -> l.matchedBy(r) } &&
-                    returnType.matchedBy(t.returnType)
+            target.matchedBy(t.target) &&
+                    argSets.all { args ->
+                        t.argSets.any { tArgs ->
+                            (args.size == tArgs.size) &&
+                                    args.zip(tArgs).all { (l, r) ->
+                                        l.matchedBy(r)
+                                    }
+                        }
+                    } &&
+                returnType.matchedBy(t.returnType)
         } else {
             false
         }
