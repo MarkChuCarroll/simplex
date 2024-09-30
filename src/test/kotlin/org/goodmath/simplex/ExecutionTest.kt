@@ -69,7 +69,6 @@ class ExecutionTest {
         fun run() {
             System.out.println("Testing script '$name.s3d'")
             val cmd = Simplex()
-
             val tmpDir = Files.createTempDirectory("test-$name")
             val out = cmd.test("--prefix=$tmpDir/$name-out", "--verbosity=2", program().toString())
             val exp = expected()
@@ -80,6 +79,7 @@ class ExecutionTest {
             assertEquals(stderr, out.stderr)
             assertEquals(exp.keys, act.keys)
             for (k in exp.keys) {
+                System.err.println("Checking $k: does ${exp[k]} == ${act[k]}?")
                 val expTxt = exp[k]?.readText()!!
                 val actTxt = act[k]?.readText()!!
                 assertEquals(expTxt, actTxt, "Output $k")

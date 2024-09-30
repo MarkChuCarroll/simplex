@@ -25,25 +25,25 @@ import org.junit.jupiter.api.Test
 class PolygonTest {
     @Test
     fun testPolygonCreators() {
-        val rect = SliceType.providesFunctions.first { it.name == "square" }
+        val rect = SliceType.providesFunctions.first { it.name == "rectangle" }
         val r = rect.execute(listOf(FloatValue(20.0),FloatValue(10.0), BooleanValue(true)))
         r as Slice
         assertEquals(
-            """(obj PolygonValue
-                       |   [array points
-                       |      (obj Point2D
-                       |         (x '15.0')
-                       |         (y '12.0'))
-                       |      (obj Point2D
-                       |         (x '25.0')
-                       |         (y '12.0'))
-                       |      (obj Point2D
-                       |         (x '25.0')
-                       |         (y '28.0'))
-                       |      (obj Point2D
-                       |         (x '15.0')
-                       |         (y '28.0'))])
-                       |"""
+            """(obj CrossSection
+               |   [array points
+               |      (obj Vec2
+               |         (x '0.0')
+               |         (y '0.0'))
+               |      (obj Vec2
+               |         (x '20.0')
+               |         (y '0.0'))
+               |      (obj Vec2
+               |         (x '20.0')
+               |         (y '10.0'))
+               |      (obj Vec2
+               |         (x '0.0')
+               |         (y '10.0'))])
+               |"""
                 .trimMargin(),
             r.twist().consStr(),
         )

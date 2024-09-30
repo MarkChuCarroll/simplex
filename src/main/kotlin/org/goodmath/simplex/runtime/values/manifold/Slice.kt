@@ -46,9 +46,7 @@ class Slice(val cross: CrossSection) : Value {
     override fun twist(): Twist =
         Twist.obj(
             "CrossSection",
-            Twist.attr("area", cross.area().toString()),
-            Twist.attr("verts", cross.numVert().toString()),
-            Twist.attr("contours", cross.numContour().toString()),
+            Twist.array("points", toPoints())
         )
 
     val area = FloatValue(cross.area())
@@ -102,6 +100,10 @@ class Slice(val cross: CrossSection) : Value {
 
     fun revolve(segments: Int, degrees: Float): Solid =
         Solid(Manifold.Revolve(cross, segments, degrees))
+
+    fun toPoints(): List<Vec2> {
+        return cross.toPolygons().flatMap { it.toList() }.map { Vec2.fromDoubleVec2(it)}
+    }
 
     companion object {
         fun rectangle(x: Double, y: Double): Slice {

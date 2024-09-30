@@ -1,9 +1,9 @@
 // Simple test of iteration.
-fun cubish(length: Float, width: Float, height: Float, x: Float): Csg {
+fun cubish(length: Float, width: Float, height: Float, x: Float): Solid {
     brick(length, width, height)->move(x, x, x*2.0)
 }
 
-fun make_a_bunch(): [Csg] {
+fun make_a_bunch(): [Solid] {
   for m in 1->to(4) {
       cubish(m->float()*10.0, m->float()*5.0, m->float()*2.0, m->float()*10.0)
   }

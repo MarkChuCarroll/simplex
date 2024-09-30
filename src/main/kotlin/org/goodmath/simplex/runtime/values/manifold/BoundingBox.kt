@@ -78,6 +78,12 @@ class BoundingBox(val box: Box) : Value {
         return move(Vec3(x, y, z))
     }
 
+    override fun toString(): String {
+        val halfSize: Vec3 = size / 2.0
+        val low = center - halfSize
+        val high = center + halfSize
+        return "[$low, $high]"
+    }
 
 
     fun expand(point: Vec3): BoundingBox {
@@ -98,6 +104,12 @@ class BoundingBox(val box: Box) : Value {
 object BoundingBoxType : ValueType() {
     override val name: String = "BoundingBox"
     override val asType: Type = Type.simple(name)
+
+    override val supportsText = true
+
+    override fun toText(v: Value): String {
+        return v.toString()
+    }
 
     override fun isTruthy(v: Value): Boolean {
         return true

@@ -27,6 +27,7 @@ import org.goodmath.simplex.runtime.SimplexUndefinedError
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.primitives.AbstractFunctionValue
 import org.goodmath.simplex.twist.Twist
+import kotlin.math.exp
 
 class FunCallExpr(val funExpr: Expr, val argExprs: List<Expr>, loc: Location) : Expr(loc) {
     override fun twist(): Twist =
@@ -62,8 +63,8 @@ class FunCallExpr(val funExpr: Expr, val argExprs: List<Expr>, loc: Location) : 
         if (funType !is FunctionType) {
             throw SimplexAnalysisError("Function expression isn't a function", loc = loc)
         }
-
-        if (funType.argLists.none { it.size == argExprs.size }) {
+        val expectedArgs =  funType.argLists.firstOrNull { it.size == argExprs.size }
+        if (expectedArgs == null) {
             throw SimplexParameterCountError(
                 "Function call",
                 funType.argLists.map { it.size },
@@ -71,13 +72,10 @@ class FunCallExpr(val funExpr: Expr, val argExprs: List<Expr>, loc: Location) : 
                 loc,
             )
         }
-        if (
-            funType.argLists.none { expectedArgs ->
-                expectedArgs.zip(argExprs).all { (type, expr) ->
+        if (!expectedArgs.zip(argExprs).all { (type, expr) ->
                     type.matchedBy(expr.resultType(env))
-                }
-            }
-        ) {
+                }) {
+
             throw SimplexAnalysisError("No function signatures matched", loc = loc)
         }
     }
@@ -104,21 +102,17 @@ class MethodCallExpr(val target: Expr, val name: String, val args: List<Expr>, l
             targetType.getMethod(name)
                 ?: throw SimplexUndefinedError(name, "method of $targetType", loc = loc)
 
-        // TODO: update this so that we search for a signature with the correct
-        // number of parameters - then we match that.
-        if (methodType.argSets.all { methodArgs ->
-                args.size != methodArgs.size }) {
+        val expectedArgs = methodType.argSets.firstOrNull { it.size == args.size }
+        if (expectedArgs == null) {
             throw SimplexParameterCountError("Method $name",
                 methodType.argSets.map { it.size },
                 args.size,
                 location = loc)
         }
-        if (methodType.argSets.none { methodArgs ->
-                methodArgs.size != args.size &&
-                        methodArgs.zip(args).all { (expected, expr) ->
+
+        if (!expectedArgs.zip(args).all { (expected, expr) ->
                             expected.matchedBy(expr.resultType(env))
-                        }
-            }) {
+                        }) {
             throw SimplexAnalysisError("Method $name does not accept an argument list of ${args.map { it.resultType(env).toString()}.joinToString(", ")}")
         }
     }

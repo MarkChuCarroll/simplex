@@ -1,18 +1,18 @@
 
-fun cone(radius: Float, height: Float): Csg {
+fun cone(radius: Float, height: Float): Solid {
       cylinder(height + 2.0, radius, 0.1)
 }
 
-fun dbl(radius: Float, height: Float): Csg {
+fun dbl(radius: Float, height: Float): Solid {
   let c = cone(height, radius)
   c + c->rotate(0.0, 180.0, 0.0)->move(0.0, 0.0, 25.0)
 }
 
 let conic = dbl(50.0, 30.0)
 
-fun goof (base: Csg, radius: Float): Csg {
-   (base + sphere(radius)->move(0.0, 0.0, 30.0)) -
-     sphere(radius)->move(0.0, 0.0, 50.0)
+fun goof (base: Solid, radius: Float): Solid {
+   (base + blob(radius)->move(0.0, 0.0, 30.0)) -
+     blob(radius)->move(0.0, 0.0, 50.0)
 }
 
 produce("conic") {

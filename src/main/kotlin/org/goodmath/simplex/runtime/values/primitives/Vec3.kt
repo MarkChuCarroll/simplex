@@ -39,7 +39,7 @@ class Vec3(val x: Double, val y: Double, val z: Double) : Value {
     }
 
     override fun toString(): String {
-        return "[$x, $y, $z]"
+        return "(x=$x, y=$y, z=$z)"
     }
 
     fun toDoubleVec3(): DoubleVec3 {
@@ -99,6 +99,15 @@ object Vec3Type : ValueType() {
     override val name: String = "Vec3"
 
     override val asType: Type = Type.simple(name)
+
+    override val supportsText: Boolean = true
+
+    override fun toText(v: Value): String {
+        return v.toString()
+    }
+
+
+
 
     override fun isTruthy(v: Value): Boolean {
         return if (v is Vec3) {

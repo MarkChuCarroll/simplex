@@ -1,5 +1,5 @@
 Loading model from ./src/test/resources/scripts/test/test.s3d
 Rendering conic
-bounds = [(x=-14.995482280443063, y=-14.995482280443063, z=-27.0), (x=14.995482280443063, y=14.995482280443063, z=52.0)]
+bounds = [(x=-30.0, y=-30.0, z=-27.0), (x=30.0, y=30.0, z=52.0)]
 Rendering 3d model of 1 bodies to test-out-conic.stl
 Writing text products to test-out-conic.txt

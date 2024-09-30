@@ -105,7 +105,6 @@ class Product(val name: String?, val body: List<Expr>, loc: Location) : AstNode(
             for (body in bodies.drop(0)) {
                 combined = combined + body
             }
-
             echo(
                 1,
                 cyan("Rendering 3d model of ${bodies.size} bodies to $prefixLastSegment-$name.stl"),
