@@ -44,9 +44,11 @@ class SMeshGL(val mesh: MeshGL) : Value {
 }
 
 object SMeshGLType : ValueType() {
-    override val name = "MeshGL"
+    override val name = "Mesh"
 
-    override val asType: Type = Type.simple(name)
+    override val asType: Type by lazy {
+        Type.simple(name)
+    }
 
     override fun isTruthy(v: Value): Boolean {
         return true
@@ -59,7 +61,7 @@ object SMeshGLType : ValueType() {
             object :
                 PrimitiveMethod(
                     "num_vert",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.IntType),
+                    MethodSignature.simple(asType, emptyList<Param>(), IntegerValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target).mesh
@@ -69,7 +71,7 @@ object SMeshGLType : ValueType() {
             object :
                 PrimitiveMethod(
                     "num_tri",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.IntType),
+                    MethodSignature.simple(asType, emptyList<Param>(), IntegerValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target).mesh
@@ -79,7 +81,7 @@ object SMeshGLType : ValueType() {
             object :
                 PrimitiveMethod(
                     "num_prop",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.IntType),
+                    MethodSignature.simple(asType, emptyList<Param>(), IntegerValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target).mesh
@@ -89,7 +91,7 @@ object SMeshGLType : ValueType() {
             object :
                 PrimitiveMethod(
                     "vert_properties",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.array(Type.FloatType)),
+                    MethodSignature.simple(asType, emptyList<Param>(), Type.array(FloatValueType.asType)),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target).mesh
@@ -108,7 +110,7 @@ object SMeshGLType : ValueType() {
             object :
                 PrimitiveMethod(
                     "tri_verts",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.array(Type.IntType)),
+                    MethodSignature.simple(asType, emptyList<Param>(), Type.array(IntegerValueType.asType)),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target).mesh

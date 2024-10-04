@@ -15,6 +15,35 @@
  */
 package org.goodmath.simplex.ast.types
 
+import com.github.ajalt.colormath.model.RGB
+import javafx.scene.shape.MeshView
+import org.goodmath.simplex.runtime.RootEnv
+import org.goodmath.simplex.runtime.SimplexAnalysisError
+import org.goodmath.simplex.runtime.values.AnyType
+import org.goodmath.simplex.runtime.values.ValueType
+import org.goodmath.simplex.runtime.values.manifold.BoundingBoxValueType
+import org.goodmath.simplex.runtime.values.manifold.BoundingRectValueType
+import org.goodmath.simplex.runtime.values.manifold.RGBAValueType
+import org.goodmath.simplex.runtime.values.manifold.SMaterial
+import org.goodmath.simplex.runtime.values.manifold.SMaterialValueType
+import org.goodmath.simplex.runtime.values.manifold.SMeshGLType
+import org.goodmath.simplex.runtime.values.manifold.SPolygonType
+import org.goodmath.simplex.runtime.values.manifold.SSmoothnessType
+import org.goodmath.simplex.runtime.values.manifold.SliceValueType
+import org.goodmath.simplex.runtime.values.manifold.SolidValueType
+import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
+import org.goodmath.simplex.runtime.values.primitives.BooleanValue
+import org.goodmath.simplex.runtime.values.primitives.BooleanValueType
+import org.goodmath.simplex.runtime.values.primitives.FloatValueType
+import org.goodmath.simplex.runtime.values.primitives.FunctionValueType
+import org.goodmath.simplex.runtime.values.primitives.IntegerValueType
+import org.goodmath.simplex.runtime.values.primitives.MethodValueType
+import org.goodmath.simplex.runtime.values.primitives.NoneValueType
+import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValueType
+import org.goodmath.simplex.runtime.values.primitives.StringValue
+import org.goodmath.simplex.runtime.values.primitives.StringValueType
+import org.goodmath.simplex.runtime.values.primitives.Vec2ValueType
+import org.goodmath.simplex.runtime.values.primitives.Vec3ValueType
 import java.util.HashMap
 import kotlin.collections.all
 import kotlin.collections.joinToString
@@ -26,45 +55,79 @@ import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
 
 abstract class Type : Twistable {
-
     abstract fun matchedBy(t: Type): Boolean
 
     companion object {
-        private val types = HashMap<String, Type>()
-        val IntType = simple("Int")
-        val FloatType = simple("Float")
-        val StringType = simple("String")
-        val PolygonType = simple("Polygon")
-        val BooleanType = simple("Boolean")
-        val AnyType = simple("Any")
-        val SolidType = simple("Solid")
-        val SliceType = simple("Slice")
-        val Vec2Type = simple("Vec2")
-        val Vec3Type = simple("Vec3")
-        val RGBAType = simple("RGBA")
-        val BoundingRectType = simple("BoundingRect")
-        val BoundingBoxType = simple("BoundingBox")
-        val MeshType = simple("Mesh")
-        val MaterialType = simple("Material")
-        val NoneType = simple("None")
+
+        private val types: HashMap<String, Type> = HashMap()
+
+        val valueTypes: HashMap<Type, ValueType> = HashMap()
+
+        val builtinValueTypes = listOf(
+            IntegerValueType, FloatValueType, StringValueType,
+            BooleanValueType,
+            Vec2ValueType, Vec3ValueType,
+            BoundingBoxValueType,
+            SolidValueType,
+            BoundingRectValueType,
+            SPolygonType,
+            SliceValueType,
+            SMeshGLType, SSmoothnessType,
+            NoneValueType, AnyType,
+        )
+
+
+        init {
+            builtinValueTypes.forEach {
+                val simp = SimpleType(it.name)
+                registerValueType(simp, it)
+            }
+        }
+
 
         operator fun get(name: String): Type? = types[name]
+
+        fun getValueType(type: Type): ValueType {
+            return valueTypes[type] ?: throw SimplexAnalysisError("Unknown value type $type")
+        }
 
         fun all(): List<Type> {
             return types.values.toList()
         }
 
+        fun registerValueType(type: Type, valueType: ValueType) {
+            if (!valueTypes.containsKey(type)) {
+                valueTypes[type] = valueType
+                System.err.println("Value type ${type} enrolled")
+                valueType.methods
+                for (f in valueType.providesFunctions) {
+                    RootEnv.declareTypeOf(f.name, f.valueType.asType)
+                    RootEnv.addVariable(f.name, f)
+                }
+            }
+        }
+
         fun simple(name: String): SimpleType {
-            return types.computeIfAbsent(name) { n -> SimpleType(n) } as SimpleType
+            return Type.types.computeIfAbsent(name) { n ->
+             SimpleType(n)
+            } as SimpleType
         }
 
         fun array(baseType: Type): ArrayType {
             val name = "[$baseType]"
-            return types.computeIfAbsent(name) { n -> ArrayType(baseType) } as ArrayType
+            val result = Type.types.computeIfAbsent(name) { n ->
+                ArrayType(baseType)
+            } as ArrayType
+            System.err.println("Accessing vector type ${result}")
+            if (!valueTypes.containsKey(result)) {
+                registerValueType(result, ArrayValueType(valueTypes[baseType]!!))
+            }
+            return result
         }
 
         fun simpleMethod(target: Type, args: List<Type>, result: Type): MethodType {
-            return multiMethod(target, listOf(args), result)
+            val result = multiMethod(target, listOf(args), result)
+            return result
         }
 
         fun multiMethod(target: Type, argSets: List<List<Type>>, result: Type): MethodType {
@@ -72,8 +135,13 @@ abstract class Type : Twistable {
                 argSet.map { arg -> arg.toString() }.joinToString(", ")
             }.joinToString("|")
             val name = "$target->($argsStr):$result"
-            return types.computeIfAbsent(name) { _ -> MethodType(target, argSets, result) }
-                    as MethodType
+            val result = Type.types.computeIfAbsent(name) { _ ->
+                 MethodType(target, argSets, result)
+            } as MethodType
+            if (!valueTypes.contains(result)) {
+                valueTypes[result] = MethodValueType(result)
+            }
+            return result
         }
 
         fun function(argOptions: List<List<Type>>, result: Type): FunctionType {
@@ -82,8 +150,12 @@ abstract class Type : Twistable {
                     .map { args -> args.map { it.toString() }.joinToString(",") }
                     .joinToString("|")
             val name = "($argOptStrings):$result"
-            return types.computeIfAbsent(name) { _ -> FunctionType(argOptions, result) }
+            val result = Type.types.computeIfAbsent(name) { _ -> FunctionType(argOptions, result) }
                 as FunctionType
+            if (!valueTypes.containsKey(result)) {
+                valueTypes[result] = FunctionValueType(result)
+            }
+            return result
         }
     }
 
@@ -98,7 +170,7 @@ abstract class Type : Twistable {
     val methods = HashMap<String, MethodType>()
 }
 
-class SimpleType internal constructor(val name: String) : Type() {
+data class SimpleType constructor(val name: String) : Type() {
     override fun twist(): Twist = Twist.obj("SimpleType", Twist.attr("name", name))
 
     override fun toString(): String {
@@ -106,9 +178,7 @@ class SimpleType internal constructor(val name: String) : Type() {
     }
 
     override fun matchedBy(t: Type): Boolean {
-        return if (this == Type.AnyType) {
-            true
-        } else if (t is SimpleType) {
+        return if (t is SimpleType) {
             t.name == name
         } else {
             false

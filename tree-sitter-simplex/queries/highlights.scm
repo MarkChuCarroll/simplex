@@ -1,4 +1,4 @@
-"tup" @definition
+"data" @definition
 "fun" @function
 "meth" @definition
 "let" @definer
@@ -7,7 +7,6 @@
 "elif" @keyword
 "else" @keyword
 "lambda" @definer
-"with" @keyword
 "produce" @definition
 (litInt) @number
 (litStr) @string

@@ -28,7 +28,11 @@ import org.goodmath.simplex.twist.Twist
 class TupleValueType(val tupleDef: TupleDefinition) : ValueType() {
     override val name: String = tupleDef.name
 
-    override val asType: Type = Type.simple(tupleDef.name)
+    override val asType: Type by lazy {
+        val t = Type.simple(tupleDef.name)
+        Type.registerValueType(t, this)
+        t
+    }
 
     override val supportsText: Boolean = true
 
@@ -65,7 +69,7 @@ class TupleValueType(val tupleDef: TupleDefinition) : ValueType() {
             object :
                 PrimitiveMethod(
                     "eq",
-                    MethodSignature.simple(asType, listOf(Param("other", asType)), Type.BooleanType),
+                    MethodSignature.simple(asType, listOf(Param("other", asType)), BooleanValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)

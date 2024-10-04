@@ -24,16 +24,18 @@ import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.runtime.values.primitives.BooleanValue
+import org.goodmath.simplex.runtime.values.primitives.BooleanValueType
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
+import org.goodmath.simplex.runtime.values.primitives.FloatValueType
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveMethod
 import org.goodmath.simplex.runtime.values.primitives.Vec2
-import org.goodmath.simplex.runtime.values.primitives.Vec2Type
+import org.goodmath.simplex.runtime.values.primitives.Vec2ValueType
 import org.goodmath.simplex.twist.Twist
 
 /** Simplex wrapper for the manifold Rect type. */
 class BoundingRect(val rect: Rect) : Value {
-    override val valueType: ValueType = BoundingRectType
+    override val valueType: ValueType = BoundingRectValueType
 
     override fun twist(): Twist =
         Twist.obj(
@@ -43,10 +45,12 @@ class BoundingRect(val rect: Rect) : Value {
         )
 }
 
-object BoundingRectType : ValueType() {
+object BoundingRectValueType : ValueType() {
     override val name: String = "BoundingRect"
 
-    override val asType: Type = Type.simple(name)
+    override val asType: Type by lazy {
+        Type.simple(name)
+    }
 
     override fun isTruthy(v: Value): Boolean {
         return true
@@ -58,13 +62,13 @@ object BoundingRectType : ValueType() {
                 PrimitiveFunctionValue(
                     "bounding_rect",
                     FunctionSignature.simple(
-                        listOf(Param("low", Type.Vec2Type), Param("high", Type.Vec2Type)),
+                        listOf(Param("low", Vec2ValueType.asType), Param("high", Vec2ValueType.asType)),
                         asType,
                     ),
                 ) {
                 override fun execute(args: List<Value>): Value {
-                    val low = Vec2Type.assertIs(args[0]).toDoubleVec2()
-                    val high = Vec2Type.assertIs(args[1]).toDoubleVec2()
+                    val low = Vec2ValueType.assertIs(args[0]).toDoubleVec2()
+                    val high = Vec2ValueType.assertIs(args[1]).toDoubleVec2()
                     return BoundingRect(Rect(low, high))
                 }
             }
@@ -76,7 +80,7 @@ object BoundingRectType : ValueType() {
             object :
                 PrimitiveMethod(
                     "size",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.Vec2Type),
+                    MethodSignature.simple(asType, emptyList<Param>(), Vec2ValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target).rect
@@ -86,7 +90,7 @@ object BoundingRectType : ValueType() {
             object :
                 PrimitiveMethod(
                     "scale",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.FloatType),
+                    MethodSignature.simple(asType, emptyList<Param>(), FloatValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target).rect
@@ -96,7 +100,7 @@ object BoundingRectType : ValueType() {
             object :
                 PrimitiveMethod(
                     "center",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.Vec2Type),
+                    MethodSignature.simple(asType, emptyList<Param>(), Vec2ValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target).rect
@@ -106,18 +110,18 @@ object BoundingRectType : ValueType() {
             object :
                 PrimitiveMethod(
                     "contains_point",
-                    MethodSignature.simple(asType, listOf(Param("pt", Type.Vec2Type)), Type.BooleanType),
+                    MethodSignature.simple(asType, listOf(Param("pt", Vec2ValueType.asType)), BooleanValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target).rect
-                    val pt = Vec2Type.assertIs(args[0]).toDoubleVec2()
+                    val pt = Vec2ValueType.assertIs(args[0]).toDoubleVec2()
                     return BooleanValue(self.Contains(pt))
                 }
             },
             object :
                 PrimitiveMethod(
                     "contains_rect",
-                    MethodSignature.simple(asType, listOf(Param("other", asType)), Type.BooleanType),
+                    MethodSignature.simple(asType, listOf(Param("other", asType)), BooleanValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target).rect
@@ -128,7 +132,7 @@ object BoundingRectType : ValueType() {
             object :
                 PrimitiveMethod(
                     "overlaps",
-                    MethodSignature.simple(asType, listOf(Param("other", asType)), Type.BooleanType),
+                    MethodSignature.simple(asType, listOf(Param("other", asType)), BooleanValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target).rect
@@ -139,7 +143,7 @@ object BoundingRectType : ValueType() {
             object :
                 PrimitiveMethod(
                     "is_empty",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.BooleanType),
+                    MethodSignature.simple(asType, emptyList<Param>(), BooleanValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target).rect
@@ -149,7 +153,7 @@ object BoundingRectType : ValueType() {
             object :
                 PrimitiveMethod(
                     "is_finite",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.BooleanType),
+                    MethodSignature.simple(asType, emptyList<Param>(), BooleanValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target).rect
@@ -170,22 +174,22 @@ object BoundingRectType : ValueType() {
             object :
                 PrimitiveMethod(
                     "plus",
-                    MethodSignature.simple(asType, listOf(Param("vec", Type.Vec2Type)), asType),
+                    MethodSignature.simple(asType, listOf(Param("vec", Vec2ValueType.asType)), asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target).rect
-                    val other = Vec2Type.assertIs(args[0]).toDoubleVec2()
+                    val other = Vec2ValueType.assertIs(args[0]).toDoubleVec2()
                     return BoundingRect(self.add(other))
                 }
             },
             object :
                 PrimitiveMethod(
                     "times",
-                    MethodSignature.simple(asType, listOf(Param("vec", Type.Vec2Type)), asType),
+                    MethodSignature.simple(asType, listOf(Param("vec", Vec2ValueType.asType)), asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target).rect
-                    val other = Vec2Type.assertIs(args[0]).toDoubleVec2()
+                    val other = Vec2ValueType.assertIs(args[0]).toDoubleVec2()
                     return BoundingRect(self.multiply(other))
                 }
             },

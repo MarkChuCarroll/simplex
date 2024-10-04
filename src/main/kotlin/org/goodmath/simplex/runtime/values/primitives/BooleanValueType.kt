@@ -22,7 +22,9 @@ import org.goodmath.simplex.twist.Twist
 
 object BooleanValueType : ValueType() {
     override val name: String = "Boolean"
-    override val asType: Type = Type.BooleanType
+    override val asType: Type by lazy {
+        Type.simple(name)
+    }
 
     override fun isTruthy(v: Value): Boolean {
         return assertIsBoolean(v)

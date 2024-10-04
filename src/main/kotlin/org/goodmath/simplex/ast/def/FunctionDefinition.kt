@@ -32,11 +32,15 @@ sealed class InvokableDefinition(
     val params: List<TypedName>,
     val body: List<Expr>,
     loc: Location,
+    val localDefs: List<FunctionDefinition> = emptyList()
 ) : Definition(name, loc) {
 
     fun validateParamsAndBody(localEnv: Env) {
         for (p in params) {
             localEnv.declareTypeOf(p.name, p.type)
+        }
+        for (l in localDefs) {
+            localEnv.declareTypeOf(l.name, l.type)
         }
         for (b in body) {
             b.validate(localEnv)
@@ -65,10 +69,10 @@ class FunctionDefinition(
     name: String,
     returnType: Type,
     params: List<TypedName>,
-    val localDefs: List<Definition>,
+    localDefs: List<FunctionDefinition>,
     body: List<Expr>,
     loc: Location,
-) : InvokableDefinition(name, returnType, params, body, loc) {
+) : InvokableDefinition(name, returnType, params, body, loc, localDefs) {
 
     val type = Type.function(listOf(params.map { it.type }), returnType)
 

@@ -35,10 +35,11 @@ module.exports = grammar({
       '}'
     ),
     tupDef: $ => seq(
-      'tup',
+      'data',
       field('name', $.id),
-      '(',
-      field('fields', $.params), ')'
+      '{',
+      field('fields', $.params),
+      '}'
     ),
     methDef: $ => seq(
       'meth',
@@ -189,28 +190,20 @@ module.exports = grammar({
         'elif',
         $.condClause
       )),
-      'else', '{',
+      'else',
       $._expr,
-      '}'
     ),
     lambda: $ => seq(
       'lambda',
-      ':',
-      $._type,
       '(',
       $.params,
       ')',
+       ':',
+      $._type,
       '{',
       repeat1($._expr),
       '}'),
     block: $ => seq(
-      '{',
-      repeat1($._expr),
-      '}'
-    ),
-    with: $ => seq(
-      'with',
-      $._expr,
       '{',
       repeat1($._expr),
       '}'
@@ -227,11 +220,11 @@ module.exports = grammar({
     ),
     loop: $ => seq(
       'for',
-      $.id,
+      field("index", $.id),
       'in',
-      $._expr,
+      field("range", $._expr),
       '{',
-      repeat1($._expr),
+      field("body", repeat1($._expr)),
       '}'
     ),
     _complex: $ => choice(
@@ -240,7 +233,11 @@ module.exports = grammar({
       $.loop,
       $.block,
       $.lambda,
-      $.with,
+      $.while
+    ),
+    while: $ => seq(
+        'while', field('cond',  $._expr),  '{',
+        field('body', repeat1($._expr)), '}'
     ),
     assignment: $ => seq(
       $.id,
@@ -273,20 +270,6 @@ module.exports = grammar({
     litBool: $ => choice(
       'true',
       'false'
-    ),
-    bindings: $ => seq(
-      $.binding,
-      repeat(seq(
-        ',',
-        $.binding
-      ))
-    ),
-    binding: $ => seq(
-      $.id,
-      ':',
-      $._type,
-      '=',
-      $._expr
     ),
     expOp: $ => '^',
     multOp: $ => choice(

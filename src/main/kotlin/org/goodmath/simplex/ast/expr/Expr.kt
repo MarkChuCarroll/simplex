@@ -27,6 +27,7 @@ import org.goodmath.simplex.ast.types.SimpleType
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.ast.types.TypedName
 import org.goodmath.simplex.runtime.Env
+import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.SimplexAnalysisError
 import org.goodmath.simplex.runtime.SimplexError
 import org.goodmath.simplex.runtime.SimplexEvaluationError
@@ -35,10 +36,14 @@ import org.goodmath.simplex.runtime.values.AnyType
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.primitives.ArrayValue
 import org.goodmath.simplex.runtime.values.primitives.BooleanValue
+import org.goodmath.simplex.runtime.values.primitives.BooleanValueType
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
+import org.goodmath.simplex.runtime.values.primitives.FloatValueType
 import org.goodmath.simplex.runtime.values.primitives.FunctionValue
 import org.goodmath.simplex.runtime.values.primitives.IntegerValue
+import org.goodmath.simplex.runtime.values.primitives.IntegerValueType
 import org.goodmath.simplex.runtime.values.primitives.StringValue
+import org.goodmath.simplex.runtime.values.primitives.StringValueType
 import org.goodmath.simplex.runtime.values.primitives.TupleValue
 import org.goodmath.simplex.twist.Twist
 
@@ -140,13 +145,13 @@ class LiteralExpr<T>(val v: T, loc: Location) : Expr(loc) {
 
     override fun resultType(env: Env): Type {
         return if (v is Int) {
-            Type.IntType
+            IntegerValueType.asType
         } else if (v is Double) {
-            Type.FloatType
+            FloatValueType.asType
         } else if (v is String) {
-            Type.StringType
+            StringValueType.asType
         } else if (v is Boolean) {
-            Type.BooleanType
+            BooleanValueType.asType
         } else {
             throw SimplexEvaluationError("Invalid literal value $v", loc = loc)
         }
@@ -228,7 +233,7 @@ class ArrayExpr(val elements: List<Expr>, loc: Location) : Expr(loc) {
     override fun resultType(env: Env): Type {
         val elementTypes = elements.map { it.resultType(env) }.toSet()
         return if (elementTypes.size > 1) {
-            Type.array(Type.simple("Any"))
+            throw SimplexAnalysisError("No resolved type: [${elementTypes}]", loc = loc)
         } else {
             Type.array(elementTypes.first())
         }
@@ -276,26 +281,32 @@ class WithExpr(val focus: Expr, val body: List<Expr>, loc: Location) : Expr(loc)
     }
 
     override fun validate(env: Env) {
-        val focusType = focus.resultType(env)
-        if (focusType !is SimpleType) {
-            throw SimplexAnalysisError(
-                "With expression focus must be a simple type, not $focusType",
-                loc = loc,
-            )
-        }
-        val focusDef = env.getDef(focusType.name)
-        if (focusDef !is TupleDefinition) {
-            throw SimplexAnalysisError(
-                "With expression focus must be a tuple type, not $focusDef",
-                loc = loc,
-            )
-        }
-        val localEnv = Env(emptyList(), env)
-        for (field in focusDef.fields) {
-            localEnv.declareTypeOf(field.name, field.type)
-        }
-        for (e in body) {
-            e.validate(localEnv)
+        try {
+            val focusType = focus.resultType(env)
+            if (focusType !is SimpleType) {
+                throw SimplexAnalysisError(
+                    "With expression focus must be a simple type, not $focusType",
+                    loc = loc,
+                )
+            }
+            val focusDef = env.getDef(focusType.name)
+            if (focusDef !is TupleDefinition) {
+                throw SimplexAnalysisError(
+                    "With expression focus must be a tuple type, not $focusDef",
+                    loc = loc,
+                )
+            }
+            val localEnv = Env(emptyList(), env)
+            for (field in focusDef.fields) {
+                localEnv.declareTypeOf(field.name, field.type)
+            }
+            for (e in body) {
+                e.validate(localEnv)
+            }
+        }catch (e: SimplexError) {
+            if (e.location == null) {
+                e.location = loc
+            }
         }
     }
 }

@@ -33,7 +33,6 @@ import org.goodmath.simplex.ast.def.TupleDefinition
 import org.goodmath.simplex.ast.def.VariableDefinition
 import org.goodmath.simplex.ast.expr.ArrayExpr
 import org.goodmath.simplex.ast.expr.AssignmentExpr
-import org.goodmath.simplex.ast.expr.Binding
 import org.goodmath.simplex.ast.expr.BlockExpr
 import org.goodmath.simplex.ast.expr.CondExpr
 import org.goodmath.simplex.ast.expr.Condition
@@ -51,7 +50,6 @@ import org.goodmath.simplex.ast.expr.TupleExpr
 import org.goodmath.simplex.ast.expr.TupleFieldUpdateExpr
 import org.goodmath.simplex.ast.expr.VarRefExpr
 import org.goodmath.simplex.ast.expr.WhileExpr
-import org.goodmath.simplex.ast.expr.WithExpr
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.ast.types.TypedName
 import org.goodmath.simplex.runtime.SimplexError
@@ -70,6 +68,7 @@ class SimplexParseListener : SimplexListener {
         val errorListener = SimplexErrorListener()
         parser.addErrorListener(errorListener)
         val tree = parser.model()
+        val t = Type
         if (errorListener.errorCount > 0) {
             for (e in errorListener.getLoggedErrors()) {
                 echo(0, e, true)
@@ -164,7 +163,7 @@ class SimplexParseListener : SimplexListener {
     override fun exitFunDef(ctx: SimplexParser.FunDefContext) {
         val name = ctx.ID().text
         val type = getValueFor(ctx.type()) as Type
-        val localDefs = ctx.funDef().map { getValueFor(it) as Definition }
+        val localDefs = ctx.funDef().map { getValueFor(it) as FunctionDefinition }
         val params = ctx.params()?.let { getValueFor(it) as List<TypedName> }
         val body = ctx.expr().map { getValueFor(it) as Expr }
         setValueFor(
@@ -228,13 +227,6 @@ class SimplexParseListener : SimplexListener {
         val args = ctx.types()?.let { getValueFor(it) as List<Type> } ?: emptyList()
         val result = getValueFor(ctx.type()) as Type
         setValueFor(ctx, Type.function(listOf(args), result))
-    }
-
-    override fun enterBindings(ctx: SimplexParser.BindingsContext) {}
-
-    override fun exitBindings(ctx: SimplexParser.BindingsContext) {
-        val bindings = ctx.binding().map { getValueFor(it) as Binding }
-        setValueFor(ctx, bindings)
     }
 
     override fun enterExprs(ctx: SimplexParser.ExprsContext) {}
@@ -402,13 +394,6 @@ class SimplexParseListener : SimplexListener {
         setValueFor(ctx, LambdaExpr(resultType, args, body, loc(ctx)))
     }
 
-    override fun enterComplexWithExpr(ctx: SimplexParser.ComplexWithExprContext) {}
-
-    override fun exitComplexWithExpr(ctx: SimplexParser.ComplexWithExprContext) {
-        val focus = getValueFor(ctx.expr()[0]) as Expr
-        val body = ctx.expr().drop(1).map { getValueFor(it) as Expr }
-        setValueFor(ctx, WithExpr(focus, body, loc(ctx)))
-    }
 
     override fun enterComplexWhileExpr(ctx: SimplexParser.ComplexWhileExprContext) {}
 
@@ -477,14 +462,6 @@ class SimplexParseListener : SimplexListener {
         setValueFor(ctx, VarRefExpr("false", loc(ctx)))
     }
 
-    override fun enterBinding(ctx: SimplexParser.BindingContext) {}
-
-    override fun exitBinding(ctx: SimplexParser.BindingContext) {
-        val name = ctx.ID().text
-        val type = getValueFor(ctx.type()) as Type
-        val value = getValueFor(ctx.expr()) as Expr
-        setValueFor(ctx, Binding(name, type, value, loc(ctx)))
-    }
 
     override fun enterOpOptPow(ctx: SimplexParser.OpOptPowContext) {}
 

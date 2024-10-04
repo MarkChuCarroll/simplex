@@ -22,6 +22,7 @@ import kotlin.let
 import org.goodmath.simplex.ast.Location
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
+import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.SimplexError
 import org.goodmath.simplex.runtime.SimplexEvaluationError
 import org.goodmath.simplex.runtime.SimplexParameterCountError
@@ -30,6 +31,7 @@ import org.goodmath.simplex.runtime.SimplexUndefinedError
 import org.goodmath.simplex.runtime.SimplexUnsupportedOperation
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.primitives.BooleanValue
+import org.goodmath.simplex.runtime.values.primitives.BooleanValueType
 import org.goodmath.simplex.runtime.values.primitives.IntegerValue
 import org.goodmath.simplex.twist.Twist
 
@@ -248,17 +250,20 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location) : Expr
             Operator.Div -> targetType.getMethod("div")?.returnType
             Operator.Mod -> targetType.getMethod("mod")?.returnType
             Operator.Pow -> targetType.getMethod("pow")?.returnType
-            Operator.Eq -> Type.simple("Boolean")
-            Operator.Neq -> Type.simple("Boolean")
-            Operator.Gt -> targetType.getMethod("compare")?.let { Type.simple("Boolean") }
-            Operator.Ge -> targetType.getMethod("compare")?.let { Type.simple("Boolean") }
-            Operator.Lt -> targetType.getMethod("compare")?.let { Type.simple("Boolean") }
-            Operator.Le -> targetType.getMethod("compare")?.let { Type.simple("Boolean") }
-            Operator.Not -> Type.simple("Boolean")
-            Operator.And -> Type.simple("Boolean")
-            Operator.Or -> Type.simple("Boolean")
+            Operator.Eq -> BooleanValueType.asType
+            Operator.Neq -> BooleanValueType.asType
+            Operator.Gt -> targetType.getMethod("compare")?.let { BooleanValueType.asType }
+            Operator.Ge -> targetType.getMethod("compare")?.let { BooleanValueType.asType }
+            Operator.Lt -> targetType.getMethod("compare")?.let { BooleanValueType.asType }
+            Operator.Le -> targetType.getMethod("compare")?.let { BooleanValueType.asType }
+            Operator.Not -> BooleanValueType.asType
+            Operator.And -> BooleanValueType.asType
+            Operator.Or -> BooleanValueType.asType
             Operator.Subscript -> targetType.getMethod("sub")?.returnType
             Operator.Uminus -> targetType.getMethod("neg")?.returnType
-        } ?: throw SimplexUnsupportedOperation(targetType.toString(), op.toString(), loc = loc)
+        } ?: run {
+            System.err.println("All types: ${Type.valueTypes.keys}")
+            throw SimplexUnsupportedOperation(targetType.toString(), op.toString(), loc = loc)
+        }
     }
 }

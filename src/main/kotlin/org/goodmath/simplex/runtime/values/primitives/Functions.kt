@@ -48,6 +48,8 @@ class FunctionValue(
 
     override fun applyTo(args: List<Value>): Value {
         val localEnv = Env(localDefs, staticScope)
+        localEnv.installStaticDefinitions()
+        localEnv.installDefinitionValues()
         if (params.size != args.size) {
             throw SimplexEvaluationError(
                 "Incorrect number of args: expected ${params.size}, but found ${args.size}"
@@ -65,7 +67,7 @@ class FunctionValue(
         Twist.obj("FunctionValue", Twist.value("def", def), Twist.value("scope", staticScope))
 }
 
-class FunctionValueType(val type: FunctionType) : ValueType() {
+open class FunctionValueType(val type: FunctionType) : ValueType() {
     override val name: String = "Function($type)"
 
     override val asType: Type = type
@@ -79,7 +81,7 @@ class FunctionValueType(val type: FunctionType) : ValueType() {
     override val providesPrimitiveMethods: List<PrimitiveMethod> = emptyList()
     override val providesVariables: Map<String, Value> = emptyMap()
 
-    override fun assertIs(v: Value): FunctionValue {
+    override fun assertIs(v: Value): AbstractFunctionValue {
         if (v is FunctionValue) {
             return v
         } else {
@@ -88,9 +90,11 @@ class FunctionValueType(val type: FunctionType) : ValueType() {
     }
 }
 
-object PrimitiveFunctionValueType : ValueType() {
-    override val name: String = "PrimitiveFunction"
-    override val asType: Type = Type.simple("PrimitiveFunction")
+class PrimitiveFunctionValueType(ft: FunctionType) : FunctionValueType(ft) {
+    override val name: String = "PrimitiveFunction($type)"
+    override val asType: Type by lazy {
+        ft
+    }
 
     override fun isTruthy(v: Value): Boolean {
         return true
@@ -122,7 +126,11 @@ abstract class PrimitiveFunctionValue(val name: String, val signature: FunctionS
 
     abstract fun execute(args: List<Value>): Value
 
-    override val valueType = PrimitiveFunctionValueType
+    override val valueType by lazy {
+        PrimitiveFunctionValueType(Type.function(signature.params.map {
+            pOpt -> pOpt.map { it.type} },
+            signature.returnType))
+    }
 
     override fun twist(): Twist =
         Twist.obj(

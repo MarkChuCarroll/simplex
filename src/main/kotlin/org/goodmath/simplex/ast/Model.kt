@@ -26,7 +26,7 @@ import org.goodmath.simplex.runtime.SimplexError
 import org.goodmath.simplex.runtime.SimplexEvaluationError
 import org.goodmath.simplex.runtime.values.manifold.SMaterial
 import org.goodmath.simplex.runtime.values.manifold.Solid
-import org.goodmath.simplex.runtime.values.manifold.SolidType
+import org.goodmath.simplex.runtime.values.manifold.SolidValueType
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.plus
 
@@ -112,7 +112,7 @@ class Product(val name: String?, val body: List<Expr>, loc: Location) : AstNode(
             )
             combined.export("$prefix-$name.stl", SMaterial.smoothGray)
         }
-        val others = results.filter { it.valueType != SolidType }
+        val others = results.filter { it.valueType != SolidValueType }
         if (others.isNotEmpty()) {
             val text = StringBuilder()
             val twists = StringBuilder()

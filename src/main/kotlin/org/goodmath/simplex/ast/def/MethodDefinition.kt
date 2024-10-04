@@ -37,7 +37,7 @@ class MethodDefinition(
     loc: Location,
 ) : InvokableDefinition("${targetType}->${methodName}", resultType, params, body, loc) {
     override fun installValues(env: Env) {
-        val valueType = env.getType(targetType.toString())
+        val valueType = Type.getValueType(targetType)
         valueType.addMethod(MethodValue(targetType, returnType, params, body, this, env))
     }
 

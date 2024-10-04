@@ -27,7 +27,7 @@ import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.twist.Twist
 
 class Vec3(val x: Double, val y: Double, val z: Double) : Value {
-    override val valueType: ValueType = Vec3Type
+    override val valueType: ValueType = Vec3ValueType
 
     override fun twist(): Twist {
         return Twist.obj(
@@ -95,19 +95,18 @@ class Vec3(val x: Double, val y: Double, val z: Double) : Value {
     }
 }
 
-object Vec3Type : ValueType() {
+object Vec3ValueType : ValueType() {
     override val name: String = "Vec3"
 
-    override val asType: Type = Type.simple(name)
+    override val asType: Type by lazy {
+        Type.simple(name)
+    }
 
     override val supportsText: Boolean = true
 
     override fun toText(v: Value): String {
         return v.toString()
     }
-
-
-
 
     override fun isTruthy(v: Value): Boolean {
         return if (v is Vec3) {
@@ -124,9 +123,9 @@ object Vec3Type : ValueType() {
                     "v3",
                     FunctionSignature.simple(
                         listOf(
-                            Param("x", Type.FloatType),
-                            Param("y", Type.FloatType),
-                            Param("z", Type.FloatType),
+                            Param("x", FloatValueType.asType),
+                            Param("y", FloatValueType.asType),
+                            Param("z", FloatValueType.asType),
                         ),
                         asType,
                     ),
@@ -169,7 +168,7 @@ object Vec3Type : ValueType() {
             object :
                 PrimitiveMethod(
                     "times",
-                    MethodSignature.simple(asType, listOf(Param("other", Type.FloatType)), asType),
+                    MethodSignature.simple(asType, listOf(Param("other", FloatValueType.asType)), asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
@@ -180,7 +179,7 @@ object Vec3Type : ValueType() {
             object :
                 PrimitiveMethod(
                     "div",
-                    MethodSignature.simple(asType, listOf(Param("other", Type.FloatType)), asType),
+                    MethodSignature.simple(asType, listOf(Param("other", FloatValueType.asType)), asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
@@ -198,7 +197,7 @@ object Vec3Type : ValueType() {
             object :
                 PrimitiveMethod(
                     "eq",
-                    MethodSignature.simple(asType, listOf(Param("other", asType)), Type.BooleanType),
+                    MethodSignature.simple(asType, listOf(Param("other", asType)), BooleanValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
@@ -209,7 +208,7 @@ object Vec3Type : ValueType() {
             object :
                 PrimitiveMethod(
                     "compare",
-                    MethodSignature.simple(asType, listOf(Param("other", asType)), Type.IntType),
+                    MethodSignature.simple(asType, listOf(Param("other", asType)), IntegerValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
@@ -220,7 +219,7 @@ object Vec3Type : ValueType() {
             object :
                 PrimitiveMethod(
                     "dot",
-                    MethodSignature.simple(asType, listOf(Param("other", asType)), Type.FloatType),
+                    MethodSignature.simple(asType, listOf(Param("other", asType)), FloatValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)

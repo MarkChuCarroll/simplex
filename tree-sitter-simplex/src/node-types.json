@@ -112,7 +112,7 @@
           "named": true
         },
         {
-          "type": "with",
+          "type": "while",
           "named": true
         }
       ]
@@ -278,142 +278,7 @@
           "named": true
         },
         {
-          "type": "with",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "binding",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "add",
-          "named": true
-        },
-        {
-          "type": "array",
-          "named": true
-        },
-        {
-          "type": "arrayType",
-          "named": true
-        },
-        {
-          "type": "assignment",
-          "named": true
-        },
-        {
-          "type": "block",
-          "named": true
-        },
-        {
-          "type": "compare",
-          "named": true
-        },
-        {
-          "type": "cond",
-          "named": true
-        },
-        {
-          "type": "field",
-          "named": true
-        },
-        {
-          "type": "funCall",
-          "named": true
-        },
-        {
-          "type": "funType",
-          "named": true
-        },
-        {
-          "type": "id",
-          "named": true
-        },
-        {
-          "type": "lambda",
-          "named": true
-        },
-        {
-          "type": "letExpr",
-          "named": true
-        },
-        {
-          "type": "litBool",
-          "named": true
-        },
-        {
-          "type": "litFloat",
-          "named": true
-        },
-        {
-          "type": "litInt",
-          "named": true
-        },
-        {
-          "type": "litStr",
-          "named": true
-        },
-        {
-          "type": "logic",
-          "named": true
-        },
-        {
-          "type": "loop",
-          "named": true
-        },
-        {
-          "type": "methType",
-          "named": true
-        },
-        {
-          "type": "methodCall",
-          "named": true
-        },
-        {
-          "type": "multiply",
-          "named": true
-        },
-        {
-          "type": "paren",
-          "named": true
-        },
-        {
-          "type": "power",
-          "named": true
-        },
-        {
-          "type": "ref",
-          "named": true
-        },
-        {
-          "type": "simpleType",
-          "named": true
-        },
-        {
-          "type": "subscript",
-          "named": true
-        },
-        {
-          "type": "tuple",
-          "named": true
-        },
-        {
-          "type": "unary",
-          "named": true
-        },
-        {
-          "type": "update",
-          "named": true
-        },
-        {
-          "type": "with",
+          "type": "while",
           "named": true
         }
       ]
@@ -528,7 +393,7 @@
           "named": true
         },
         {
-          "type": "with",
+          "type": "while",
           "named": true
         }
       ]
@@ -657,7 +522,7 @@
           "named": true
         },
         {
-          "type": "with",
+          "type": "while",
           "named": true
         }
       ]
@@ -776,7 +641,7 @@
           "named": true
         },
         {
-          "type": "with",
+          "type": "while",
           "named": true
         }
       ]
@@ -891,7 +756,7 @@
           "named": true
         },
         {
-          "type": "with",
+          "type": "while",
           "named": true
         }
       ]
@@ -1033,7 +898,7 @@
           "named": true
         },
         {
-          "type": "with",
+          "type": "while",
           "named": true
         }
       ]
@@ -1152,7 +1017,7 @@
           "named": true
         },
         {
-          "type": "with",
+          "type": "while",
           "named": true
         }
       ]
@@ -1271,7 +1136,7 @@
           "named": true
         },
         {
-          "type": "with",
+          "type": "while",
           "named": true
         }
       ]
@@ -1386,7 +1251,7 @@
             "named": true
           },
           {
-            "type": "with",
+            "type": "while",
             "named": true
           }
         ]
@@ -1605,7 +1470,7 @@
           "named": true
         },
         {
-          "type": "with",
+          "type": "while",
           "named": true
         }
       ]
@@ -1740,7 +1605,7 @@
           "named": true
         },
         {
-          "type": "with",
+          "type": "while",
           "named": true
         }
       ]
@@ -1864,7 +1729,7 @@
           "named": true
         },
         {
-          "type": "with",
+          "type": "while",
           "named": true
         }
       ]
@@ -1878,120 +1743,237 @@
   {
     "type": "loop",
     "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "add",
-          "named": true
-        },
-        {
-          "type": "array",
-          "named": true
-        },
-        {
-          "type": "assignment",
-          "named": true
-        },
-        {
-          "type": "block",
-          "named": true
-        },
-        {
-          "type": "compare",
-          "named": true
-        },
-        {
-          "type": "cond",
-          "named": true
-        },
-        {
-          "type": "field",
-          "named": true
-        },
-        {
-          "type": "funCall",
-          "named": true
-        },
-        {
-          "type": "id",
-          "named": true
-        },
-        {
-          "type": "lambda",
-          "named": true
-        },
-        {
-          "type": "letExpr",
-          "named": true
-        },
-        {
-          "type": "litBool",
-          "named": true
-        },
-        {
-          "type": "litFloat",
-          "named": true
-        },
-        {
-          "type": "litInt",
-          "named": true
-        },
-        {
-          "type": "litStr",
-          "named": true
-        },
-        {
-          "type": "logic",
-          "named": true
-        },
-        {
-          "type": "loop",
-          "named": true
-        },
-        {
-          "type": "methodCall",
-          "named": true
-        },
-        {
-          "type": "multiply",
-          "named": true
-        },
-        {
-          "type": "paren",
-          "named": true
-        },
-        {
-          "type": "power",
-          "named": true
-        },
-        {
-          "type": "ref",
-          "named": true
-        },
-        {
-          "type": "subscript",
-          "named": true
-        },
-        {
-          "type": "tuple",
-          "named": true
-        },
-        {
-          "type": "unary",
-          "named": true
-        },
-        {
-          "type": "update",
-          "named": true
-        },
-        {
-          "type": "with",
-          "named": true
-        }
-      ]
+    "fields": {
+      "body": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "add",
+            "named": true
+          },
+          {
+            "type": "array",
+            "named": true
+          },
+          {
+            "type": "assignment",
+            "named": true
+          },
+          {
+            "type": "block",
+            "named": true
+          },
+          {
+            "type": "compare",
+            "named": true
+          },
+          {
+            "type": "cond",
+            "named": true
+          },
+          {
+            "type": "field",
+            "named": true
+          },
+          {
+            "type": "funCall",
+            "named": true
+          },
+          {
+            "type": "lambda",
+            "named": true
+          },
+          {
+            "type": "letExpr",
+            "named": true
+          },
+          {
+            "type": "litBool",
+            "named": true
+          },
+          {
+            "type": "litFloat",
+            "named": true
+          },
+          {
+            "type": "litInt",
+            "named": true
+          },
+          {
+            "type": "litStr",
+            "named": true
+          },
+          {
+            "type": "logic",
+            "named": true
+          },
+          {
+            "type": "loop",
+            "named": true
+          },
+          {
+            "type": "methodCall",
+            "named": true
+          },
+          {
+            "type": "multiply",
+            "named": true
+          },
+          {
+            "type": "paren",
+            "named": true
+          },
+          {
+            "type": "power",
+            "named": true
+          },
+          {
+            "type": "ref",
+            "named": true
+          },
+          {
+            "type": "subscript",
+            "named": true
+          },
+          {
+            "type": "tuple",
+            "named": true
+          },
+          {
+            "type": "unary",
+            "named": true
+          },
+          {
+            "type": "update",
+            "named": true
+          },
+          {
+            "type": "while",
+            "named": true
+          }
+        ]
+      },
+      "index": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "id",
+            "named": true
+          }
+        ]
+      },
+      "range": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "add",
+            "named": true
+          },
+          {
+            "type": "array",
+            "named": true
+          },
+          {
+            "type": "assignment",
+            "named": true
+          },
+          {
+            "type": "block",
+            "named": true
+          },
+          {
+            "type": "compare",
+            "named": true
+          },
+          {
+            "type": "cond",
+            "named": true
+          },
+          {
+            "type": "field",
+            "named": true
+          },
+          {
+            "type": "funCall",
+            "named": true
+          },
+          {
+            "type": "lambda",
+            "named": true
+          },
+          {
+            "type": "letExpr",
+            "named": true
+          },
+          {
+            "type": "litBool",
+            "named": true
+          },
+          {
+            "type": "litFloat",
+            "named": true
+          },
+          {
+            "type": "litInt",
+            "named": true
+          },
+          {
+            "type": "litStr",
+            "named": true
+          },
+          {
+            "type": "logic",
+            "named": true
+          },
+          {
+            "type": "loop",
+            "named": true
+          },
+          {
+            "type": "methodCall",
+            "named": true
+          },
+          {
+            "type": "multiply",
+            "named": true
+          },
+          {
+            "type": "paren",
+            "named": true
+          },
+          {
+            "type": "power",
+            "named": true
+          },
+          {
+            "type": "ref",
+            "named": true
+          },
+          {
+            "type": "subscript",
+            "named": true
+          },
+          {
+            "type": "tuple",
+            "named": true
+          },
+          {
+            "type": "unary",
+            "named": true
+          },
+          {
+            "type": "update",
+            "named": true
+          },
+          {
+            "type": "while",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
@@ -2134,7 +2116,7 @@
           "named": true
         },
         {
-          "type": "with",
+          "type": "while",
           "named": true
         }
       ]
@@ -2288,7 +2270,7 @@
           "named": true
         },
         {
-          "type": "with",
+          "type": "while",
           "named": true
         }
       ]
@@ -2412,7 +2394,7 @@
           "named": true
         },
         {
-          "type": "with",
+          "type": "while",
           "named": true
         }
       ]
@@ -2573,7 +2555,7 @@
           "named": true
         },
         {
-          "type": "with",
+          "type": "while",
           "named": true
         }
       ]
@@ -2692,7 +2674,7 @@
           "named": true
         },
         {
-          "type": "with",
+          "type": "while",
           "named": true
         }
       ]
@@ -2807,7 +2789,7 @@
           "named": true
         },
         {
-          "type": "with",
+          "type": "while",
           "named": true
         }
       ]
@@ -2979,7 +2961,7 @@
           "named": true
         },
         {
-          "type": "with",
+          "type": "while",
           "named": true
         }
       ]
@@ -3170,7 +3152,7 @@
           "named": true
         },
         {
-          "type": "with",
+          "type": "while",
           "named": true
         }
       ]
@@ -3294,7 +3276,7 @@
           "named": true
         },
         {
-          "type": "with",
+          "type": "while",
           "named": true
         }
       ]
@@ -3441,7 +3423,7 @@
             "named": true
           },
           {
-            "type": "with",
+            "type": "while",
             "named": true
           }
         ]
@@ -3449,118 +3431,229 @@
     }
   },
   {
-    "type": "with",
+    "type": "while",
     "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "add",
-          "named": true
-        },
-        {
-          "type": "array",
-          "named": true
-        },
-        {
-          "type": "assignment",
-          "named": true
-        },
-        {
-          "type": "block",
-          "named": true
-        },
-        {
-          "type": "compare",
-          "named": true
-        },
-        {
-          "type": "cond",
-          "named": true
-        },
-        {
-          "type": "field",
-          "named": true
-        },
-        {
-          "type": "funCall",
-          "named": true
-        },
-        {
-          "type": "lambda",
-          "named": true
-        },
-        {
-          "type": "letExpr",
-          "named": true
-        },
-        {
-          "type": "litBool",
-          "named": true
-        },
-        {
-          "type": "litFloat",
-          "named": true
-        },
-        {
-          "type": "litInt",
-          "named": true
-        },
-        {
-          "type": "litStr",
-          "named": true
-        },
-        {
-          "type": "logic",
-          "named": true
-        },
-        {
-          "type": "loop",
-          "named": true
-        },
-        {
-          "type": "methodCall",
-          "named": true
-        },
-        {
-          "type": "multiply",
-          "named": true
-        },
-        {
-          "type": "paren",
-          "named": true
-        },
-        {
-          "type": "power",
-          "named": true
-        },
-        {
-          "type": "ref",
-          "named": true
-        },
-        {
-          "type": "subscript",
-          "named": true
-        },
-        {
-          "type": "tuple",
-          "named": true
-        },
-        {
-          "type": "unary",
-          "named": true
-        },
-        {
-          "type": "update",
-          "named": true
-        },
-        {
-          "type": "with",
-          "named": true
-        }
-      ]
+    "fields": {
+      "body": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "add",
+            "named": true
+          },
+          {
+            "type": "array",
+            "named": true
+          },
+          {
+            "type": "assignment",
+            "named": true
+          },
+          {
+            "type": "block",
+            "named": true
+          },
+          {
+            "type": "compare",
+            "named": true
+          },
+          {
+            "type": "cond",
+            "named": true
+          },
+          {
+            "type": "field",
+            "named": true
+          },
+          {
+            "type": "funCall",
+            "named": true
+          },
+          {
+            "type": "lambda",
+            "named": true
+          },
+          {
+            "type": "letExpr",
+            "named": true
+          },
+          {
+            "type": "litBool",
+            "named": true
+          },
+          {
+            "type": "litFloat",
+            "named": true
+          },
+          {
+            "type": "litInt",
+            "named": true
+          },
+          {
+            "type": "litStr",
+            "named": true
+          },
+          {
+            "type": "logic",
+            "named": true
+          },
+          {
+            "type": "loop",
+            "named": true
+          },
+          {
+            "type": "methodCall",
+            "named": true
+          },
+          {
+            "type": "multiply",
+            "named": true
+          },
+          {
+            "type": "paren",
+            "named": true
+          },
+          {
+            "type": "power",
+            "named": true
+          },
+          {
+            "type": "ref",
+            "named": true
+          },
+          {
+            "type": "subscript",
+            "named": true
+          },
+          {
+            "type": "tuple",
+            "named": true
+          },
+          {
+            "type": "unary",
+            "named": true
+          },
+          {
+            "type": "update",
+            "named": true
+          },
+          {
+            "type": "while",
+            "named": true
+          }
+        ]
+      },
+      "cond": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "add",
+            "named": true
+          },
+          {
+            "type": "array",
+            "named": true
+          },
+          {
+            "type": "assignment",
+            "named": true
+          },
+          {
+            "type": "block",
+            "named": true
+          },
+          {
+            "type": "compare",
+            "named": true
+          },
+          {
+            "type": "cond",
+            "named": true
+          },
+          {
+            "type": "field",
+            "named": true
+          },
+          {
+            "type": "funCall",
+            "named": true
+          },
+          {
+            "type": "lambda",
+            "named": true
+          },
+          {
+            "type": "letExpr",
+            "named": true
+          },
+          {
+            "type": "litBool",
+            "named": true
+          },
+          {
+            "type": "litFloat",
+            "named": true
+          },
+          {
+            "type": "litInt",
+            "named": true
+          },
+          {
+            "type": "litStr",
+            "named": true
+          },
+          {
+            "type": "logic",
+            "named": true
+          },
+          {
+            "type": "loop",
+            "named": true
+          },
+          {
+            "type": "methodCall",
+            "named": true
+          },
+          {
+            "type": "multiply",
+            "named": true
+          },
+          {
+            "type": "paren",
+            "named": true
+          },
+          {
+            "type": "power",
+            "named": true
+          },
+          {
+            "type": "ref",
+            "named": true
+          },
+          {
+            "type": "subscript",
+            "named": true
+          },
+          {
+            "type": "tuple",
+            "named": true
+          },
+          {
+            "type": "unary",
+            "named": true
+          },
+          {
+            "type": "update",
+            "named": true
+          },
+          {
+            "type": "while",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
@@ -3664,6 +3757,10 @@
     "named": false
   },
   {
+    "type": "data",
+    "named": false
+  },
+  {
     "type": "elif",
     "named": false
   },
@@ -3740,11 +3837,7 @@
     "named": false
   },
   {
-    "type": "tup",
-    "named": false
-  },
-  {
-    "type": "with",
+    "type": "while",
     "named": false
   },
   {

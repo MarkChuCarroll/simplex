@@ -30,7 +30,7 @@ import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveMethod
 import org.goodmath.simplex.runtime.values.primitives.Vec2
-import org.goodmath.simplex.runtime.values.primitives.Vec2Type
+import org.goodmath.simplex.runtime.values.primitives.Vec2ValueType
 import org.goodmath.simplex.twist.Twist
 
 class SPolygon(val poly: SimplePolygon) : Value {
@@ -47,7 +47,9 @@ class SPolygon(val poly: SimplePolygon) : Value {
 object SPolygonType : ValueType() {
     override val name: String = "Polygon"
 
-    override val asType: Type = Type.simple("Polygon")
+    override val asType: Type by lazy {
+        Type.simple("Polygon")
+    }
 
     override fun isTruthy(v: Value): Boolean {
         return true
@@ -58,10 +60,10 @@ object SPolygonType : ValueType() {
             object :
                 PrimitiveFunctionValue(
                     "polygon",
-                    FunctionSignature.simple(listOf(Param("points", Type.array(Type.Vec2Type))), asType),
+                    FunctionSignature.simple(listOf(Param("points", Type.array(Vec2ValueType.asType))), asType),
                 ) {
                 override fun execute(args: List<Value>): Value {
-                    val points = ArrayValueType.of(Vec2Type).assertIs(args[0]).elements
+                    val points = ArrayValueType.of(Vec2ValueType).assertIs(args[0]).elements
                     val floatArray =
                         DoubleArray(
                             points.size,
@@ -78,8 +80,8 @@ object SPolygonType : ValueType() {
                 PrimitiveFunctionValue(
                     "polygons_hull",
                     FunctionSignature.simple(
-                        listOf(Param("polygons", Type.array(Type.PolygonType))),
-                        Type.SliceType,
+                        listOf(Param("polygons", Type.array(asType))),
+                        SliceValueType.asType
                     ),
                 ) {
                 override fun execute(args: List<Value>): Value {
@@ -100,7 +102,7 @@ object SPolygonType : ValueType() {
             object :
                 PrimitiveMethod(
                     "points",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.array(Type.Vec2Type)),
+                    MethodSignature.simple(asType, emptyList<Param>(), Type.array(Vec2ValueType.asType)),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target).poly
@@ -108,13 +110,13 @@ object SPolygonType : ValueType() {
                     for (p in self) {
                         result.add(Vec2(p.x(), p.y()))
                     }
-                    return ArrayValue(Vec2Type, result)
+                    return ArrayValue(Vec2ValueType, result)
                 }
             },
             object :
                 PrimitiveMethod(
                     "convex_hull",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.SliceType),
+                    MethodSignature.simple(asType, emptyList<Param>(), SliceValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val poly = assertIs(target).poly

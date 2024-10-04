@@ -9,6 +9,9 @@ import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
+import org.goodmath.simplex.runtime.values.primitives.FloatValueType
+import org.goodmath.simplex.runtime.values.primitives.IntegerValue
+import org.goodmath.simplex.runtime.values.primitives.IntegerValueType
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveMethod
 import org.goodmath.simplex.twist.Twist
@@ -38,7 +41,7 @@ class SSmoothness(var smoothness: Float, var halfEdge: Int): Value {
 object SSmoothnessType: ValueType() {
     override val name: String = "Smoothness"
 
-    override val asType: Type = Type.simple("Smoothness")
+    override val asType: Type by lazy { Type.simple("Smoothness") }
 
     override fun isTruthy(v: Value): Boolean {
         return true
@@ -47,8 +50,8 @@ object SSmoothnessType: ValueType() {
     override val providesFunctions: List<PrimitiveFunctionValue> by lazy {
         listOf(
             object: PrimitiveFunctionValue("smoothness",
-            FunctionSignature.simple(listOf(Param("smoothness", Type.FloatType),
-                Param("halfEdge", Type.IntType)),
+            FunctionSignature.simple(listOf(Param("smoothness", FloatValueType.asType),
+                Param("halfEdge", IntegerValueType.asType)),
                 asType)
             ) {
                 override fun execute(args: List<Value>): Value {
@@ -62,7 +65,7 @@ object SSmoothnessType: ValueType() {
     override val providesPrimitiveMethods: List<PrimitiveMethod> by lazy {
         listOf(
             object: PrimitiveMethod("set_smoothness",
-                MethodSignature.simple(asType, listOf(Param("smoothness", Type.FloatType)),
+                MethodSignature.simple(asType, listOf(Param("smoothness", FloatValueType.asType)),
                     asType)) {
                 override fun execute(
                     target: Value,
@@ -76,7 +79,7 @@ object SSmoothnessType: ValueType() {
                 }
             },
             object: PrimitiveMethod("set_halfedge",
-                MethodSignature.simple(asType, listOf(Param("halfedge", Type.IntType)),
+                MethodSignature.simple(asType, listOf(Param("halfedge", IntegerValueType.asType)),
                     asType)) {
                 override fun execute(
                     target: Value,
@@ -91,7 +94,7 @@ object SSmoothnessType: ValueType() {
             },
             object: PrimitiveMethod("set_smoothness",
                 MethodSignature.simple(asType, emptyList<Param>(),
-                    Type.FloatType)) {
+                    FloatValueType.asType)) {
                 override fun execute(
                     target: Value,
                     args: List<Value>,
@@ -103,7 +106,7 @@ object SSmoothnessType: ValueType() {
             },
             object: PrimitiveMethod("halfedge",
                 MethodSignature.simple(asType, emptyList<Param>(),
-                    Type.FloatType)) {
+                    FloatValueType.asType)) {
                 override fun execute(
                     target: Value,
                     args: List<Value>,

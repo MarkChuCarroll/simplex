@@ -28,17 +28,21 @@ import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.runtime.values.primitives.ArrayValue
+import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
+import org.goodmath.simplex.runtime.values.primitives.BooleanValueType
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
+import org.goodmath.simplex.runtime.values.primitives.FloatValueType
 import org.goodmath.simplex.runtime.values.primitives.IntegerValue
+import org.goodmath.simplex.runtime.values.primitives.IntegerValueType
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveMethod
 import org.goodmath.simplex.runtime.values.primitives.Vec3
-import org.goodmath.simplex.runtime.values.primitives.Vec3Type
+import org.goodmath.simplex.runtime.values.primitives.Vec3ValueType
 import org.goodmath.simplex.twist.Twist
 
 /** The Simplex wrapper for Manifold's Manifold type. */
 class Solid(val manifold: Manifold) : Value {
-    override val valueType: ValueType = SolidType
+    override val valueType: ValueType = SolidValueType
     var material: SMaterial = SMaterial.smoothGray
 
     override fun twist(): Twist =
@@ -87,16 +91,19 @@ class Solid(val manifold: Manifold) : Value {
 
     fun volume(): FloatValue = FloatValue(manifold.properties.surfaceArea().toDouble())
 
+
+
+
     fun splitByPlane(norm: Vec3, offset: Double): ArrayValue {
         val mPair = manifold.splitByPlane(norm.toDoubleVec3(), offset.toFloat())
         val mList = listOf(Solid(mPair.first()), Solid(mPair.second()))
-        return ArrayValue(SolidType, mList)
+        return ArrayValue(SolidValueType, mList)
     }
 
     fun split(other: Solid): ArrayValue {
         val mPair = manifold.split(other.manifold)
         val mList = listOf(Solid(mPair.first()), Solid(mPair.second()))
-        return ArrayValue(SolidType, mList)
+        return ArrayValue(SolidValueType, mList)
     }
 
     fun slice(height: Double): Slice = Slice(manifold.slice(height.toFloat()))
@@ -107,7 +114,7 @@ class Solid(val manifold: Manifold) : Value {
         for (slice in slices) {
             result.add(Slice(slice))
         }
-        return ArrayValue(SliceType, result)
+        return ArrayValue(SliceValueType, result)
     }
 
     fun normals(idx: Int, minSharpAngle: Double): Solid =
@@ -123,9 +130,13 @@ class Solid(val manifold: Manifold) : Value {
 
     fun refineToLength(length: Double): Solid = Solid(manifold.refineToLength(length.toFloat()))
 
+    fun hull(): Solid {
+        return Solid(manifold.convexHull())
+    }
+
     companion object {
         fun union(bodies: List<Solid>): Solid =
-            Solid(Manifold.BatchBoolean(SolidType.listToVec(bodies), OpType.Add))
+            Solid(Manifold.BatchBoolean(SolidValueType.listToVec(bodies), OpType.Add))
 
         fun brick(width: Double, height: Double, depth: Double,
                   center: Boolean): Solid =
@@ -148,9 +159,11 @@ class Solid(val manifold: Manifold) : Value {
     }
 }
 
-object SolidType : ValueType() {
+object SolidValueType : ValueType() {
     override val name: String = "Solid"
-    override val asType: Type = Type.SolidType
+    override val asType: Type by lazy {
+        Type.simple(name)
+    }
 
     fun listToVec(solids: List<Solid>): ManifoldVector {
         return ManifoldVector(solids.map { it.manifold }.toTypedArray())
@@ -167,12 +180,12 @@ object SolidType : ValueType() {
                     "blob",
                     FunctionSignature.multi(
                         listOf(
-                            listOf(Param("radius", Type.FloatType)),
-                            listOf(Param("radius", Type.FloatType), Param("segments", Type.IntType)),
-                            listOf(Param("x", Type.FloatType),
-                                Param("y", Type.FloatType),
-                                Param("z", Type.FloatType),
-                                Param("segments", Type.IntType))
+                            listOf(Param("radius", FloatValueType.asType)),
+                            listOf(Param("radius", FloatValueType.asType), Param("segments", IntegerValueType.asType)),
+                            listOf(Param("x", FloatValueType.asType),
+                                Param("y", FloatValueType.asType),
+                                Param("z", FloatValueType.asType),
+                                Param("segments", IntegerValueType.asType))
                         ),
                         asType,
                     ),
@@ -203,23 +216,23 @@ object SolidType : ValueType() {
                     "brick",
                     FunctionSignature.multi(
                         listOf(
-                            listOf(Param("v", Type.Vec3Type)),
-                            listOf(Param("v", Type.Vec3Type), Param("center", Type.BooleanType)),
-                            listOf(Param("x", Type.FloatType),
-                                Param("y", Type.FloatType),
-                                Param("z", Type.FloatType)),
-                            listOf(Param("x", Type.FloatType),
-                                Param("y", Type.FloatType),
-                                Param("z", Type.FloatType),
-                                Param("centered", Type.BooleanType))),
+                            listOf(Param("v", Vec3ValueType.asType)),
+                            listOf(Param("v", Vec3ValueType.asType), Param("center", BooleanValueType.asType)),
+                            listOf(Param("x", FloatValueType.asType),
+                                Param("y", FloatValueType.asType),
+                                Param("z", FloatValueType.asType)),
+                            listOf(Param("x", FloatValueType.asType),
+                                Param("y", FloatValueType.asType),
+                                Param("z", FloatValueType.asType),
+                                Param("centered", BooleanValueType.asType))),
                         asType,
                     ),
                 ) {
                 override fun execute(args: List<Value>): Value {
                     if (args.size == 1) {
-                        return Solid.brick(Vec3Type.assertIs(args[0]), true)
+                        return Solid.brick(Vec3ValueType.assertIs(args[0]), true)
                     } else if (args.size == 2) {
-                        return Solid.brick(Vec3Type.assertIs(args[0]), assertIsBoolean(args[1]))
+                        return Solid.brick(Vec3ValueType.assertIs(args[0]), assertIsBoolean(args[1]))
                     } else if (args.size == 3) {
                         return Solid.brick(
                             assertIsFloat(args[0]), assertIsFloat(args[1]),
@@ -238,17 +251,17 @@ object SolidType : ValueType() {
                     FunctionSignature.multi(
                         listOf(
                             listOf(
-                                Param("height", Type.FloatType),
-                                Param("radiusLow", Type.FloatType)),
+                                Param("height", FloatValueType.asType),
+                                Param("radiusLow", FloatValueType.asType)),
                             listOf(
-                                Param("height", Type.FloatType),
-                                Param("radiusLow", Type.FloatType),
-                                Param("radiusHigh", Type.FloatType)),
+                                Param("height", FloatValueType.asType),
+                                Param("radiusLow", FloatValueType.asType),
+                                Param("radiusHigh", FloatValueType.asType)),
                             listOf(
-                                Param("height", Type.FloatType),
-                                Param("radiusLow", Type.FloatType),
-                                Param("radiusHigh", Type.FloatType),
-                                Param("facets", Type.IntType))),
+                                Param("height", FloatValueType.asType),
+                                Param("radiusLow", FloatValueType.asType),
+                                Param("radiusHigh", FloatValueType.asType),
+                                Param("facets", IntegerValueType.asType))),
                         asType,
                     ),
                 ) {
@@ -271,7 +284,7 @@ object SolidType : ValueType() {
             object :
                 PrimitiveFunctionValue(
                     "tetrahedron",
-                    FunctionSignature.simple(emptyList<Param>(), Type.SolidType),
+                    FunctionSignature.simple(emptyList<Param>(), asType),
                 ) {
                 override fun execute(args: List<Value>): Value {
                     return Solid(Manifold.Tetrahedron())
@@ -285,7 +298,7 @@ object SolidType : ValueType() {
             object: PrimitiveMethod(
                 "bounds",
                 MethodSignature.simple(asType, emptyList<Param>(),
-                    Type.BoundingBoxType)
+                    BoundingBoxValueType.asType)
             ) {
                 override fun execute(
                     target: Value,
@@ -303,19 +316,19 @@ object SolidType : ValueType() {
                         asType,
                         listOf(
                             listOf(
-                                Param("x", Type.FloatType),
-                                Param("y", Type.FloatType),
-                                Param("z", Type.FloatType),
+                                Param("x", FloatValueType.asType),
+                                Param("y", FloatValueType.asType),
+                                Param("z", FloatValueType.asType),
                             ),
-                            listOf(Param("v", Type.Vec3Type)),
+                            listOf(Param("v", Vec3ValueType.asType)),
                         ),
-                        Type.SolidType,
+                        asType
                     ),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self: Solid = assertIs(target)
                     if (args.size == 1) {
-                        val v = Vec3Type.assertIs(args[0])
+                        val v = Vec3ValueType.assertIs(args[0])
                         return self.move(v)
                     } else {
                         val x = assertIsFloat(args[0])
@@ -332,11 +345,11 @@ object SolidType : ValueType() {
                         asType,
                         listOf(
                             listOf(
-                                Param("x", Type.FloatType),
-                                Param("y", Type.FloatType),
-                                Param("z", Type.FloatType),
+                                Param("x", FloatValueType.asType),
+                                Param("y", FloatValueType.asType),
+                                Param("z", FloatValueType.asType),
                             ),
-                            listOf(Param("v", Type.Vec3Type)),
+                            listOf(Param("v", Vec3ValueType.asType)),
                         ),
                         asType,
                     ),
@@ -344,7 +357,7 @@ object SolidType : ValueType() {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
                     if (args.size == 1) {
-                        val v = Vec3Type.assertIs(args[0])
+                        val v = Vec3ValueType.assertIs(args[0])
                         return self.scale(v)
                     } else {
                         val x = assertIsFloat(args[0])
@@ -361,11 +374,11 @@ object SolidType : ValueType() {
                         asType,
                         listOf(
                             listOf(
-                                Param("x", Type.FloatType),
-                                Param("y", Type.FloatType),
-                                Param("z", Type.FloatType),
+                                Param("x", FloatValueType.asType),
+                                Param("y", FloatValueType.asType),
+                                Param("z", FloatValueType.asType),
                             ),
-                            listOf(Param("v", Type.Vec3Type)),
+                            listOf(Param("v", Vec3ValueType.asType)),
                         ),
                         asType,
                     ),
@@ -373,7 +386,7 @@ object SolidType : ValueType() {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
                     if (args.size == 1) {
-                        val v = Vec3Type.assertIs(args[0])
+                        val v = Vec3ValueType.assertIs(args[0])
                         return self.rotate(v)
                     } else {
                         val x = assertIsFloat(args[0])
@@ -386,18 +399,18 @@ object SolidType : ValueType() {
             object :
                 PrimitiveMethod(
                     "mirror",
-                    MethodSignature.simple(asType, listOf(Param("norm", Type.FloatType)), asType),
+                    MethodSignature.simple(asType, listOf(Param("norm", FloatValueType.asType)), asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
-                    val norm = Vec3Type.assertIs(args[0])
+                    val norm = Vec3ValueType.assertIs(args[0])
                     return self.mirror(norm)
                 }
             },
             object :
                 PrimitiveMethod(
                     "refine",
-                    MethodSignature.simple(asType, listOf(Param("factor", Type.IntType)), asType),
+                    MethodSignature.simple(asType, listOf(Param("factor", IntegerValueType.asType)), asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
@@ -441,7 +454,7 @@ object SolidType : ValueType() {
             object :
                 PrimitiveMethod(
                     "genus",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.IntType),
+                    MethodSignature.simple(asType, emptyList<Param>(), IntegerValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
@@ -451,7 +464,7 @@ object SolidType : ValueType() {
             object :
                 PrimitiveMethod(
                     "surface_area",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.FloatType),
+                    MethodSignature.simple(asType, emptyList<Param>(), FloatValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
@@ -461,7 +474,7 @@ object SolidType : ValueType() {
             object :
                 PrimitiveMethod(
                     "volume",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.FloatType),
+                    MethodSignature.simple(asType, emptyList<Param>(), FloatValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
@@ -474,15 +487,15 @@ object SolidType : ValueType() {
                     MethodSignature.simple(
                         asType,
                         listOf(
-                            Param("normal", Type.Vec3Type),
-                            Param("origin_offset", Type.FloatType),
+                            Param("normal", Vec3ValueType.asType),
+                            Param("origin_offset", FloatValueType.asType),
                         ),
-                        Type.array(Type.SolidType),
+                        ArrayValueType(this).asType
                     ),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
-                    val norm = Vec3Type.assertIs(args[0])
+                    val norm = Vec3ValueType.assertIs(args[0])
                     val offset = assertIsFloat(args[1])
                     return self.splitByPlane(norm, offset)
                 }
@@ -490,7 +503,7 @@ object SolidType : ValueType() {
             object :
                 PrimitiveMethod(
                     "split",
-                    MethodSignature.simple(asType, listOf(Param("other", asType)), Type.FloatType),
+                    MethodSignature.simple(asType, listOf(Param("other", asType)), FloatValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
@@ -498,13 +511,25 @@ object SolidType : ValueType() {
                     return self.split(other)
                 }
             },
+            object: PrimitiveMethod("hull",
+                MethodSignature.simple(asType,
+                    emptyList<Param>(), asType)) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env
+                ): Value {
+                    val self = assertIs(target)
+                    return self.hull()
+                }
+            },
             object :
                 PrimitiveMethod(
                     "slice",
                     MethodSignature.simple(
                         asType,
-                        listOf(Param("height", Type.FloatType)),
-                        Type.SliceType,
+                        listOf(Param("height", FloatValueType.asType)),
+                        SliceValueType.asType
                     ),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
@@ -519,11 +544,11 @@ object SolidType : ValueType() {
                     MethodSignature.simple(
                         asType,
                         listOf(
-                            Param("bottom_z", Type.FloatType),
-                            Param("top_z", Type.FloatType),
-                            Param("count", Type.IntType),
+                            Param("bottom_z", FloatValueType.asType),
+                            Param("top_z", FloatValueType.asType),
+                            Param("count", IntegerValueType.asType),
                         ),
-                        Type.array(Type.SliceType),
+                        SliceValueType.asType
                     ),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
@@ -539,7 +564,7 @@ object SolidType : ValueType() {
                     "normals",
                     MethodSignature.simple(
                         asType,
-                        listOf(Param("idx", Type.IntType), Param("minSharpAngle", Type.FloatType)),
+                        listOf(Param("idx", IntegerValueType.asType), Param("minSharpAngle", FloatValueType.asType)),
                         asType,
                     ),
                 ) {
@@ -553,7 +578,7 @@ object SolidType : ValueType() {
             object :
                 PrimitiveMethod(
                     "smooth_by_normals",
-                    MethodSignature.simple(asType, listOf(Param("normal_idx", Type.IntType)), asType),
+                    MethodSignature.simple(asType, listOf(Param("normal_idx", IntegerValueType.asType)), asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
@@ -567,8 +592,8 @@ object SolidType : ValueType() {
                     MethodSignature.simple(
                         asType,
                         listOf(
-                            Param("min_sharp_angle", Type.FloatType),
-                            Param("minSmoothness", Type.FloatType),
+                            Param("min_sharp_angle", FloatValueType.asType),
+                            Param("minSmoothness", FloatValueType.asType),
                         ),
                         asType,
                     ),
@@ -583,7 +608,7 @@ object SolidType : ValueType() {
             object :
                 PrimitiveMethod(
                     "project",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.SliceType),
+                    MethodSignature.simple(asType, emptyList<Param>(), SliceValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
@@ -593,7 +618,7 @@ object SolidType : ValueType() {
             object :
                 PrimitiveMethod(
                     "refine_to_length",
-                    MethodSignature.simple(asType, listOf(Param("length", Type.FloatType)), asType),
+                    MethodSignature.simple(asType, listOf(Param("length", FloatValueType.asType)), asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
@@ -603,7 +628,7 @@ object SolidType : ValueType() {
             },
             object: PrimitiveMethod("set_material",
                 MethodSignature.simple(asType,
-                    listOf(Param("material", Type.MaterialType)),
+                    listOf(Param("material", SMaterialValueType.asType)),
                     asType)) {
                 override fun execute(
                     target: Value,
@@ -611,7 +636,7 @@ object SolidType : ValueType() {
                     env: Env
                 ): Value {
                     val self = assertIs(target)
-                    val material = SMaterialType.assertIs(args[0])
+                    val material = SMaterialValueType.assertIs(args[0])
                     self.material = material
                     return self
                 }

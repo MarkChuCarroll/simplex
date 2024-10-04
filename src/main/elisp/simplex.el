@@ -1,6 +1,4 @@
 
-
-
 (defvar simplex-keywords nil "simplex keywords")
 (setq simplex-keywords '("var" "fun" "meth" "tup" "produce" "do" "end"))
 
@@ -12,7 +10,7 @@
                       "TwoDPoint" "Array" "Function" "Polygon"))
 
 
-        
+
 (defvar simplex-fontlock nil "font-lock defaults")
 (setq simplex-fontlock
       (let (simplex-keywords-regex simplex-exprwords-regex simplex-types-regex)

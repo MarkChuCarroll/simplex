@@ -24,24 +24,24 @@ import org.goodmath.simplex.runtime.values.AnyType
 import org.goodmath.simplex.runtime.values.FunctionSignature
 import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.Value
-import org.goodmath.simplex.runtime.values.ValueType
-import org.goodmath.simplex.runtime.values.manifold.RGBAType
-import org.goodmath.simplex.runtime.values.manifold.BoundingBoxType
-import org.goodmath.simplex.runtime.values.manifold.SliceType
-import org.goodmath.simplex.runtime.values.manifold.SMaterialType
+import org.goodmath.simplex.runtime.values.manifold.RGBAValueType
+import org.goodmath.simplex.runtime.values.manifold.BoundingBoxValueType
+import org.goodmath.simplex.runtime.values.manifold.SliceValueType
+import org.goodmath.simplex.runtime.values.manifold.SMaterialValueType
 import org.goodmath.simplex.runtime.values.manifold.SMeshGLType
 import org.goodmath.simplex.runtime.values.manifold.SPolygonType
-import org.goodmath.simplex.runtime.values.manifold.BoundingRectType
-import org.goodmath.simplex.runtime.values.manifold.SolidType
+import org.goodmath.simplex.runtime.values.manifold.BoundingRectValueType
+import org.goodmath.simplex.runtime.values.manifold.SolidValueType
 import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
+import org.goodmath.simplex.runtime.values.primitives.BooleanValueType
 import org.goodmath.simplex.runtime.values.primitives.FloatValueType
 import org.goodmath.simplex.runtime.values.primitives.IntegerValueType
-import org.goodmath.simplex.runtime.values.primitives.NoneType
+import org.goodmath.simplex.runtime.values.primitives.NoneValueType
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.StringValue
 import org.goodmath.simplex.runtime.values.primitives.StringValueType
-import org.goodmath.simplex.runtime.values.primitives.Vec2Type
-import org.goodmath.simplex.runtime.values.primitives.Vec3Type
+import org.goodmath.simplex.runtime.values.primitives.Vec2ValueType
+import org.goodmath.simplex.runtime.values.primitives.Vec3ValueType
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
 
@@ -56,37 +56,15 @@ open class Env(defList: List<Definition>, val parentEnv: Env?) : Twistable {
     val defs = defList.associateBy { it.name }.toMutableMap()
     val vars = HashMap<String, Value>()
     val declaredTypes = HashMap<String, Type>()
-    open val valueTypes = HashMap<String, ValueType>()
     val functions = HashMap<String, PrimitiveFunctionValue>()
 
     /** A unique identifier for a scope. Used only for debugging purposes. */
     open val id: String = UUID.randomUUID().toString()
 
-    /** Register a new type defined within the scope. */
-    fun registerType(name: String, valueType: ValueType) {
-        if (valueTypes.containsKey(name)) {
-            throw SimplexInternalError("Type $name is already registered in env $id")
-        }
-        valueTypes[name] = valueType
-    }
-
-    /**
-     * Get a type in the scope. The key is the string returned by a static type's "toString" method.
-     */
-    fun getType(name: String): ValueType {
-        return if (valueTypes.containsKey(name)) {
-            valueTypes[name]!!
-        } else if (parentEnv != null) {
-            parentEnv.getType(name)
-        } else {
-            throw SimplexUndefinedError(name, "type")
-        }
-    }
-
     /** Declare the static type of a new variable name in the scope. */
     fun declareTypeOf(name: String, t: Type) {
         if (declaredTypes.containsKey(name) && declaredTypes[name] != t) {
-            throw SimplexAnalysisError("Type of $name is already defined")
+            throw SimplexAnalysisError("Type of $name is already defined as ${declaredTypes[name]}, not ${t}")
         }
         declaredTypes[name] = t
     }
@@ -131,19 +109,13 @@ open class Env(defList: List<Definition>, val parentEnv: Env?) : Twistable {
      * For use during analysis: Iterate through the definitions in this scope, and register their
      * static types and methods with the environment.
      */
-    fun installStaticDefinitions() {
-        for (t in valueTypes.values) {
-            t.methods
-            for (f in t.providesFunctions) {
-                val sig = f.signature
-                declareTypeOf(f.name, sig.toStaticType())
-            }
-        }
+    open fun installStaticDefinitions() {
         for (f in functions.values) {
             val sig = f.signature
             val funType = sig.toStaticType()
             declareTypeOf(f.name, funType)
         }
+
         for (d in defs.values) {
             d.installStatic(this)
         }
@@ -153,15 +125,11 @@ open class Env(defList: List<Definition>, val parentEnv: Env?) : Twistable {
      * For use during execution when entering a scope: register the runtime values of symbols,
      * functions, and methods provided by the scope's definitions.
      */
-    fun installDefinitionValues() {
+    open fun installDefinitionValues() {
         for (d in defs.values) {
             d.installValues(this)
         }
-        for (t in valueTypes.values) {
-            for (f in t.providesFunctions) {
-                functions[f.name] = f
-            }
-        }
+
         for (f in functions.values) {
             this.addVariable(f.name, f)
         }
@@ -235,26 +203,6 @@ object RootEnv : Env(emptyList(), null) {
         defs[def.name] = def
     }
 
-    override val valueTypes by lazy {
-        hashMapOf(
-            "Int" to IntegerValueType,
-            "Float" to FloatValueType,
-            "String" to StringValueType,
-            "Polygon" to SPolygonType,
-            "Solid" to SolidType,
-            "CrossSection" to SliceType,
-            "Box" to BoundingBoxType,
-            "Rect" to BoundingRectType,
-            "Material" to SMaterialType,
-            "MeshGL" to SMeshGLType,
-            "Vec2" to Vec2Type,
-            "Vec3" to Vec3Type,
-            "RGBA" to RGBAType,
-            "None" to NoneType,
-            "Any" to AnyType,
-        )
-    }
-
     override val id: String = "Root"
 
     var echo: (level: Int, output: Any?, err: Boolean) -> Unit = { l, o, e ->
@@ -263,5 +211,17 @@ object RootEnv : Env(emptyList(), null) {
         } else {
             System.out.println(o)
         }
+    }
+
+    override fun installDefinitionValues() {
+        for (t in Type.valueTypes.values) {
+            for (f in t.providesFunctions) {
+                functions[f.name] = f
+            }
+            for (v in t.providesVariables) {
+                this.addVariable(v.key, v.value)
+            }
+        }
+        super.installDefinitionValues()
     }
 }

@@ -27,7 +27,7 @@ import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.twist.Twist
 
 class Vec2(val x: Double, val y: Double) : Value {
-    override val valueType: ValueType = Vec2Type
+    override val valueType: ValueType = Vec2ValueType
 
     override fun twist(): Twist {
         return Twist.obj("Vec2", Twist.attr("x", x.toString()), Twist.attr("y", y.toString()))
@@ -88,10 +88,12 @@ class Vec2(val x: Double, val y: Double) : Value {
     }
 }
 
-object Vec2Type : ValueType() {
+object Vec2ValueType : ValueType() {
     override val name: String = "Vec2"
 
-    override val asType: Type = Type.simple(name)
+    override val asType: Type by lazy {
+        Type.simple(name)
+    }
 
     override fun isTruthy(v: Value): Boolean {
         return if (v is Vec3) {
@@ -107,15 +109,14 @@ object Vec2Type : ValueType() {
                 PrimitiveFunctionValue(
                     "v2",
                     FunctionSignature.simple(
-                        listOf(Param("x", Type.FloatType), Param("y", Type.FloatType)),
+                        listOf(Param("x", FloatValueType.asType), Param("y", FloatValueType.asType)),
                         asType,
                     ),
                 ) {
                 override fun execute(args: List<Value>): Value {
-                    return Vec3(
+                    return Vec2(
                         assertIsFloat(args[0]),
                         assertIsFloat(args[1]),
-                        assertIsFloat(args[2]),
                     )
                 }
             }
@@ -149,7 +150,7 @@ object Vec2Type : ValueType() {
             object :
                 PrimitiveMethod(
                     "times",
-                    MethodSignature.simple(asType, listOf(Param("other", Type.FloatType)), asType),
+                    MethodSignature.simple(asType, listOf(Param("other", FloatValueType.asType)), asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
@@ -160,7 +161,7 @@ object Vec2Type : ValueType() {
             object :
                 PrimitiveMethod(
                     "div",
-                    MethodSignature.simple(asType, listOf(Param("other", Type.FloatType)), asType),
+                    MethodSignature.simple(asType, listOf(Param("other", FloatValueType.asType)), asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
@@ -178,7 +179,7 @@ object Vec2Type : ValueType() {
             object :
                 PrimitiveMethod(
                     "eq",
-                    MethodSignature.simple(asType, listOf(Param("other", asType)), Type.BooleanType),
+                    MethodSignature.simple(asType, listOf(Param("other", asType)), BooleanValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
@@ -189,7 +190,7 @@ object Vec2Type : ValueType() {
             object :
                 PrimitiveMethod(
                     "compare",
-                    MethodSignature.simple(asType, listOf(Param("other", asType)), Type.IntType),
+                    MethodSignature.simple(asType, listOf(Param("other", asType)), IntegerValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
@@ -200,7 +201,7 @@ object Vec2Type : ValueType() {
             object :
                 PrimitiveMethod(
                     "dot",
-                    MethodSignature.simple(asType, listOf(Param("other", asType)), Type.FloatType),
+                    MethodSignature.simple(asType, listOf(Param("other", asType)), FloatValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
@@ -211,7 +212,7 @@ object Vec2Type : ValueType() {
             object :
                 PrimitiveMethod(
                     "at",
-                    MethodSignature.simple(asType, listOf(Param("z", Type.FloatType)), Type.Vec3Type),
+                    MethodSignature.simple(asType, listOf(Param("z", FloatValueType.asType)), Vec3ValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)

@@ -23,6 +23,7 @@ import org.goodmath.simplex.runtime.values.MethodSignature
 import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
+import org.goodmath.simplex.runtime.values.primitives.FloatValueType
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveMethod
 import org.goodmath.simplex.twist.Twist
@@ -30,7 +31,7 @@ import org.goodmath.simplex.twist.Twist
 class RGBA(val r: Double, val g: Double, val b: Double, val a: Double) : Value {
     constructor(r: Double, g: Double, b: Double) : this(r, g, b, 1.0)
 
-    override val valueType: ValueType = RGBAType
+    override val valueType: ValueType = RGBAValueType
 
     override fun twist(): Twist =
         Twist.obj(
@@ -65,10 +66,12 @@ class RGBA(val r: Double, val g: Double, val b: Double, val a: Double) : Value {
     }
 }
 
-object RGBAType : ValueType() {
+object RGBAValueType : ValueType() {
     override val name: String = "RGBA"
 
-    override val asType: Type = Type.RGBAType
+    override val asType: Type by lazy {
+        Type.simple(name)
+    }
 
     override fun isTruthy(v: Value): Boolean {
         return if (v is RGBA) {
@@ -85,9 +88,9 @@ object RGBAType : ValueType() {
                     "rgb",
                     FunctionSignature.simple(
                     listOf(
-                            Param("red", Type.FloatType),
-                            Param("green", Type.FloatType),
-                            Param("blue", Type.FloatType),
+                            Param("red", FloatValueType.asType),
+                            Param("green", FloatValueType.asType),
+                            Param("blue", FloatValueType.asType),
                     ),
                         asType,
                     ),
@@ -104,10 +107,10 @@ object RGBAType : ValueType() {
                     "rgba",
                     FunctionSignature.simple(
                         listOf(
-                            Param("red", Type.FloatType),
-                            Param("green", Type.FloatType),
-                            Param("blue", Type.FloatType),
-                            Param("alpha", Type.FloatType),
+                            Param("red", FloatValueType.asType),
+                            Param("green", FloatValueType.asType),
+                            Param("blue", FloatValueType.asType),
+                            Param("alpha", FloatValueType.asType),
                         ),
                         asType,
                     ),
@@ -128,7 +131,7 @@ object RGBAType : ValueType() {
             object :
                 PrimitiveMethod(
                     "dim",
-                    MethodSignature.simple(asType, listOf(Param("factor", Type.FloatType)), asType),
+                    MethodSignature.simple(asType, listOf(Param("factor", FloatValueType.asType)), asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
@@ -139,7 +142,7 @@ object RGBAType : ValueType() {
             object :
                 PrimitiveMethod(
                     "fade",
-                    MethodSignature.simple(asType, listOf(Param("factor", Type.FloatType)), asType),
+                    MethodSignature.simple(asType, listOf(Param("factor", FloatValueType.asType)), asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)

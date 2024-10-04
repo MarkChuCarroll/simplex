@@ -37,7 +37,9 @@ class ArrayValueType(val elementType: ValueType) : ValueType() {
 
     override val name: String = "[${elementType.name}]"
 
-    override val asType: Type = Type.array(elementType.asType)
+    override val asType: Type by lazy {
+        Type.array(elementType.asType)
+    }
 
     fun assertIsArray(v: Value): List<Value> {
         if (v is ArrayValue) {
@@ -46,7 +48,6 @@ class ArrayValueType(val elementType: ValueType) : ValueType() {
             throw SimplexTypeError("Array", v.valueType.name)
         }
     }
-
     override val supportsText: Boolean = elementType.supportsText
 
     override fun toText(v: Value): String {
@@ -78,7 +79,7 @@ class ArrayValueType(val elementType: ValueType) : ValueType() {
                     "sub",
                     MethodSignature.simple(
                         asType,
-                        listOf(Param("subscript", Type.IntType)),
+                        listOf(Param("subscript", IntegerValueType.asType)),
                         elementType.asType,
                     ),
                 ) {
@@ -91,7 +92,7 @@ class ArrayValueType(val elementType: ValueType) : ValueType() {
             object :
                 PrimitiveMethod(
                     "length",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.IntType),
+                    MethodSignature.simple(asType, emptyList<Param>(), IntegerValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val a = this@ArrayValueType.assertIs(target).elements
@@ -139,7 +140,7 @@ class ArrayValueType(val elementType: ValueType) : ValueType() {
             object :
                 PrimitiveMethod(
                     "eq",
-                    MethodSignature.simple(asType, listOf(Param("r", asType)), Type.BooleanType),
+                    MethodSignature.simple(asType, listOf(Param("r", asType)), BooleanValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val a1 = assertIsArray(target)
@@ -167,7 +168,7 @@ class ArrayValueType(val elementType: ValueType) : ValueType() {
             object :
                 PrimitiveMethod(
                     "compare",
-                    MethodSignature.simple(asType, listOf(Param("r", asType)), Type.IntType),
+                    MethodSignature.simple(asType, listOf(Param("r", asType)), IntegerValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     // Basically doing a lexicographic ordering.

@@ -173,6 +173,7 @@ abstract class ValueType : Twistable {
     }
 
     abstract fun assertIs(v: Value): Value
+
 }
 
 
@@ -184,7 +185,10 @@ abstract class ValueType : Twistable {
  */
 object AnyType : ValueType() {
     override val name: String = "Any"
-    override val asType: Type = Type.simple("Any")
+    override val asType: Type by lazy {
+        Type.simple(name)
+    }
+
 
     override fun assertIs(v: Value): Value {
         return v

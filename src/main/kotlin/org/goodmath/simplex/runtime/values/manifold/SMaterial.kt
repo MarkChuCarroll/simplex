@@ -27,16 +27,17 @@ import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.runtime.values.primitives.ArrayValue
 import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
-import org.goodmath.simplex.runtime.values.primitives.NoneType
+import org.goodmath.simplex.runtime.values.primitives.FloatValueType
+import org.goodmath.simplex.runtime.values.primitives.NoneValueType
 import org.goodmath.simplex.runtime.values.primitives.NoneValue
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveMethod
 import org.goodmath.simplex.runtime.values.primitives.StringValue
+import org.goodmath.simplex.runtime.values.primitives.StringValueType
 import org.goodmath.simplex.twist.Twist
-import kotlin.math.max
 
 class SMaterial(val name: String, val material: Material) : Value {
-    override val valueType = SMaterialType
+    override val valueType = SMaterialValueType
 
     override fun twist(): Twist = Twist.obj("Material", Twist.attr("name", name))
 
@@ -136,10 +137,12 @@ class SMaterial(val name: String, val material: Material) : Value {
     }
 }
 
-object SMaterialType : ValueType() {
+object SMaterialValueType : ValueType() {
     override val name: String = "Material"
 
-    override val asType: Type = Type.simple(name)
+    override val asType: Type by lazy {
+        Type.simple(name)
+    }
 
     override fun isTruthy(v: Value): Boolean {
         return true
@@ -150,7 +153,7 @@ object SMaterialType : ValueType() {
             object :
                 PrimitiveFunctionValue(
                     "material",
-                    FunctionSignature.simple(listOf(Param("name", Type.StringType)), asType),
+                    FunctionSignature.simple(listOf(Param("name", StringValueType.asType)), asType),
                 ) {
                 override fun execute(args: List<Value>): Value {
                     val name = assertIsString(args[0])
@@ -167,8 +170,8 @@ object SMaterialType : ValueType() {
                     "set_roughness",
                     MethodSignature.simple(
                         asType,
-                        listOf(Param("roughness", Type.FloatType)),
-                        NoneType.asType,
+                        listOf(Param("roughness", FloatValueType.asType)),
+                        NoneValueType.asType,
                     ),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
@@ -183,8 +186,8 @@ object SMaterialType : ValueType() {
                     "set_metalness",
                     MethodSignature.simple(
                         asType,
-                        listOf(Param("metalness", Type.FloatType)),
-                        Type.NoneType,
+                        listOf(Param("metalness", FloatValueType.asType)),
+                        NoneValueType.asType,
                     ),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
@@ -199,15 +202,15 @@ object SMaterialType : ValueType() {
                     "set_vert_colors",
                     MethodSignature.simple(
                         asType,
-                        listOf(Param("colors", Type.array(Type.RGBAType))),
-                        Type.NoneType,
+                        listOf(Param("colors", Type.array(RGBAValueType.asType))),
+                        NoneValueType.asType,
                     ),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
                     val colorList =
-                        ArrayValueType.of(RGBAType).assertIs(args[0]).elements.map {
-                            RGBAType.assertIs(it).toDVec4()
+                        ArrayValueType.of(RGBAValueType).assertIs(args[0]).elements.map {
+                            RGBAValueType.assertIs(it).toDVec4()
                         }
                     val colorVec = DoubleVec4Vector()
                     colorVec.resize(colorList.size.toLong())
@@ -219,11 +222,11 @@ object SMaterialType : ValueType() {
             object :
                 PrimitiveMethod(
                     "set_color",
-                    MethodSignature.simple(asType, listOf(Param("color", Type.RGBAType)), Type.NoneType),
+                    MethodSignature.simple(asType, listOf(Param("color", RGBAValueType.asType)), NoneValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
-                    val color = RGBAType.assertIs(args[0])
+                    val color = RGBAValueType.assertIs(args[0])
                     self.material.color(color.toDVec4())
                     return NoneValue
                 }
@@ -231,7 +234,7 @@ object SMaterialType : ValueType() {
             object :
                 PrimitiveMethod(
                     "get_color",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.RGBAType),
+                    MethodSignature.simple(asType, emptyList<Param>(), RGBAValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target).material
@@ -242,18 +245,18 @@ object SMaterialType : ValueType() {
             object :
                 PrimitiveMethod(
                     "get_vert_colors",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.array(Type.RGBAType)),
+                    MethodSignature.simple(asType, emptyList<Param>(), Type.array(RGBAValueType.asType)),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
                     val colorVec = self.material.vertColor().map { RGBA.fromDVec4(it) }
-                    return ArrayValue(RGBAType, colorVec)
+                    return ArrayValue(RGBAValueType, colorVec)
                 }
             },
             object :
                 PrimitiveMethod(
                     "metalness",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.FloatType),
+                    MethodSignature.simple(asType, emptyList<Param>(), FloatValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target).material
@@ -263,7 +266,7 @@ object SMaterialType : ValueType() {
             object :
                 PrimitiveMethod(
                     "roughness",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.FloatType),
+                    MethodSignature.simple(asType, emptyList<Param>(), FloatValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target).material
@@ -273,7 +276,7 @@ object SMaterialType : ValueType() {
             object :
                 PrimitiveMethod(
                     "name",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.StringType),
+                    MethodSignature.simple(asType, emptyList<Param>(), StringValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)

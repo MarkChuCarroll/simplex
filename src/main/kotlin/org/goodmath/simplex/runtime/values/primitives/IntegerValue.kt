@@ -27,7 +27,9 @@ import org.goodmath.simplex.twist.Twist
 object IntegerValueType : ValueType() {
     override val name: String = "Int"
 
-    override val asType: Type = Type.IntType
+    override val asType: Type by lazy {
+        Type.simple(name)
+    }
 
     override val supportsText: Boolean = true
 
@@ -59,7 +61,7 @@ object IntegerValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "float",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.FloatType),
+                    MethodSignature.simple(asType, emptyList<Param>(), FloatValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     return FloatValue(assertIsInt(target).toDouble())
@@ -140,7 +142,7 @@ object IntegerValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "eq",
-                    MethodSignature.simple(asType, listOf(Param("r", asType)), Type.BooleanType),
+                    MethodSignature.simple(asType, listOf(Param("r", asType)), BooleanValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val l = assertIsInt(target)
@@ -151,7 +153,7 @@ object IntegerValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "compare",
-                    MethodSignature.simple(asType, listOf(Param("r", asType)), Type.IntType),
+                    MethodSignature.simple(asType, listOf(Param("r", asType)), asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val l = assertIsInt(target)

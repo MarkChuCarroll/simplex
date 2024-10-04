@@ -21,17 +21,19 @@ import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.twist.Twist
 
 object NoneValue : Value {
-    override val valueType: ValueType = NoneType
+    override val valueType: ValueType = NoneValueType
 
     override fun twist(): Twist {
         return Twist.obj("None")
     }
 }
 
-object NoneType : ValueType() {
+object NoneValueType : ValueType() {
     override val name: String = "None"
 
-    override val asType: Type = Type.simple(name)
+    override val asType: Type by lazy {
+        Type.simple(name)
+    }
 
     override fun isTruthy(v: Value): Boolean {
         return false

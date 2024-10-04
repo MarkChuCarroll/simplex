@@ -28,7 +28,9 @@ import org.goodmath.simplex.twist.Twist
 object FloatValueType : ValueType() {
     override val name: String = "Float"
 
-    override val asType: Type = Type.FloatType
+    override val asType: Type by lazy {
+        Type.simple(name)
+    }
 
     override fun isTruthy(v: Value): Boolean {
         return assertIsFloat(v) != 0.0
@@ -48,7 +50,7 @@ object FloatValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "isNaN",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.BooleanType),
+                    MethodSignature.simple(asType, emptyList<Param>(), BooleanValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     return BooleanValue(assertIsFloat(target).isNaN())
@@ -57,7 +59,7 @@ object FloatValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "truncate",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.IntType),
+                    MethodSignature.simple(asType, emptyList<Param>(), IntegerValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     return IntegerValue(assertIsFloat(target).toInt())
@@ -132,7 +134,7 @@ object FloatValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "eq",
-                    MethodSignature.simple(asType, listOf(Param("r", asType)), Type.BooleanType),
+                    MethodSignature.simple(asType, listOf(Param("r", asType)), BooleanValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val l = assertIsFloat(target)
@@ -143,7 +145,7 @@ object FloatValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "compare",
-                    MethodSignature.simple(asType, listOf(Param("r", asType)), Type.IntType),
+                    MethodSignature.simple(asType, listOf(Param("r", asType)), IntegerValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val l = assertIsFloat(target)

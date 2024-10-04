@@ -72,10 +72,6 @@ type:
 | target=type '->' '(' types? ')' ':' result=type #optMethodType
 ;
 
-bindings:
-   binding ( ',' binding )*
-;
-
 exprs:
   expr (',' expr)*
 ;
@@ -102,8 +98,7 @@ complex:
 | 'if' condClause ( 'elif' condClause )* 'else' expr  #complexCondExpr
 | 'for' ID 'in' expr '{' expr+ '}' #complexForExpr
 | '{' expr+ '}'  #complexDoExpr
-| 'lambda' ':' type '(' params ')' '{' expr+ '}' #complexLambdaExpr
-| 'with' focus=expr '{' body=expr+ '}' #complexWithExpr
+| 'lambda'  '(' params ')' ':' type '{' expr+ '}' #complexLambdaExpr
 | 'while' expr '{' expr+ '}' #complexWhileExpr
 ;
 
@@ -118,9 +113,6 @@ primary:
 | 'false' #optFalse
 ;
 
-binding:
-   ID ':' type  '=' expr
-;
 
 expOp:
     '^' #opOptPow

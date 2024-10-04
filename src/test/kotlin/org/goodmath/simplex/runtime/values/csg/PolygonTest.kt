@@ -16,7 +16,7 @@
 package org.goodmath.simplex.runtime.values.csg
 
 import org.goodmath.simplex.runtime.values.manifold.Slice
-import org.goodmath.simplex.runtime.values.manifold.SliceType
+import org.goodmath.simplex.runtime.values.manifold.SliceValueType
 import org.goodmath.simplex.runtime.values.primitives.BooleanValue
 import kotlin.test.assertEquals
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test
 class PolygonTest {
     @Test
     fun testPolygonCreators() {
-        val rect = SliceType.providesFunctions.first { it.name == "rectangle" }
+        val rect = SliceValueType.providesFunctions.first { it.name == "rectangle" }
         val r = rect.execute(listOf(FloatValue(20.0),FloatValue(10.0), BooleanValue(true)))
         r as Slice
         assertEquals(

@@ -49,7 +49,7 @@ class TupleDefinition(name: String, val fields: List<TypedName>, loc: Location) 
 
     override fun installStatic(env: Env) {
         val tupleType = TupleValueType(this)
-        env.registerType(name, tupleType)
-        Type.simple(name)
+        val tt = Type.simple(name)
+        Type.registerValueType(tt, tupleType)
     }
 }
