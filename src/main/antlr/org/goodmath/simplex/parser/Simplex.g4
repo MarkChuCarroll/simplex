@@ -27,11 +27,11 @@ model:
 def:
   varDef #optVarDef
 | funDef #optFunDef
-| tupleDef #optTupleDef
+| dataDef #optDataDef
 | methDef #optMethDef
 ;
 
-tupleDef:
+dataDef:
    'data' ID '{' params '}'
 ;
 
@@ -105,7 +105,7 @@ complex:
 primary:
   ID (':=' expr)? #optIdExpr
 | '['  exprs   ']' #optVecExpr
-| '#' ID '(' exprs ')' #optTupleExpr
+| '#' ID '(' exprs ')' #optDataExpr
 | LIT_INT #optLitInt
 | LIT_FLOAT #optLitFloat
 | LIT_STRING #optLitStr

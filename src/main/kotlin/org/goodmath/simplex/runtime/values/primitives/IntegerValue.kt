@@ -50,12 +50,12 @@ object IntegerValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "to",
-                    MethodSignature.simple(asType, listOf(Param("max", asType)), Type.array(asType)),
+                    MethodSignature.simple(asType, listOf(Param("max", asType)), Type.vector(asType)),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val lower = assertIs(target).i
                     val upper = assertIs(args[0]).i
-                    return ArrayValue(IntegerValueType, (lower..upper).map { IntegerValue(it) })
+                    return VectorValue(IntegerValueType, (lower..upper).map { IntegerValue(it) })
                 }
             },
             object :

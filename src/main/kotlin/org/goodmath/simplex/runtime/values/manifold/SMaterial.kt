@@ -24,8 +24,8 @@ import org.goodmath.simplex.runtime.values.MethodSignature
 import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
-import org.goodmath.simplex.runtime.values.primitives.ArrayValue
-import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
+import org.goodmath.simplex.runtime.values.primitives.VectorValue
+import org.goodmath.simplex.runtime.values.primitives.VectorValueType
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
 import org.goodmath.simplex.runtime.values.primitives.FloatValueType
 import org.goodmath.simplex.runtime.values.primitives.NoneValueType
@@ -202,14 +202,14 @@ object SMaterialValueType : ValueType() {
                     "set_vert_colors",
                     MethodSignature.simple(
                         asType,
-                        listOf(Param("colors", Type.array(RGBAValueType.asType))),
+                        listOf(Param("colors", Type.vector(RGBAValueType.asType))),
                         NoneValueType.asType,
                     ),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
                     val colorList =
-                        ArrayValueType.of(RGBAValueType).assertIs(args[0]).elements.map {
+                        VectorValueType.of(RGBAValueType).assertIs(args[0]).elements.map {
                             RGBAValueType.assertIs(it).toDVec4()
                         }
                     val colorVec = DoubleVec4Vector()
@@ -245,12 +245,12 @@ object SMaterialValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "get_vert_colors",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.array(RGBAValueType.asType)),
+                    MethodSignature.simple(asType, emptyList<Param>(), Type.vector(RGBAValueType.asType)),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
                     val colorVec = self.material.vertColor().map { RGBA.fromDVec4(it) }
-                    return ArrayValue(RGBAValueType, colorVec)
+                    return VectorValue(RGBAValueType, colorVec)
                 }
             },
             object :

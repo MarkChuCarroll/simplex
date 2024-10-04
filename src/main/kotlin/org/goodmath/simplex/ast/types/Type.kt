@@ -15,32 +15,24 @@
  */
 package org.goodmath.simplex.ast.types
 
-import com.github.ajalt.colormath.model.RGB
-import javafx.scene.shape.MeshView
 import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.SimplexAnalysisError
-import org.goodmath.simplex.runtime.values.AnyType
+import org.goodmath.simplex.runtime.values.AnyValueType
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.runtime.values.manifold.BoundingBoxValueType
 import org.goodmath.simplex.runtime.values.manifold.BoundingRectValueType
-import org.goodmath.simplex.runtime.values.manifold.RGBAValueType
-import org.goodmath.simplex.runtime.values.manifold.SMaterial
-import org.goodmath.simplex.runtime.values.manifold.SMaterialValueType
 import org.goodmath.simplex.runtime.values.manifold.SMeshGLType
 import org.goodmath.simplex.runtime.values.manifold.SPolygonType
 import org.goodmath.simplex.runtime.values.manifold.SSmoothnessType
 import org.goodmath.simplex.runtime.values.manifold.SliceValueType
 import org.goodmath.simplex.runtime.values.manifold.SolidValueType
-import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
-import org.goodmath.simplex.runtime.values.primitives.BooleanValue
+import org.goodmath.simplex.runtime.values.primitives.VectorValueType
 import org.goodmath.simplex.runtime.values.primitives.BooleanValueType
 import org.goodmath.simplex.runtime.values.primitives.FloatValueType
 import org.goodmath.simplex.runtime.values.primitives.FunctionValueType
 import org.goodmath.simplex.runtime.values.primitives.IntegerValueType
 import org.goodmath.simplex.runtime.values.primitives.MethodValueType
 import org.goodmath.simplex.runtime.values.primitives.NoneValueType
-import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValueType
-import org.goodmath.simplex.runtime.values.primitives.StringValue
 import org.goodmath.simplex.runtime.values.primitives.StringValueType
 import org.goodmath.simplex.runtime.values.primitives.Vec2ValueType
 import org.goodmath.simplex.runtime.values.primitives.Vec3ValueType
@@ -54,6 +46,9 @@ import kotlin.collections.zip
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
 
+/**
+ * Static types. These types are used for analysis and typechecking.
+ */
 abstract class Type : Twistable {
     abstract fun matchedBy(t: Type): Boolean
 
@@ -73,9 +68,8 @@ abstract class Type : Twistable {
             SPolygonType,
             SliceValueType,
             SMeshGLType, SSmoothnessType,
-            NoneValueType, AnyType,
+            NoneValueType, AnyValueType
         )
-
 
         init {
             builtinValueTypes.forEach {
@@ -83,7 +77,6 @@ abstract class Type : Twistable {
                 registerValueType(simp, it)
             }
         }
-
 
         operator fun get(name: String): Type? = types[name]
 
@@ -113,14 +106,14 @@ abstract class Type : Twistable {
             } as SimpleType
         }
 
-        fun array(baseType: Type): ArrayType {
+        fun vector(baseType: Type): VectorType {
             val name = "[$baseType]"
             val result = Type.types.computeIfAbsent(name) { n ->
-                ArrayType(baseType)
-            } as ArrayType
+                VectorType(baseType)
+            } as VectorType
             System.err.println("Accessing vector type ${result}")
             if (!valueTypes.containsKey(result)) {
-                registerValueType(result, ArrayValueType(valueTypes[baseType]!!))
+                registerValueType(result, VectorValueType(valueTypes[baseType]!!))
             }
             return result
         }
@@ -157,6 +150,22 @@ abstract class Type : Twistable {
             }
             return result
         }
+
+        val IntType = simple("Int")
+        val FloatType = simple("Float")
+        val StringType = simple("String")
+        val BooleanType = simple("Boolean")
+        val Vec2Type = simple("Vec2")
+        val Vec3Type = simple("Vec3")
+        val BoundingBoxType = simple("BoundingBox")
+        val SolidType = simple("Solid")
+        val BoundingRectType = simple("BoundingRect")
+        val PolygonType = simple("Polygon")
+        val SliceType = simple("Slice")
+        val MeshType = simple("Mesh")
+        val SmoothnessType = simple("Smoothness")
+        val NoneType = simple("None")
+        val AnyType = simple("Any")
     }
 
     fun registerMethod(name: String, type: MethodType) {
@@ -186,15 +195,15 @@ data class SimpleType constructor(val name: String) : Type() {
     }
 }
 
-class ArrayType internal constructor(val elementType: Type) : Type() {
-    override fun twist(): Twist = Twist.obj("ArrayType", Twist.value("elementType", elementType))
+class VectorType internal constructor(val elementType: Type) : Type() {
+    override fun twist(): Twist = Twist.obj("VectorType", Twist.value("elementType", elementType))
 
     override fun toString(): String {
         return "[$elementType]"
     }
 
     override fun matchedBy(t: Type): Boolean {
-        return if (t is ArrayType) {
+        return if (t is VectorType) {
             elementType.matchedBy(t.elementType)
         } else {
             false

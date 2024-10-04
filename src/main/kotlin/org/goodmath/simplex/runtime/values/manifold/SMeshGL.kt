@@ -22,7 +22,7 @@ import org.goodmath.simplex.runtime.values.MethodSignature
 import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
-import org.goodmath.simplex.runtime.values.primitives.ArrayValue
+import org.goodmath.simplex.runtime.values.primitives.VectorValue
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
 import org.goodmath.simplex.runtime.values.primitives.FloatValueType
 import org.goodmath.simplex.runtime.values.primitives.IntegerValue
@@ -91,7 +91,7 @@ object SMeshGLType : ValueType() {
             object :
                 PrimitiveMethod(
                     "vert_properties",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.array(FloatValueType.asType)),
+                    MethodSignature.simple(asType, emptyList<Param>(), Type.vector(FloatValueType.asType)),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target).mesh
@@ -101,7 +101,7 @@ object SMeshGLType : ValueType() {
                     for (p in 0..<props.size()) {
                         result.add(FloatValue(props.get(p.toLong()).toDouble()))
                     }
-                    return ArrayValue(FloatValueType, result)
+                    return VectorValue(FloatValueType, result)
                 }
             },
             // TODO
@@ -110,7 +110,7 @@ object SMeshGLType : ValueType() {
             object :
                 PrimitiveMethod(
                     "tri_verts",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.array(IntegerValueType.asType)),
+                    MethodSignature.simple(asType, emptyList<Param>(), Type.vector(IntegerValueType.asType)),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target).mesh
@@ -119,7 +119,7 @@ object SMeshGLType : ValueType() {
                     for (p in 0..<verts.size()) {
                         result.add(IntegerValue(verts.get(p.toLong()).toInt()))
                     }
-                    return ArrayValue(IntegerValueType, result)
+                    return VectorValue(IntegerValueType, result)
                 }
             },
         )

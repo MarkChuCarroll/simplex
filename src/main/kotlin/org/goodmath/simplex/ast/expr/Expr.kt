@@ -22,19 +22,18 @@ import kotlin.collections.toSet
 import kotlin.toString
 import org.goodmath.simplex.ast.AstNode
 import org.goodmath.simplex.ast.Location
-import org.goodmath.simplex.ast.def.TupleDefinition
+import org.goodmath.simplex.ast.def.DataDefinition
 import org.goodmath.simplex.ast.types.SimpleType
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.ast.types.TypedName
 import org.goodmath.simplex.runtime.Env
-import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.SimplexAnalysisError
 import org.goodmath.simplex.runtime.SimplexError
 import org.goodmath.simplex.runtime.SimplexEvaluationError
 import org.goodmath.simplex.runtime.SimplexTypeError
-import org.goodmath.simplex.runtime.values.AnyType
+import org.goodmath.simplex.runtime.values.AnyValueType
 import org.goodmath.simplex.runtime.values.Value
-import org.goodmath.simplex.runtime.values.primitives.ArrayValue
+import org.goodmath.simplex.runtime.values.primitives.VectorValue
 import org.goodmath.simplex.runtime.values.primitives.BooleanValue
 import org.goodmath.simplex.runtime.values.primitives.BooleanValueType
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
@@ -44,7 +43,7 @@ import org.goodmath.simplex.runtime.values.primitives.IntegerValue
 import org.goodmath.simplex.runtime.values.primitives.IntegerValueType
 import org.goodmath.simplex.runtime.values.primitives.StringValue
 import org.goodmath.simplex.runtime.values.primitives.StringValueType
-import org.goodmath.simplex.runtime.values.primitives.TupleValue
+import org.goodmath.simplex.runtime.values.primitives.DataValue
 import org.goodmath.simplex.twist.Twist
 
 abstract class Expr(loc: Location) : AstNode(loc) {
@@ -215,19 +214,19 @@ class VarRefExpr(val name: String, loc: Location) : Expr(loc) {
     }
 }
 
-class ArrayExpr(val elements: List<Expr>, loc: Location) : Expr(loc) {
-    override fun twist(): Twist = Twist.obj("Array", Twist.array("elements", elements))
+class VectorExpr(val elements: List<Expr>, loc: Location) : Expr(loc) {
+    override fun twist(): Twist = Twist.obj("Vector", Twist.array("elements", elements))
 
     override fun evaluateIn(env: Env): Value {
         val elementValues = elements.map { it.evaluateIn(env) }
         val elementTypes = elementValues.map { it.valueType }.toSet()
         val elementType =
             if (elementTypes.size > 1) {
-                AnyType
+                AnyValueType
             } else {
                 elementTypes.first()
             }
-        return ArrayValue(elementType, elementValues)
+        return VectorValue(elementType, elementValues)
     }
 
     override fun resultType(env: Env): Type {
@@ -235,7 +234,7 @@ class ArrayExpr(val elements: List<Expr>, loc: Location) : Expr(loc) {
         return if (elementTypes.size > 1) {
             throw SimplexAnalysisError("No resolved type: [${elementTypes}]", loc = loc)
         } else {
-            Type.array(elementTypes.first())
+            Type.vector(elementTypes.first())
         }
     }
 
@@ -253,10 +252,10 @@ class WithExpr(val focus: Expr, val body: List<Expr>, loc: Location) : Expr(loc)
 
     override fun evaluateIn(env: Env): Value {
         val focusVal = focus.evaluateIn(env)
-        if (focusVal !is TupleValue) {
-            throw SimplexTypeError("Tuple", focusVal.valueType.name, location = loc)
+        if (focusVal !is DataValue) {
+            throw SimplexTypeError("Data", focusVal.valueType.name, location = loc)
         }
-        val def = focusVal.valueType.tupleDef
+        val def = focusVal.valueType.dataDef
         val localEnv = Env(emptyList(), env)
         for ((name, idx) in def.fields.map { Pair(it.name, def.indexOf(it.name)) }) {
             localEnv.addVariable(name, focusVal.fields[idx])
@@ -271,8 +270,8 @@ class WithExpr(val focus: Expr, val body: List<Expr>, loc: Location) : Expr(loc)
     override fun resultType(env: Env): Type {
         // We know it's a simple type, because validation would have failed otherwise.
         val focusType = focus.resultType(env) as SimpleType
-        // similarly, we know it's a tuple-def
-        val focusDef = env.getDef(focusType.name) as TupleDefinition
+        // similarly, we know it's a data-def
+        val focusDef = env.getDef(focusType.name) as DataDefinition
         val localEnv = Env(emptyList(), env)
         for (field in focusDef.fields) {
             localEnv.declareTypeOf(field.name, field.type)
@@ -285,14 +284,14 @@ class WithExpr(val focus: Expr, val body: List<Expr>, loc: Location) : Expr(loc)
             val focusType = focus.resultType(env)
             if (focusType !is SimpleType) {
                 throw SimplexAnalysisError(
-                    "With expression focus must be a simple type, not $focusType",
+                    "With expression focus must be a data value type, not $focusType",
                     loc = loc,
                 )
             }
             val focusDef = env.getDef(focusType.name)
-            if (focusDef !is TupleDefinition) {
+            if (focusDef !is DataDefinition) {
                 throw SimplexAnalysisError(
-                    "With expression focus must be a tuple type, not $focusDef",
+                    "With expression focus must be a data value type, not $focusDef",
                     loc = loc,
                 )
             }

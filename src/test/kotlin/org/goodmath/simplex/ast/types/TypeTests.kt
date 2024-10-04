@@ -1,18 +1,35 @@
 package org.goodmath.simplex.ast.types
 
+import org.goodmath.simplex.ast.Location
+import org.goodmath.simplex.ast.def.DataDefinition
+import org.goodmath.simplex.runtime.Env
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.BeforeEach
 
 class TypeTests {
+
+    @BeforeEach
+    fun initRootEnvironment() {
+        Env.createRootEnv()
+        val t = Type
+    }
+
     @Test
     fun testTypeCreation() {
         val s1 = Type.simple("foo")
         val s2 = Type.simple("bar")
-        val a1 = Type.array(Type.simple("zip"))
-        val a2 = Type.array(Type.simple("foo"))
-        val a3 = Type.array(s1)
-        val a4 = Type.array(s2)
+        val zip = DataDefinition("zip",
+            listOf(), Location("none", 0, 0))
+        val foo = DataDefinition("foo",
+            listOf(), Location("none", 0, 0))
+        Type.registerValueType(s1, foo.valueType)
+        Type.registerValueType(s2, zip.valueType)
+        val a1 = Type.vector(Type.simple("zip"))
+        val a2 = Type.vector(Type.simple("foo"))
+        val a3 = Type.vector(s1)
+        val a4 = Type.vector(s2)
 
         assertTrue(s1.matchedBy(s1))
         assertTrue(s2.matchedBy(s2))
@@ -28,8 +45,8 @@ class TypeTests {
         assertFalse(a2.matchedBy(a1))
         assertTrue(a2.matchedBy(a3))
         assertFalse(a2.matchedBy(a4))
-        assertTrue(a2.matchedBy(Type.array(Type.simple("foo"))))
-        assertTrue(Type.array(Type.simple("foo")).matchedBy(a2))
+        assertTrue(a2.matchedBy(Type.vector(Type.simple("foo"))))
+        assertTrue(Type.vector(Type.simple("foo")).matchedBy(a2))
         assertTrue(s1.matchedBy(a2.elementType))
     }
 
@@ -38,33 +55,33 @@ class TypeTests {
         val same1 =
             Type.simpleMethod(
                 Type.simple("Test"),
-                listOf(Type.IntType, Type.array(Type.FloatType)),
+                listOf(Type.IntType, Type.vector(Type.FloatType)),
                 Type.StringType,
             )
 
         val same2 =
             Type.simpleMethod(
                 Type.simple("Test"),
-                listOf(Type.simple("Int"), Type.array(Type.FloatType)),
+                listOf(Type.simple("Int"), Type.vector(Type.FloatType)),
                 Type.simple("String"),
             )
 
         val diff1 =
             Type.simpleMethod(
                 Type.StringType,
-                listOf(Type.simple("Int"), Type.array(Type.FloatType)),
+                listOf(Type.simple("Int"), Type.vector(Type.FloatType)),
                 Type.simple("String"),
             )
         val diff2 =
             Type.simpleMethod(
                 Type.simple("Test"),
-                listOf(Type.simple("Int"), Type.array(Type.IntType)),
+                listOf(Type.simple("Int"), Type.vector(Type.IntType)),
                 Type.simple("String"),
             )
         val diff3 =
             Type.simpleMethod(
                 Type.simple("Test"),
-                listOf(Type.simple("Int"), Type.array(Type.FloatType)),
+                listOf(Type.simple("Int"), Type.vector(Type.FloatType)),
                 Type.FloatType,
             )
         assertTrue(same1.matchedBy(same2))

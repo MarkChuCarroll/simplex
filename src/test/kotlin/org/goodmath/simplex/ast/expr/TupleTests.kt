@@ -22,14 +22,14 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 import org.goodmath.simplex.ast.Location
-import org.goodmath.simplex.ast.def.TupleDefinition
+import org.goodmath.simplex.ast.def.DataDefinition
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.ast.types.TypedName
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.primitives.BooleanValue
 import org.goodmath.simplex.runtime.values.primitives.IntegerValue
 import org.goodmath.simplex.runtime.values.primitives.StringValue
-import org.goodmath.simplex.runtime.values.primitives.TupleValue
+import org.goodmath.simplex.runtime.values.primitives.DataValue
 import org.junit.jupiter.api.BeforeEach
 
 /** Some basic tests of tuple types. */
@@ -48,21 +48,21 @@ class TupleTests {
     @BeforeEach
     fun setupEnvironment() {
         val tupleTypeOne =
-            TupleDefinition(
+            DataDefinition(
                 "TestTupleOne",
                 listOf(
-                    TypedName("iFoo", Type.IntType, mockLoc()),
-                    TypedName("sBar", Type.StringType, mockLoc()),
-                    TypedName("fBaz", Type.FloatType, mockLoc()),
+                    TypedName("iFoo", Type.simple("Int"), mockLoc()),
+                    TypedName("sBar", Type.simple("String"), mockLoc()),
+                    TypedName("fBaz", Type.simple("Float"), mockLoc()),
                 ),
                 mockLoc(),
             )
         val tupleTypeTwo =
-            TupleDefinition(
+            DataDefinition(
                 "TestTupleTwo",
                 listOf(
                     TypedName("tOne", Type.simple("TestTupleOne"), mockLoc()),
-                    TypedName("oops", Type.StringType, mockLoc()),
+                    TypedName("oops", Type.simple("String"), mockLoc()),
                 ),
                 mockLoc(),
             )
@@ -75,7 +75,7 @@ class TupleTests {
     @Test
     fun testCreateTuple() {
         val createOne =
-            TupleExpr(
+            DataExpr(
                 "TestTupleOne",
                 listOf(
                     LiteralExpr(11, mockLoc()),
@@ -88,13 +88,13 @@ class TupleTests {
         createOne.validate(env)
         val v = createOne.evaluateIn(env)
         assertEquals("TestTupleOne", v.valueType.name)
-        v as TupleValue
+        v as DataValue
         assertEquals(IntegerValue(11), v.fields[0])
 
         val createTwo =
-            TupleExpr("TestTupleTwo", listOf(createOne, LiteralExpr("oops", mockLoc())), mockLoc())
+            DataExpr("TestTupleTwo", listOf(createOne, LiteralExpr("oops", mockLoc())), mockLoc())
         val w = createTwo.evaluateIn(env)
-        assertIs<TupleValue>(w)
+        assertIs<DataValue>(w)
         val eq = v.valueType.applyMethod(v, "eq", listOf(w.fields[0]), env)
         assertTrue(eq is BooleanValue && eq.b)
         val wOne = w.fields[1] as StringValue
@@ -105,7 +105,7 @@ class TupleTests {
     @Test
     fun testFieldAccess() {
         val createOne =
-            TupleExpr(
+            DataExpr(
                 "TestTupleOne",
                 listOf(
                     LiteralExpr(11, mockLoc()),
@@ -115,7 +115,7 @@ class TupleTests {
                 mockLoc(),
             )
         val createTwo =
-            TupleExpr("TestTupleTwo", listOf(createOne, LiteralExpr("oops", mockLoc())), mockLoc())
+            DataExpr("TestTupleTwo", listOf(createOne, LiteralExpr("oops", mockLoc())), mockLoc())
 
         val getExpr = FieldRefExpr(FieldRefExpr(createTwo, "tOne", mockLoc()), "iFoo", mockLoc())
         val result = getExpr.evaluateIn(env)
@@ -126,7 +126,7 @@ class TupleTests {
     @Test
     fun testFieldUpdate() {
         val createOne =
-            TupleExpr(
+            DataExpr(
                 "TestTupleOne",
                 listOf(
                     LiteralExpr(11, mockLoc()),
@@ -136,11 +136,11 @@ class TupleTests {
                 mockLoc(),
             )
         val createTwo =
-            TupleExpr("TestTupleTwo", listOf(createOne, LiteralExpr("oops", mockLoc())), mockLoc())
+            DataExpr("TestTupleTwo", listOf(createOne, LiteralExpr("oops", mockLoc())), mockLoc())
 
         val letExpr = LetExpr("two", Type.simple("TestTupleTwo"), createTwo, mockLoc())
         val update =
-            TupleFieldUpdateExpr(
+            DataFieldUpdateExpr(
                 VarRefExpr("two", mockLoc()),
                 "oops",
                 LiteralExpr("yikes", mockLoc()),
@@ -150,7 +150,7 @@ class TupleTests {
 
         val result = block.evaluateIn(env)
 
-        assertIs<TupleValue>(result)
+        assertIs<DataValue>(result)
         assertEquals("yikes", (result.fields[1] as StringValue).s)
     }
 }

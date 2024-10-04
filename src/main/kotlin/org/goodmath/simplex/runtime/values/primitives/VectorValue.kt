@@ -30,30 +30,30 @@ import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.twist.Twist
 
-class ArrayValueType(val elementType: ValueType) : ValueType() {
+class VectorValueType(val elementType: ValueType) : ValueType() {
     override fun twist(): Twist {
-        return Twist.obj("ArrayValueType", Twist.value("elementType", elementType))
+        return Twist.obj("VectorValueType", Twist.value("elementType", elementType))
     }
 
     override val name: String = "[${elementType.name}]"
 
     override val asType: Type by lazy {
-        Type.array(elementType.asType)
+        Type.vector(elementType.asType)
     }
 
-    fun assertIsArray(v: Value): List<Value> {
-        if (v is ArrayValue) {
+    fun assertIsVector(v: Value): List<Value> {
+        if (v is VectorValue) {
             return v.elements
         } else {
-            throw SimplexTypeError("Array", v.valueType.name)
+            throw SimplexTypeError("Vector", v.valueType.name)
         }
     }
     override val supportsText: Boolean = elementType.supportsText
 
     override fun toText(v: Value): String {
-        val array = assertIs(v).elements
+        val vec = assertIs(v).elements
         val rendered =
-            array
+            vec
                 .map {
                     if (it.valueType.supportsText) {
                         it.valueType.toText(it)
@@ -66,7 +66,7 @@ class ArrayValueType(val elementType: ValueType) : ValueType() {
     }
 
     override fun isTruthy(v: Value): Boolean {
-        val a = assertIsArray(v)
+        val a = assertIsVector(v)
         return a.isNotEmpty()
     }
 
@@ -84,7 +84,7 @@ class ArrayValueType(val elementType: ValueType) : ValueType() {
                     ),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
-                    val arr = assertIsArray(target)
+                    val arr = assertIsVector(target)
                     val idx = assertIsInt(args[0])
                     return arr[idx]
                 }
@@ -95,7 +95,7 @@ class ArrayValueType(val elementType: ValueType) : ValueType() {
                     MethodSignature.simple(asType, emptyList<Param>(), IntegerValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
-                    val a = this@ArrayValueType.assertIs(target).elements
+                    val a = this@VectorValueType.assertIs(target).elements
                     return IntegerValue(a.size)
                 }
             },
@@ -105,13 +105,13 @@ class ArrayValueType(val elementType: ValueType) : ValueType() {
                     MethodSignature.simple(asType, listOf(Param("r", asType)), asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
-                    val a1 = assertIsArray(target)
-                    val a2 = assertIsArray(args[0])
+                    val a1 = assertIsVector(target)
+                    val a2 = assertIsVector(args[0])
                     if (a1.size != a2.size) {
-                        throw SimplexEvaluationError("Cannot add arrays of different lengths")
+                        throw SimplexEvaluationError("Cannot add vectors of different lengths")
                     }
-                    return ArrayValue(
-                        this@ArrayValueType.elementType,
+                    return VectorValue(
+                        this@VectorValueType.elementType,
                         a1.zip(a2).map { (l, r) ->
                             l.valueType.applyMethod(l, "plus", listOf(r), env)
                         },
@@ -124,13 +124,13 @@ class ArrayValueType(val elementType: ValueType) : ValueType() {
                     MethodSignature.simple(asType, listOf(Param("r", asType)), asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
-                    val a1 = assertIsArray(target)
-                    val a2 = assertIsArray(args[0])
+                    val a1 = assertIsVector(target)
+                    val a2 = assertIsVector(args[0])
                     if (a1.size != a2.size) {
-                        throw SimplexEvaluationError("Cannot add arrays of different lengths")
+                        throw SimplexEvaluationError("Cannot subtract vectors of different lengths")
                     }
-                    return ArrayValue(
-                        this@ArrayValueType.elementType,
+                    return VectorValue(
+                        this@VectorValueType.elementType,
                         a1.zip(a2).map { (l, r) ->
                             l.valueType.applyMethod(l, "minus", listOf(r), env)
                         },
@@ -143,8 +143,8 @@ class ArrayValueType(val elementType: ValueType) : ValueType() {
                     MethodSignature.simple(asType, listOf(Param("r", asType)), BooleanValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
-                    val a1 = assertIsArray(target)
-                    val a2 = assertIsArray(args[0])
+                    val a1 = assertIsVector(target)
+                    val a2 = assertIsVector(args[0])
                     if (a1.size != a2.size) {
                         return BooleanValue(false)
                     }
@@ -158,9 +158,9 @@ class ArrayValueType(val elementType: ValueType) : ValueType() {
             },
             object : PrimitiveMethod("neg", MethodSignature.simple(asType, emptyList<Param>(), asType)) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
-                    val a1 = assertIsArray(target)
-                    return ArrayValue(
-                        this@ArrayValueType.elementType,
+                    val a1 = assertIsVector(target)
+                    return VectorValue(
+                        this@VectorValueType.elementType,
                         a1.map { it.valueType.applyMethod(it, "neg", emptyList(), env) },
                     )
                 }
@@ -172,8 +172,8 @@ class ArrayValueType(val elementType: ValueType) : ValueType() {
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     // Basically doing a lexicographic ordering.
-                    val a1 = assertIsArray(target)
-                    val a2 = assertIsArray(args[0])
+                    val a1 = assertIsVector(target)
+                    val a2 = assertIsVector(args[0])
                     val commonLength = min(a1.size, a2.size)
                     for (i in 0..<commonLength) {
                         val c =
@@ -199,8 +199,8 @@ class ArrayValueType(val elementType: ValueType) : ValueType() {
     }
     override val providesVariables: Map<String, Value> = emptyMap()
 
-    override fun assertIs(v: Value): ArrayValue {
-        if (v is ArrayValue) {
+    override fun assertIs(v: Value): VectorValue {
+        if (v is VectorValue) {
             return v
         } else {
             throwTypeError(v)
@@ -208,18 +208,18 @@ class ArrayValueType(val elementType: ValueType) : ValueType() {
     }
 
     companion object {
-        val arrayTypes = HashMap<ValueType, ArrayValueType>()
+        val vectorTypes = HashMap<ValueType, VectorValueType>()
 
-        fun of(t: ValueType): ArrayValueType {
-            return arrayTypes.computeIfAbsent(t) { t -> ArrayValueType(t) }
+        fun of(t: ValueType): VectorValueType {
+            return vectorTypes.computeIfAbsent(t) { t -> VectorValueType(t) }
         }
     }
 }
 
-class ArrayValue(val elementType: ValueType, val elements: List<Value>) : Value {
+class VectorValue(val elementType: ValueType, val elements: List<Value>) : Value {
     fun isEmpty(): Boolean = elements.isEmpty()
 
-    override val valueType: ValueType = ArrayValueType(elementType)
+    override val valueType: ValueType = VectorValueType(elementType)
 
-    override fun twist(): Twist = Twist.obj("ArrayValue", Twist.array("elements", elements))
+    override fun twist(): Twist = Twist.obj("VectorValue", Twist.array("elements", elements))
 }

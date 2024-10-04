@@ -15,12 +15,9 @@
  */
 package org.goodmath.simplex.runtime.values
 
-import org.goodmath.simplex.ast.def.MethodDefinition
-import org.goodmath.simplex.ast.expr.Expr
-import org.goodmath.simplex.ast.types.MethodType
 import org.goodmath.simplex.ast.types.Type
-import org.goodmath.simplex.ast.types.TypedName
 import org.goodmath.simplex.runtime.Env
+import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.SimplexUndefinedError
 import org.goodmath.simplex.runtime.SimplexUnsupportedOperation
@@ -28,16 +25,21 @@ import org.goodmath.simplex.runtime.values.primitives.AbstractMethod
 import org.goodmath.simplex.runtime.values.primitives.BooleanValue
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
 import org.goodmath.simplex.runtime.values.primitives.IntegerValue
+import org.goodmath.simplex.runtime.values.primitives.NoneValue
+import org.goodmath.simplex.runtime.values.primitives.NoneValueType
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveMethod
 import org.goodmath.simplex.runtime.values.primitives.StringValue
+import org.goodmath.simplex.runtime.values.primitives.VectorValue
+import org.goodmath.simplex.runtime.values.primitives.VectorValueType
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
 
 /**
  * The abstract supertype of all values.
  *
- * All values in the Simplex runtime can report their own value type.
+ * All values in the Simplex runtime can report their own value type,
+ * which is used to provide all of their behaviors and validations.
  */
 interface Value : Twistable {
     val valueType: ValueType
@@ -52,7 +54,7 @@ interface Value : Twistable {
  * behavior - sort of like the runtime value of a class object in some object-oriented languages.
  *
  * A value type provides the implementations of the basic operations for its values. It does this
- * mainly by providing functions and methods for the object.
+ * mainly by providing functions, methods, and variables for the object/type.
  */
 abstract class ValueType : Twistable {
     abstract val name: String
@@ -66,8 +68,12 @@ abstract class ValueType : Twistable {
     }
 
     /**
-     * Get the static type of values of this value type. It's possible that multiple value types
-     * will map onto one static type.
+     * Get the static type of values of this value type.
+     *
+     * Subclass implementors: the implementation of this should be
+     * lazy; and if you're adding a new primitive type, you should
+     * make sure that you add it to the primitive type list in
+     * Type.kt.
      */
     abstract val asType: Type
 
@@ -103,6 +109,10 @@ abstract class ValueType : Twistable {
      */
     abstract val providesPrimitiveMethods: List<PrimitiveMethod>
 
+    /**
+     * A list of global variables provided by this type, which will
+     * be installed into the root environment.
+     */
     abstract val providesVariables: Map<String, Value>
 
     /**
@@ -118,7 +128,7 @@ abstract class ValueType : Twistable {
         result
     }
 
-    /** Get a method for a value, throwing an exception if no method with the name exists. */
+    /** Get a method for a value of this type, throwing an exception if no method with the name exists. */
     fun getMethod(name: String): AbstractMethod {
         return methods[name] ?: throw SimplexUndefinedError(name, "method of type $asType")
     }
@@ -140,6 +150,13 @@ abstract class ValueType : Twistable {
         return meth.applyTo(target, args, env)
     }
 
+    /**
+     * Utility method for implementing primitive functions
+     * and methods. This checks that the type of a runtime value
+     * is a string, and if so, unwraps the string and returns it.
+     * If the runtime value is not a string, then this throws an
+     * exception.
+     */
     fun assertIsString(v: Value): String {
         if (v !is StringValue) {
             throw SimplexTypeError("String", v.valueType.name)
@@ -148,6 +165,13 @@ abstract class ValueType : Twistable {
         }
     }
 
+    /**
+     * Utility method for implementing primitive functions
+     * and methods. This checks that the type of a runtime value
+     * is an integer, and if so, unwraps the int and returns it.
+     * If the runtime value is not an int, then this throws an
+     * exception.
+     */
     fun assertIsInt(v: Value): Int {
         if (v !is IntegerValue) {
             throw SimplexTypeError("Int", v.valueType.name)
@@ -156,6 +180,13 @@ abstract class ValueType : Twistable {
         }
     }
 
+    /**
+     * Utility method for implementing primitive functions
+     * and methods. This checks that the type of a runtime value
+     * is a Double, and if so, unwraps the Double and returns it.
+     * If the runtime value is not a Double, then this throws an
+     * exception.
+     */
     fun assertIsFloat(v: Value): Double {
         if (v !is FloatValue) {
             throw SimplexTypeError("Float", v.valueType.name)
@@ -164,6 +195,13 @@ abstract class ValueType : Twistable {
         }
     }
 
+    /**
+     * Utility method for implementing primitive functions
+     * and methods. This checks that the type of a runtime value
+     * is a Boolean, and if so, unwraps the Boolean and returns it.
+     * If the runtime value is not a Boolean, then this throws an
+     * exception.
+     */
     fun assertIsBoolean(v: Value): Boolean {
         if (v !is BooleanValue) {
             throw SimplexTypeError("Boolean", v.valueType.name)
@@ -172,6 +210,16 @@ abstract class ValueType : Twistable {
         }
     }
 
+    /**
+     * Utility method for implementing primitive functions
+     * and methods. This checks that the type of a runtime value
+     * as a value of this value type, and if so, returns it.
+     * If the runtime value is not of this type, then this throws an
+     * exception.
+     *
+     * Note to implementors: you should change the return type of
+     * this to match the correct ValueType.
+     */
     abstract fun assertIs(v: Value): Value
 
 }
@@ -183,7 +231,7 @@ abstract class ValueType : Twistable {
  * object has been passed into something as an "Any", there's virtually nothing you can do with it.
  * There's no downcast from any!
  */
-object AnyType : ValueType() {
+object AnyValueType : ValueType() {
     override val name: String = "Any"
     override val asType: Type by lazy {
         Type.simple(name)
@@ -198,7 +246,31 @@ object AnyType : ValueType() {
         return v.valueType.isTruthy(v)
     }
 
-    override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()
+    override val providesFunctions: List<PrimitiveFunctionValue> by lazy {
+        listOf(
+            object: PrimitiveFunctionValue("print",
+                FunctionSignature.simple(listOf(
+                    Param("args", VectorValueType.of(AnyValueType).asType)),
+                    NoneValueType.asType)) {
+                override fun execute(args: List<Value>): Value {
+                    val v = VectorValueType.of(AnyValueType).assertIsVector(args[0])
+                    RootEnv.echo(0,
+                        "${
+                            v.map {
+                                if (it.valueType.supportsText) {
+                                    it.valueType.toText(it)
+                                } else {
+                                    it.toString()
+                                }
+                            }.joinToString()
+                        }\n",
+                        false
+                    )
+                    return NoneValue
+                }
+            }
+        )
+    }
 
     override val providesPrimitiveMethods: List<PrimitiveMethod> = emptyList()
 

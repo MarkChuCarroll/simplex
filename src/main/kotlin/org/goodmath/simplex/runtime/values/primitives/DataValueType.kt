@@ -15,7 +15,7 @@
  */
 package org.goodmath.simplex.runtime.values.primitives
 
-import org.goodmath.simplex.ast.def.TupleDefinition
+import org.goodmath.simplex.ast.def.DataDefinition
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexTypeError
@@ -25,11 +25,11 @@ import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.twist.Twist
 
-class TupleValueType(val tupleDef: TupleDefinition) : ValueType() {
-    override val name: String = tupleDef.name
+class DataValueType(val dataDef: DataDefinition) : ValueType() {
+    override val name: String = dataDef.name
 
     override val asType: Type by lazy {
-        val t = Type.simple(tupleDef.name)
+        val t = Type.simple(dataDef.name)
         Type.registerValueType(t, this)
         t
     }
@@ -42,9 +42,9 @@ class TupleValueType(val tupleDef: TupleDefinition) : ValueType() {
         sb.append("#${tup.valueType.name}(")
 
         sb.append(
-            tup.valueType.tupleDef.fields
+            tup.valueType.dataDef.fields
                 .map { field ->
-                    val fieldValue = tup.fields[tup.valueType.tupleDef.indexOf(field.name)]
+                    val fieldValue = tup.fields[tup.valueType.dataDef.indexOf(field.name)]
                     if (fieldValue.valueType.supportsText) {
                         "${field.name}=${fieldValue.valueType.toText(fieldValue)}"
                     } else {
@@ -76,7 +76,7 @@ class TupleValueType(val tupleDef: TupleDefinition) : ValueType() {
                     return if (args[0].valueType != self.valueType) {
                         BooleanValue(false)
                     } else {
-                        val other = args[0] as TupleValue
+                        val other = args[0] as DataValue
                         if (self.fields.size != other.fields.size) {
                             BooleanValue(false)
                         } else {
@@ -94,17 +94,17 @@ class TupleValueType(val tupleDef: TupleDefinition) : ValueType() {
     }
     override val providesVariables: Map<String, Value> = emptyMap()
 
-    override fun assertIs(v: Value): TupleValue {
-        if (v.valueType is TupleValueType) {
-            return v as TupleValue
+    override fun assertIs(v: Value): DataValue {
+        if (v.valueType is DataValueType) {
+            return v as DataValue
         } else {
             throw SimplexTypeError(v.valueType.asType.toString(), this.toString())
         }
     }
 }
 
-class TupleValue(override val valueType: TupleValueType, val fields: MutableList<Value>) : Value {
+class DataValue(override val valueType: DataValueType, val fields: MutableList<Value>) : Value {
 
     override fun twist(): Twist =
-        Twist.obj("TupleValue", Twist.attr("name", valueType.name), Twist.array("fields", fields))
+        Twist.obj("DataValue", Twist.attr("name", valueType.dataDef.name), Twist.array("fields", fields))
 }

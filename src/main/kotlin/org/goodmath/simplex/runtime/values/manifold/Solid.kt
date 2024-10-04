@@ -27,8 +27,8 @@ import org.goodmath.simplex.runtime.values.MethodSignature
 import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
-import org.goodmath.simplex.runtime.values.primitives.ArrayValue
-import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
+import org.goodmath.simplex.runtime.values.primitives.VectorValue
+import org.goodmath.simplex.runtime.values.primitives.VectorValueType
 import org.goodmath.simplex.runtime.values.primitives.BooleanValueType
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
 import org.goodmath.simplex.runtime.values.primitives.FloatValueType
@@ -94,27 +94,27 @@ class Solid(val manifold: Manifold) : Value {
 
 
 
-    fun splitByPlane(norm: Vec3, offset: Double): ArrayValue {
+    fun splitByPlane(norm: Vec3, offset: Double): VectorValue {
         val mPair = manifold.splitByPlane(norm.toDoubleVec3(), offset.toFloat())
         val mList = listOf(Solid(mPair.first()), Solid(mPair.second()))
-        return ArrayValue(SolidValueType, mList)
+        return VectorValue(SolidValueType, mList)
     }
 
-    fun split(other: Solid): ArrayValue {
+    fun split(other: Solid): VectorValue {
         val mPair = manifold.split(other.manifold)
         val mList = listOf(Solid(mPair.first()), Solid(mPair.second()))
-        return ArrayValue(SolidValueType, mList)
+        return VectorValue(SolidValueType, mList)
     }
 
     fun slice(height: Double): Slice = Slice(manifold.slice(height.toFloat()))
 
-    fun slices(low: Double, high: Double, count: Int): ArrayValue {
+    fun slices(low: Double, high: Double, count: Int): VectorValue {
         val slices = manifold.slices(low.toFloat(), high.toFloat(), count)
         val result = ArrayList<Value>()
         for (slice in slices) {
             result.add(Slice(slice))
         }
-        return ArrayValue(SliceValueType, result)
+        return VectorValue(SliceValueType, result)
     }
 
     fun normals(idx: Int, minSharpAngle: Double): Solid =
@@ -490,7 +490,7 @@ object SolidValueType : ValueType() {
                             Param("normal", Vec3ValueType.asType),
                             Param("origin_offset", FloatValueType.asType),
                         ),
-                        ArrayValueType(this).asType
+                        VectorValueType(this).asType
                     ),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {

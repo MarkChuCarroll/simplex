@@ -26,8 +26,8 @@ import org.goodmath.simplex.runtime.values.MethodSignature
 import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
-import org.goodmath.simplex.runtime.values.primitives.ArrayValue
-import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
+import org.goodmath.simplex.runtime.values.primitives.VectorValue
+import org.goodmath.simplex.runtime.values.primitives.VectorValueType
 import org.goodmath.simplex.runtime.values.primitives.BooleanValue
 import org.goodmath.simplex.runtime.values.primitives.BooleanValueType
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
@@ -87,11 +87,11 @@ class Slice(val cross: CrossSection) : Value {
 
     fun intersect(other: Slice): Slice = Slice(cross.intersect(other.cross))
 
-    fun toPolygons(): ArrayValue = ArrayValue(SPolygonType, cross.toPolygons().map { SPolygon(it) })
+    fun toPolygons(): VectorValue = VectorValue(SPolygonType, cross.toPolygons().map { SPolygon(it) })
 
-    fun decompose(): ArrayValue {
+    fun decompose(): VectorValue {
         val css = cross.decompose()
-        return ArrayValue(SliceValueType, css.map { Slice(it) })
+        return VectorValue(SliceValueType, css.map { Slice(it) })
     }
 
     fun extrude(height: Double, steps: Int, scale: Vec2, twist: Double): Solid {
@@ -201,12 +201,12 @@ object SliceValueType : ValueType() {
                 PrimitiveFunctionValue(
                     "batch_hull",
                     FunctionSignature.simple(
-                        listOf(Param("css", Type.array(asType))), asType),
+                        listOf(Param("css", Type.vector(asType))), asType),
                 ) {
                 override fun execute(args: List<Value>): Value {
                     val css =
                         ArrayList(
-                            ArrayValueType.of(SliceValueType).assertIs(args[0]).elements.map {
+                            VectorValueType.of(SliceValueType).assertIs(args[0]).elements.map {
                                 assertIs(it).cross
                             }
                         )
@@ -216,12 +216,12 @@ object SliceValueType : ValueType() {
             object :
                 PrimitiveFunctionValue(
                     "cross_section_compose",
-                    FunctionSignature.simple(listOf(Param("css", Type.array(asType))), asType),
+                    FunctionSignature.simple(listOf(Param("css", Type.vector(asType))), asType),
                 ) {
                 override fun execute(args: List<Value>): Value {
                     val css =
                         ArrayList(
-                            ArrayValueType.of(SliceValueType).assertIs(args[0]).elements.map {
+                            VectorValueType.of(SliceValueType).assertIs(args[0]).elements.map {
                                 assertIs(it).cross
                             }
                         )
@@ -525,7 +525,7 @@ object SliceValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "to_polygons",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.array(SPolygonType.asType)),
+                    MethodSignature.simple(asType, emptyList<Param>(), Type.vector(SPolygonType.asType)),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
@@ -535,7 +535,7 @@ object SliceValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "decompose",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.array(asType)),
+                    MethodSignature.simple(asType, emptyList<Param>(), Type.vector(asType)),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)

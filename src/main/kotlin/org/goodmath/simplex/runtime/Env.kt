@@ -18,30 +18,16 @@ package org.goodmath.simplex.runtime
 import com.github.ajalt.mordant.rendering.TextColors.*
 import java.util.UUID
 import org.goodmath.simplex.ast.def.Definition
-import org.goodmath.simplex.ast.types.ArrayType
+import org.goodmath.simplex.ast.types.VectorType
 import org.goodmath.simplex.ast.types.Type
-import org.goodmath.simplex.runtime.values.AnyType
+import org.goodmath.simplex.runtime.values.AnyValueType
 import org.goodmath.simplex.runtime.values.FunctionSignature
 import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.Value
-import org.goodmath.simplex.runtime.values.manifold.RGBAValueType
-import org.goodmath.simplex.runtime.values.manifold.BoundingBoxValueType
-import org.goodmath.simplex.runtime.values.manifold.SliceValueType
-import org.goodmath.simplex.runtime.values.manifold.SMaterialValueType
-import org.goodmath.simplex.runtime.values.manifold.SMeshGLType
-import org.goodmath.simplex.runtime.values.manifold.SPolygonType
-import org.goodmath.simplex.runtime.values.manifold.BoundingRectValueType
-import org.goodmath.simplex.runtime.values.manifold.SolidValueType
-import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
-import org.goodmath.simplex.runtime.values.primitives.BooleanValueType
-import org.goodmath.simplex.runtime.values.primitives.FloatValueType
-import org.goodmath.simplex.runtime.values.primitives.IntegerValueType
-import org.goodmath.simplex.runtime.values.primitives.NoneValueType
+import org.goodmath.simplex.runtime.values.primitives.VectorValueType
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.StringValue
 import org.goodmath.simplex.runtime.values.primitives.StringValueType
-import org.goodmath.simplex.runtime.values.primitives.Vec2ValueType
-import org.goodmath.simplex.runtime.values.primitives.Vec3ValueType
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
 
@@ -164,12 +150,12 @@ open class Env(defList: List<Definition>, val parentEnv: Env?) : Twistable {
                     PrimitiveFunctionValue(
                         "print",
                         FunctionSignature.simple(
-                            listOf(Param("values", ArrayType(AnyType.asType))),
+                            listOf(Param("values", VectorType(AnyValueType.asType))),
                             StringValueType.asType,
                         ),
                     ) {
                     override fun execute(args: List<Value>): Value {
-                        val arr = ArrayValueType.of(AnyType).assertIsArray(args[0])
+                        val arr = VectorValueType.of(AnyValueType).assertIsVector(args[0])
                         val result =
                             arr.map {
                                     if (it.valueType.supportsText) {

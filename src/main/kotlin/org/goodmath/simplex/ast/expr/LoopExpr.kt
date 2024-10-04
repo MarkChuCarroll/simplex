@@ -19,14 +19,14 @@ import java.util.ArrayList
 import kotlin.collections.first
 import kotlin.collections.last
 import org.goodmath.simplex.ast.Location
-import org.goodmath.simplex.ast.types.ArrayType
+import org.goodmath.simplex.ast.types.VectorType
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexAnalysisError
 import org.goodmath.simplex.runtime.SimplexEvaluationError
 import org.goodmath.simplex.runtime.values.Value
-import org.goodmath.simplex.runtime.values.primitives.ArrayValue
-import org.goodmath.simplex.runtime.values.primitives.ArrayValueType
+import org.goodmath.simplex.runtime.values.primitives.VectorValue
+import org.goodmath.simplex.runtime.values.primitives.VectorValueType
 import org.goodmath.simplex.runtime.values.primitives.BooleanValue
 import org.goodmath.simplex.runtime.values.primitives.IntegerValue
 import org.goodmath.simplex.twist.Twist
@@ -43,13 +43,13 @@ class LoopExpr(val idxVar: String, val collExpr: Expr, val body: List<Expr>, loc
 
     override fun evaluateIn(env: Env): Value {
         val collValue = collExpr.evaluateIn(env)
-        if (collValue.valueType !is ArrayValueType) {
+        if (collValue.valueType !is VectorValueType) {
             throw SimplexEvaluationError(
                 "Loops can only iterate over arrays, not ${collValue.valueType.name}",
                 loc = loc,
             )
         }
-        collValue as ArrayValue
+        collValue as VectorValue
         if (collValue.isEmpty()) {
             return collValue
         }
@@ -66,20 +66,20 @@ class LoopExpr(val idxVar: String, val collExpr: Expr, val body: List<Expr>, loc
             result.add(iterationResult)
         }
         // TODO this should be better.
-        return ArrayValue(result[0].valueType, result)
+        return VectorValue(result[0].valueType, result)
     }
 
     override fun resultType(env: Env): Type {
-        val collectionType = collExpr.resultType(env) as ArrayType
+        val collectionType = collExpr.resultType(env) as VectorType
         val elementType = collectionType.elementType
         val localEnv = Env(emptyList(), env)
         localEnv.declareTypeOf(idxVar, elementType)
-        return Type.array(body.last().resultType(localEnv))
+        return Type.vector(body.last().resultType(localEnv))
     }
 
     override fun validate(env: Env) {
         val collectionType = collExpr.resultType(env)
-        if (collectionType !is ArrayType) {
+        if (collectionType !is VectorType) {
             throw SimplexAnalysisError(
                 "Target of a loop must be an array, not $collectionType",
                 loc = loc,

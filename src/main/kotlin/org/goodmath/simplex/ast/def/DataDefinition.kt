@@ -21,16 +21,16 @@ import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.ast.types.TypedName
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexUndefinedError
-import org.goodmath.simplex.runtime.values.primitives.TupleValueType
+import org.goodmath.simplex.runtime.values.primitives.DataValueType
 import org.goodmath.simplex.twist.Twist
 
-class TupleDefinition(name: String, val fields: List<TypedName>, loc: Location) :
+class DataDefinition(name: String, val fields: List<TypedName>, loc: Location) :
     Definition(name, loc) {
 
-    val valueType = TupleValueType(this)
+    val valueType = DataValueType(this)
 
     override fun twist(): Twist =
-        Twist.obj("TupleDefinition", Twist.attr("name", name), Twist.array("fields", fields))
+        Twist.obj("DataDefinition", Twist.attr("name", name), Twist.array("fields", fields))
 
     override fun installValues(env: Env) {}
 
@@ -41,15 +41,15 @@ class TupleDefinition(name: String, val fields: List<TypedName>, loc: Location) 
     fun indexOf(fieldName: String): Int {
         val idx = fields.indexOfFirst { it.name == fieldName }
         if (idx < 0) {
-            throw SimplexUndefinedError(fieldName, "tuple field of $name", loc = loc)
+            throw SimplexUndefinedError(fieldName, "data field of $name", loc = loc)
         } else {
             return idx
         }
     }
 
     override fun installStatic(env: Env) {
-        val tupleType = TupleValueType(this)
+        val dataType = DataValueType(this)
         val tt = Type.simple(name)
-        Type.registerValueType(tt, tupleType)
+        Type.registerValueType(tt, dataType)
     }
 }

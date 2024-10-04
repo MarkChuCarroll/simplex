@@ -28,7 +28,6 @@ import org.goodmath.simplex.parser.SimplexParseListener
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.manifold.SMaterial
 import org.goodmath.simplex.runtime.values.manifold.Solid
-import org.goodmath.simplex.runtime.values.primitives.ArrayValue
 import org.junit.jupiter.api.Test
 
 class CsgTest {

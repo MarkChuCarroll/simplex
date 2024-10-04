@@ -29,9 +29,9 @@ import org.goodmath.simplex.ast.Product
 import org.goodmath.simplex.ast.def.Definition
 import org.goodmath.simplex.ast.def.FunctionDefinition
 import org.goodmath.simplex.ast.def.MethodDefinition
-import org.goodmath.simplex.ast.def.TupleDefinition
+import org.goodmath.simplex.ast.def.DataDefinition
 import org.goodmath.simplex.ast.def.VariableDefinition
-import org.goodmath.simplex.ast.expr.ArrayExpr
+import org.goodmath.simplex.ast.expr.VectorExpr
 import org.goodmath.simplex.ast.expr.AssignmentExpr
 import org.goodmath.simplex.ast.expr.BlockExpr
 import org.goodmath.simplex.ast.expr.CondExpr
@@ -46,8 +46,8 @@ import org.goodmath.simplex.ast.expr.LoopExpr
 import org.goodmath.simplex.ast.expr.MethodCallExpr
 import org.goodmath.simplex.ast.expr.Operator
 import org.goodmath.simplex.ast.expr.OperatorExpr
-import org.goodmath.simplex.ast.expr.TupleExpr
-import org.goodmath.simplex.ast.expr.TupleFieldUpdateExpr
+import org.goodmath.simplex.ast.expr.DataExpr
+import org.goodmath.simplex.ast.expr.DataFieldUpdateExpr
 import org.goodmath.simplex.ast.expr.VarRefExpr
 import org.goodmath.simplex.ast.expr.WhileExpr
 import org.goodmath.simplex.ast.types.Type
@@ -122,10 +122,10 @@ class SimplexParseListener : SimplexListener {
         setValueFor(ctx, getValueFor(ctx.funDef()))
     }
 
-    override fun enterOptTupleDef(ctx: SimplexParser.OptTupleDefContext) {}
+    override fun enterOptDataDef(ctx: SimplexParser.OptDataDefContext) {}
 
-    override fun exitOptTupleDef(ctx: SimplexParser.OptTupleDefContext) {
-        setValueFor(ctx, getValueFor(ctx.tupleDef()))
+    override fun exitOptDataDef(ctx: SimplexParser.OptDataDefContext) {
+        setValueFor(ctx, getValueFor(ctx.dataDef()))
     }
 
     override fun enterOptMethDef(ctx: SimplexParser.OptMethDefContext) {}
@@ -134,12 +134,12 @@ class SimplexParseListener : SimplexListener {
         setValueFor(ctx, getValueFor(ctx.methDef()))
     }
 
-    override fun enterTupleDef(ctx: SimplexParser.TupleDefContext) {}
+    override fun enterDataDef(ctx: SimplexParser.DataDefContext) {}
 
-    override fun exitTupleDef(ctx: SimplexParser.TupleDefContext) {
+    override fun exitDataDef(ctx: SimplexParser.DataDefContext) {
         val name = ctx.ID().text
         val fields = getValueFor(ctx.params()) as List<TypedName>
-        setValueFor(ctx, TupleDefinition(name, fields, loc(ctx)))
+        setValueFor(ctx, DataDefinition(name, fields, loc(ctx)))
     }
 
     override fun enterParams(ctx: SimplexParser.ParamsContext) {}
@@ -218,7 +218,7 @@ class SimplexParseListener : SimplexListener {
 
     override fun exitOptVectorType(ctx: SimplexParser.OptVectorTypeContext) {
         val elementType = getValueFor(ctx.type()) as Type
-        setValueFor(ctx, Type.array(elementType))
+        setValueFor(ctx, Type.vector(elementType))
     }
 
     override fun enterOptFunType(ctx: SimplexParser.OptFunTypeContext) {}
@@ -242,7 +242,7 @@ class SimplexParseListener : SimplexListener {
         val target = getValueFor(ctx.target) as Expr
         val field = ctx.ID().text
         val value = getValueFor(ctx.value) as Expr
-        setValueFor(ctx, TupleFieldUpdateExpr(target, field, value, loc(ctx)))
+        setValueFor(ctx, DataFieldUpdateExpr(target, field, value, loc(ctx)))
     }
 
     override fun enterExprParen(ctx: SimplexParser.ExprParenContext) {}
@@ -419,15 +419,15 @@ class SimplexParseListener : SimplexListener {
 
     override fun exitOptVecExpr(ctx: SimplexParser.OptVecExprContext) {
         val es = getValueFor(ctx.exprs()) as List<Expr>
-        setValueFor(ctx, ArrayExpr(es, loc(ctx)))
+        setValueFor(ctx, VectorExpr(es, loc(ctx)))
     }
 
-    override fun enterOptTupleExpr(ctx: SimplexParser.OptTupleExprContext) {}
+    override fun enterOptDataExpr(ctx: SimplexParser.OptDataExprContext) {}
 
-    override fun exitOptTupleExpr(ctx: SimplexParser.OptTupleExprContext) {
+    override fun exitOptDataExpr(ctx: SimplexParser.OptDataExprContext) {
         val id = ctx.ID().text
         val args = getValueFor(ctx.exprs()) as List<Expr>
-        setValueFor(ctx, TupleExpr(id, args, loc(ctx)))
+        setValueFor(ctx, DataExpr(id, args, loc(ctx)))
     }
 
     override fun enterOptLitInt(ctx: SimplexParser.OptLitIntContext) {}
