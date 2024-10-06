@@ -261,9 +261,7 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location) : Expr
             Operator.Or -> BooleanValueType.asType
             Operator.Subscript -> targetType.getMethod("sub")?.returnType
             Operator.Uminus -> targetType.getMethod("neg")?.returnType
-        } ?: run {
-            System.err.println("All types: ${Type.valueTypes.keys}")
-            throw SimplexUnsupportedOperation(targetType.toString(), op.toString(), loc = loc)
-        }
+        } ?: throw SimplexUnsupportedOperation(targetType.toString(), op.toString(), loc = loc)
+
     }
 }

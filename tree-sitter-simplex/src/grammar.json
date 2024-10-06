@@ -41,7 +41,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "tupDef"
+          "name": "dataDef"
         },
         {
           "type": "SYMBOL",
@@ -186,7 +186,7 @@
         }
       ]
     },
-    "tupDef": {
+    "dataDef": {
       "type": "SEQ",
       "members": [
         {
@@ -1124,7 +1124,7 @@
       "type": "SYMBOL",
       "name": "id"
     },
-    "tuple": {
+    "data": {
       "type": "SEQ",
       "members": [
         {
@@ -1183,7 +1183,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "tuple"
+          "name": "data"
         },
         {
           "type": "SYMBOL",

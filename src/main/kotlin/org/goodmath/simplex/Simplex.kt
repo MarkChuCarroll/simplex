@@ -34,8 +34,8 @@ class Simplex : CliktCommand(help = "Evaluate a Simplex model") {
     val input: String by
         argument(help = "The path to the input file. The pathname must end in .s3d")
     val prefix: String? by option("--prefix", help = "Prefix for all output files")
-    val renders: List<String>? by
-        option("--render", help = "The names of product blocks to render").split(Regex(","))
+    val products: List<String>? by
+        option("--products", help = "The names of product blocks to render").split(Regex(","))
     val verbosity: Int by
         option("--verbosity", help = "How chatty the execution of the model should be.")
             .int()
@@ -64,7 +64,7 @@ class Simplex : CliktCommand(help = "Evaluate a Simplex model") {
                 echo(cyan("Loading model from $inputPath"))
             }
             val result = SimplexParseListener().parse(input, stream, captiveEcho)
-            result.execute(renders?.toSet(), pre, captiveEcho)
+            result.execute(products?.toSet(), pre, captiveEcho)
         } catch (e: SimplexError) {
             echo(e.message, err = true)
         }

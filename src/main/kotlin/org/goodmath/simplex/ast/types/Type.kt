@@ -91,7 +91,6 @@ abstract class Type : Twistable {
         fun registerValueType(type: Type, valueType: ValueType) {
             if (!valueTypes.containsKey(type)) {
                 valueTypes[type] = valueType
-                System.err.println("Value type ${type} enrolled")
                 valueType.methods
                 for (f in valueType.providesFunctions) {
                     RootEnv.declareTypeOf(f.name, f.valueType.asType)
@@ -111,7 +110,6 @@ abstract class Type : Twistable {
             val result = Type.types.computeIfAbsent(name) { n ->
                 VectorType(baseType)
             } as VectorType
-            System.err.println("Accessing vector type ${result}")
             if (!valueTypes.containsKey(result)) {
                 registerValueType(result, VectorValueType(valueTypes[baseType]!!))
             }

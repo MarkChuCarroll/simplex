@@ -32,8 +32,8 @@ import org.goodmath.simplex.runtime.values.primitives.StringValue
 import org.goodmath.simplex.runtime.values.primitives.DataValue
 import org.junit.jupiter.api.BeforeEach
 
-/** Some basic tests of tuple types. */
-class TupleTests {
+/** Some basic tests of data types. */
+class DataTypeTests {
 
     val rootEnv = Env.createRootEnv()
     lateinit var env: Env
@@ -47,9 +47,9 @@ class TupleTests {
 
     @BeforeEach
     fun setupEnvironment() {
-        val tupleTypeOne =
+        val dataTypeOne =
             DataDefinition(
-                "TestTupleOne",
+                "TestDataOne",
                 listOf(
                     TypedName("iFoo", Type.simple("Int"), mockLoc()),
                     TypedName("sBar", Type.simple("String"), mockLoc()),
@@ -57,26 +57,26 @@ class TupleTests {
                 ),
                 mockLoc(),
             )
-        val tupleTypeTwo =
+        val dataTypeTwo =
             DataDefinition(
-                "TestTupleTwo",
+                "TestDataTwo",
                 listOf(
-                    TypedName("tOne", Type.simple("TestTupleOne"), mockLoc()),
+                    TypedName("tOne", Type.simple("TestDataOne"), mockLoc()),
                     TypedName("oops", Type.simple("String"), mockLoc()),
                 ),
                 mockLoc(),
             )
 
-        env = Env(listOf(tupleTypeTwo, tupleTypeOne), rootEnv)
+        env = Env(listOf(dataTypeTwo, dataTypeOne), rootEnv)
         env.installStaticDefinitions()
         env.installDefinitionValues()
     }
 
     @Test
-    fun testCreateTuple() {
+    fun testCreatedata() {
         val createOne =
             DataExpr(
-                "TestTupleOne",
+                "TestDataOne",
                 listOf(
                     LiteralExpr(11, mockLoc()),
                     LiteralExpr("garble", mockLoc()),
@@ -87,12 +87,12 @@ class TupleTests {
 
         createOne.validate(env)
         val v = createOne.evaluateIn(env)
-        assertEquals("TestTupleOne", v.valueType.name)
+        assertEquals("TestDataOne", v.valueType.name)
         v as DataValue
         assertEquals(IntegerValue(11), v.fields[0])
 
         val createTwo =
-            DataExpr("TestTupleTwo", listOf(createOne, LiteralExpr("oops", mockLoc())), mockLoc())
+            DataExpr("TestDataTwo", listOf(createOne, LiteralExpr("oops", mockLoc())), mockLoc())
         val w = createTwo.evaluateIn(env)
         assertIs<DataValue>(w)
         val eq = v.valueType.applyMethod(v, "eq", listOf(w.fields[0]), env)
@@ -106,7 +106,7 @@ class TupleTests {
     fun testFieldAccess() {
         val createOne =
             DataExpr(
-                "TestTupleOne",
+                "TestDataOne",
                 listOf(
                     LiteralExpr(11, mockLoc()),
                     LiteralExpr("garble", mockLoc()),
@@ -115,7 +115,7 @@ class TupleTests {
                 mockLoc(),
             )
         val createTwo =
-            DataExpr("TestTupleTwo", listOf(createOne, LiteralExpr("oops", mockLoc())), mockLoc())
+            DataExpr("TestDataTwo", listOf(createOne, LiteralExpr("oops", mockLoc())), mockLoc())
 
         val getExpr = FieldRefExpr(FieldRefExpr(createTwo, "tOne", mockLoc()), "iFoo", mockLoc())
         val result = getExpr.evaluateIn(env)
@@ -127,7 +127,7 @@ class TupleTests {
     fun testFieldUpdate() {
         val createOne =
             DataExpr(
-                "TestTupleOne",
+                "TestDataOne",
                 listOf(
                     LiteralExpr(11, mockLoc()),
                     LiteralExpr("garble", mockLoc()),
@@ -136,9 +136,9 @@ class TupleTests {
                 mockLoc(),
             )
         val createTwo =
-            DataExpr("TestTupleTwo", listOf(createOne, LiteralExpr("oops", mockLoc())), mockLoc())
+            DataExpr("TestDataTwo", listOf(createOne, LiteralExpr("oops", mockLoc())), mockLoc())
 
-        val letExpr = LetExpr("two", Type.simple("TestTupleTwo"), createTwo, mockLoc())
+        val letExpr = LetExpr("two", Type.simple("TestDataTwo"), createTwo, mockLoc())
         val update =
             DataFieldUpdateExpr(
                 VarRefExpr("two", mockLoc()),

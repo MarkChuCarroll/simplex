@@ -8,7 +8,7 @@ module.exports = grammar({
     definition: $ => choice(
       $.varDef,
       $.funDef,
-      $.tupDef,
+      $.dataDef,
       $.methDef),
     varDef: $ => seq(
       'let',
@@ -34,7 +34,7 @@ module.exports = grammar({
       field('body', repeat($._expr)),
       '}'
     ),
-    tupDef: $ => seq(
+    dataDef: $ => seq(
       'data',
       field('name', $.id),
       '{',
@@ -245,7 +245,7 @@ module.exports = grammar({
       $._expr
     ),
     ref: $ => $.id,
-    tuple: $ => seq(
+    data: $ => seq(
       '#',
       $.id,
       '(',
@@ -261,7 +261,7 @@ module.exports = grammar({
       $.assignment,
       $.ref,
       $.array,
-      $.tuple,
+      $.data,
       $.litInt,
       $.litFloat,
       $.litStr,

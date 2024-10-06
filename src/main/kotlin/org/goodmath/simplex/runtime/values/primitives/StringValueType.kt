@@ -61,14 +61,89 @@ object StringValueType : ValueType() {
                     return IntegerValue(assertIsString(target).length)
                 }
             },
+            object: PrimitiveMethod("substring",
+                MethodSignature.multi(asType, listOf(listOf(Param("start", IntegerValueType.asType)),
+                    listOf(Param("start", IntegerValueType.asType), Param("length", IntegerValueType.asType))), asType)) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env
+                ): Value {
+                    val self = assertIsString(target)
+                    val start = assertIsInt(args[0])
+                    if (args.size == 1) {
+                        return StringValue(self.substring(start))
+                    } else {
+                        val len = assertIsInt(args[1])
+                        return StringValue(self.substring(start, start + len))
+                    }
+                }
+            },
+            object: PrimitiveMethod("to_upper",
+                MethodSignature.simple(asType, emptyList(), asType)) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env
+                ): Value {
+                    val self = assertIsString(target)
+                    return StringValue(self.uppercase())
+                }
+            },
+            object: PrimitiveMethod("to_lower",
+                MethodSignature.simple(asType, emptyList(), asType)) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env
+                ): Value {
+                    val self = assertIsString(target)
+                    return StringValue(self.lowercase())
+                }
+            },
+            object: PrimitiveMethod("replace",
+                MethodSignature.multi(asType,
+                    listOf(
+                        listOf(Param("to_replace", asType),
+                            Param("with", asType)),
+                        listOf(Param("to_replace", asType),
+                            Param("with", asType),
+                            Param("ignore_case", BooleanValueType.asType))
+                    ), asType)) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env
+                ): Value {
+                    val self = assertIsString(target)
+                    val toReplace = assertIsString(args[0])
+                    val with = assertIsString(args[1])
+                    val ignoreCase = if (args.size > 2) {
+                        assertIsBoolean(args[2])
+                    } else {
+                        false
+                    }
+                    return StringValue(self.replace(toReplace, with, ignoreCase))
+                }
+            },
             object :
                 PrimitiveMethod(
                     "find",
-                    MethodSignature.simple(asType, listOf(Param("s", asType)), IntegerValueType.asType),
+                    MethodSignature.multi(asType,
+                        listOf(
+                            listOf(Param("s", asType)),
+                            listOf(Param("s", asType), Param("start_at", IntegerValueType.asType))),
+                            IntegerValueType.asType)
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val self = assertIsString(target)
                     val pat = assertIsString(args[0])
-                    return IntegerValue(assertIsString(target).indexOf(pat))
+                    val startAt = if (args.size > 1) {
+                        assertIsInt(args[1])
+                    } else {
+                        0
+                    }
+                    return IntegerValue(self.indexOf(pat, startAt))
                 }
             },
             object :

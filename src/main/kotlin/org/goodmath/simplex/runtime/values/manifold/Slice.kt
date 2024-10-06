@@ -253,46 +253,7 @@ object SliceValueType : ValueType() {
                         )
                     )
                 }
-            },
-            object :
-                PrimitiveFunctionValue(
-                    "circle_cross_section",
-                    FunctionSignature.simple(
-                        listOf(
-                            Param("height", FloatValueType.asType),
-                            Param("circle_segmets", IntegerValueType.asType),
-                        ),
-                        asType,
-                    ),
-                ) {
-                override fun execute(args: List<Value>): Value {
-                    return Slice(
-                        CrossSection.Circle(assertIsFloat(args[0]).toFloat(), assertIsInt(args[1]))
-                    )
-                }
-            },
-            object :
-                PrimitiveFunctionValue(
-                    "square_cross_section",
-                    FunctionSignature.simple(
-                        listOf(
-                            Param("width", FloatValueType.asType),
-                            Param("height", FloatValueType.asType),
-                            Param("center", BooleanValueType.asType),
-                        ),
-                        asType,
-                    ),
-                ) {
-                override fun execute(args: List<Value>): Value {
-                    return Slice(
-                        CrossSection.Square(
-                            assertIsFloat(args[0]),
-                            assertIsFloat(args[1]),
-                            assertIsBoolean(args[2]),
-                        )
-                    )
-                }
-            },
+            }
         )
     }
 
@@ -351,7 +312,7 @@ object SliceValueType : ValueType() {
             },
             object :
                 PrimitiveMethod(
-                    "translate",
+                    "move",
                     MethodSignature.multi(
                         asType,
                         listOf(
@@ -481,7 +442,7 @@ object SliceValueType : ValueType() {
             },
             object :
                 PrimitiveMethod(
-                    "convex_hull",
+                    "hull",
                     MethodSignature.simple(asType, emptyList<Param>(), asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {

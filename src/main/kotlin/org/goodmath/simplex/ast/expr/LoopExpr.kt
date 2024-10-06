@@ -65,7 +65,6 @@ class LoopExpr(val idxVar: String, val collExpr: Expr, val body: List<Expr>, loc
             }
             result.add(iterationResult)
         }
-        // TODO this should be better.
         return VectorValue(result[0].valueType, result)
     }
 

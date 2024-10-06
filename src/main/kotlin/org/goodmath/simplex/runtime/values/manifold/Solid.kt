@@ -177,7 +177,7 @@ object SolidValueType : ValueType() {
         listOf(
             object :
                 PrimitiveFunctionValue(
-                    "blob",
+                    "ovoid",
                     FunctionSignature.multi(
                         listOf(
                             listOf(Param("radius", FloatValueType.asType)),
@@ -284,10 +284,12 @@ object SolidValueType : ValueType() {
             object :
                 PrimitiveFunctionValue(
                     "tetrahedron",
-                    FunctionSignature.simple(emptyList<Param>(), asType),
+                    FunctionSignature.simple(listOf(Param("size", FloatValueType.asType)), asType),
                 ) {
                 override fun execute(args: List<Value>): Value {
-                    return Solid(Manifold.Tetrahedron())
+                    val tet = Manifold.Tetrahedron()
+                    val scale = assertIsFloat(args[0])
+                    return Solid(tet.scale(Vec3(scale, scale, scale).toDoubleVec3()))
                 }
             },
         )

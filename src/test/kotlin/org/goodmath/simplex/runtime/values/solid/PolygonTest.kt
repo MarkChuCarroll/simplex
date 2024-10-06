@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.goodmath.simplex.runtime.values.csg
+package org.goodmath.simplex.runtime.values.solid
 
 import org.goodmath.simplex.runtime.values.manifold.Slice
 import org.goodmath.simplex.runtime.values.manifold.SliceValueType

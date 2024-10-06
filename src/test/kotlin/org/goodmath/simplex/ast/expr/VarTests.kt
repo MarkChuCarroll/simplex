@@ -50,7 +50,6 @@ class VarTests {
         env.installStaticDefinitions()
         env.installDefinitionValues()
         val c = CrossSection.Square(10.0, 20.0)
-        System.err.println("ARea = ${c.area()}")
     }
 
     @Test

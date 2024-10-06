@@ -24,6 +24,7 @@ import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.twist.Twist
+import kotlin.math.sqrt
 
 object FloatValueType : ValueType() {
     override val name: String = "Float"
@@ -159,6 +160,16 @@ object FloatValueType : ValueType() {
                     return FloatValue(-l)
                 }
             },
+            object: PrimitiveMethod("sqrt", MethodSignature.simple(asType, emptyList<Param>(), asType)) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env
+                ): Value {
+                    val self = assertIsFloat(target)
+                    return FloatValue(sqrt(self))
+                }
+            }
         )
     }
     override val providesVariables: Map<String, Value> by lazy {

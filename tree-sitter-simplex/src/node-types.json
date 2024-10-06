@@ -36,6 +36,10 @@
           "named": true
         },
         {
+          "type": "data",
+          "named": true
+        },
+        {
           "type": "field",
           "named": true
         },
@@ -97,10 +101,6 @@
         },
         {
           "type": "subscript",
-          "named": true
-        },
-        {
-          "type": "tuple",
           "named": true
         },
         {
@@ -198,6 +198,10 @@
           "named": true
         },
         {
+          "type": "data",
+          "named": true
+        },
+        {
           "type": "field",
           "named": true
         },
@@ -266,10 +270,6 @@
           "named": true
         },
         {
-          "type": "tuple",
-          "named": true
-        },
-        {
           "type": "unary",
           "named": true
         },
@@ -314,6 +314,10 @@
         },
         {
           "type": "cond",
+          "named": true
+        },
+        {
+          "type": "data",
           "named": true
         },
         {
@@ -378,10 +382,6 @@
         },
         {
           "type": "subscript",
-          "named": true
-        },
-        {
-          "type": "tuple",
           "named": true
         },
         {
@@ -446,6 +446,10 @@
           "named": true
         },
         {
+          "type": "data",
+          "named": true
+        },
+        {
           "type": "field",
           "named": true
         },
@@ -507,10 +511,6 @@
         },
         {
           "type": "subscript",
-          "named": true
-        },
-        {
-          "type": "tuple",
           "named": true
         },
         {
@@ -565,6 +565,10 @@
           "named": true
         },
         {
+          "type": "data",
+          "named": true
+        },
+        {
           "type": "field",
           "named": true
         },
@@ -626,10 +630,6 @@
         },
         {
           "type": "subscript",
-          "named": true
-        },
-        {
-          "type": "tuple",
           "named": true
         },
         {
@@ -680,6 +680,10 @@
           "named": true
         },
         {
+          "type": "data",
+          "named": true
+        },
+        {
           "type": "field",
           "named": true
         },
@@ -744,10 +748,6 @@
           "named": true
         },
         {
-          "type": "tuple",
-          "named": true
-        },
-        {
           "type": "unary",
           "named": true
         },
@@ -763,6 +763,51 @@
     }
   },
   {
+    "type": "data",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "exprs",
+          "named": true
+        },
+        {
+          "type": "id",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "dataDef",
+    "named": true,
+    "fields": {
+      "fields": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "params",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "id",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "definition",
     "named": true,
     "fields": {},
@@ -771,15 +816,15 @@
       "required": true,
       "types": [
         {
+          "type": "dataDef",
+          "named": true
+        },
+        {
           "type": "funDef",
           "named": true
         },
         {
           "type": "methDef",
-          "named": true
-        },
-        {
-          "type": "tupDef",
           "named": true
         },
         {
@@ -822,6 +867,10 @@
           "named": true
         },
         {
+          "type": "data",
+          "named": true
+        },
+        {
           "type": "field",
           "named": true
         },
@@ -883,10 +932,6 @@
         },
         {
           "type": "subscript",
-          "named": true
-        },
-        {
-          "type": "tuple",
           "named": true
         },
         {
@@ -934,6 +979,10 @@
         },
         {
           "type": "cond",
+          "named": true
+        },
+        {
+          "type": "data",
           "named": true
         },
         {
@@ -1005,10 +1054,6 @@
           "named": true
         },
         {
-          "type": "tuple",
-          "named": true
-        },
-        {
           "type": "unary",
           "named": true
         },
@@ -1053,6 +1098,10 @@
         },
         {
           "type": "cond",
+          "named": true
+        },
+        {
+          "type": "data",
           "named": true
         },
         {
@@ -1124,10 +1173,6 @@
           "named": true
         },
         {
-          "type": "tuple",
-          "named": true
-        },
-        {
           "type": "unary",
           "named": true
         },
@@ -1172,6 +1217,10 @@
           },
           {
             "type": "cond",
+            "named": true
+          },
+          {
+            "type": "data",
             "named": true
           },
           {
@@ -1236,10 +1285,6 @@
           },
           {
             "type": "subscript",
-            "named": true
-          },
-          {
-            "type": "tuple",
             "named": true
           },
           {
@@ -1378,6 +1423,10 @@
           "named": true
         },
         {
+          "type": "data",
+          "named": true
+        },
+        {
           "type": "field",
           "named": true
         },
@@ -1458,10 +1507,6 @@
           "named": true
         },
         {
-          "type": "tuple",
-          "named": true
-        },
-        {
           "type": "unary",
           "named": true
         },
@@ -1510,6 +1555,10 @@
         },
         {
           "type": "cond",
+          "named": true
+        },
+        {
+          "type": "data",
           "named": true
         },
         {
@@ -1593,10 +1642,6 @@
           "named": true
         },
         {
-          "type": "tuple",
-          "named": true
-        },
-        {
           "type": "unary",
           "named": true
         },
@@ -1646,6 +1691,10 @@
         },
         {
           "type": "cond",
+          "named": true
+        },
+        {
+          "type": "data",
           "named": true
         },
         {
@@ -1717,10 +1766,6 @@
           "named": true
         },
         {
-          "type": "tuple",
-          "named": true
-        },
-        {
           "type": "unary",
           "named": true
         },
@@ -1770,6 +1815,10 @@
           },
           {
             "type": "cond",
+            "named": true
+          },
+          {
+            "type": "data",
             "named": true
           },
           {
@@ -1834,10 +1883,6 @@
           },
           {
             "type": "subscript",
-            "named": true
-          },
-          {
-            "type": "tuple",
             "named": true
           },
           {
@@ -1893,6 +1938,10 @@
             "named": true
           },
           {
+            "type": "data",
+            "named": true
+          },
+          {
             "type": "field",
             "named": true
           },
@@ -1954,10 +2003,6 @@
           },
           {
             "type": "subscript",
-            "named": true
-          },
-          {
-            "type": "tuple",
             "named": true
           },
           {
@@ -2021,6 +2066,10 @@
         },
         {
           "type": "cond",
+          "named": true
+        },
+        {
+          "type": "data",
           "named": true
         },
         {
@@ -2101,10 +2150,6 @@
         },
         {
           "type": "subscript",
-          "named": true
-        },
-        {
-          "type": "tuple",
           "named": true
         },
         {
@@ -2186,6 +2231,10 @@
           "named": true
         },
         {
+          "type": "data",
+          "named": true
+        },
+        {
           "type": "exprs",
           "named": true
         },
@@ -2258,10 +2307,6 @@
           "named": true
         },
         {
-          "type": "tuple",
-          "named": true
-        },
-        {
           "type": "unary",
           "named": true
         },
@@ -2311,6 +2356,10 @@
         },
         {
           "type": "cond",
+          "named": true
+        },
+        {
+          "type": "data",
           "named": true
         },
         {
@@ -2379,10 +2428,6 @@
         },
         {
           "type": "subscript",
-          "named": true
-        },
-        {
-          "type": "tuple",
           "named": true
         },
         {
@@ -2479,6 +2524,10 @@
           "named": true
         },
         {
+          "type": "data",
+          "named": true
+        },
+        {
           "type": "field",
           "named": true
         },
@@ -2543,10 +2592,6 @@
           "named": true
         },
         {
-          "type": "tuple",
-          "named": true
-        },
-        {
           "type": "unary",
           "named": true
         },
@@ -2591,6 +2636,10 @@
         },
         {
           "type": "cond",
+          "named": true
+        },
+        {
+          "type": "data",
           "named": true
         },
         {
@@ -2662,10 +2711,6 @@
           "named": true
         },
         {
-          "type": "tuple",
-          "named": true
-        },
-        {
           "type": "unary",
           "named": true
         },
@@ -2710,6 +2755,10 @@
         },
         {
           "type": "cond",
+          "named": true
+        },
+        {
+          "type": "data",
           "named": true
         },
         {
@@ -2774,10 +2823,6 @@
         },
         {
           "type": "subscript",
-          "named": true
-        },
-        {
-          "type": "tuple",
           "named": true
         },
         {
@@ -2885,6 +2930,10 @@
           "named": true
         },
         {
+          "type": "data",
+          "named": true
+        },
+        {
           "type": "field",
           "named": true
         },
@@ -2949,10 +2998,6 @@
           "named": true
         },
         {
-          "type": "tuple",
-          "named": true
-        },
-        {
           "type": "unary",
           "named": true
         },
@@ -2962,51 +3007,6 @@
         },
         {
           "type": "while",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "tupDef",
-    "named": true,
-    "fields": {
-      "fields": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "params",
-            "named": true
-          }
-        ]
-      },
-      "name": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "id",
-            "named": true
-          }
-        ]
-      }
-    }
-  },
-  {
-    "type": "tuple",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "exprs",
-          "named": true
-        },
-        {
-          "type": "id",
           "named": true
         }
       ]
@@ -3072,6 +3072,10 @@
           "named": true
         },
         {
+          "type": "data",
+          "named": true
+        },
+        {
           "type": "field",
           "named": true
         },
@@ -3136,10 +3140,6 @@
           "named": true
         },
         {
-          "type": "tuple",
-          "named": true
-        },
-        {
           "type": "unary",
           "named": true
         },
@@ -3193,6 +3193,10 @@
         },
         {
           "type": "cond",
+          "named": true
+        },
+        {
+          "type": "data",
           "named": true
         },
         {
@@ -3261,10 +3265,6 @@
         },
         {
           "type": "subscript",
-          "named": true
-        },
-        {
-          "type": "tuple",
           "named": true
         },
         {
@@ -3347,6 +3347,10 @@
             "named": true
           },
           {
+            "type": "data",
+            "named": true
+          },
+          {
             "type": "field",
             "named": true
           },
@@ -3408,10 +3412,6 @@
           },
           {
             "type": "subscript",
-            "named": true
-          },
-          {
-            "type": "tuple",
             "named": true
           },
           {
@@ -3463,6 +3463,10 @@
             "named": true
           },
           {
+            "type": "data",
+            "named": true
+          },
+          {
             "type": "field",
             "named": true
           },
@@ -3524,10 +3528,6 @@
           },
           {
             "type": "subscript",
-            "named": true
-          },
-          {
-            "type": "tuple",
             "named": true
           },
           {
@@ -3573,6 +3573,10 @@
             "named": true
           },
           {
+            "type": "data",
+            "named": true
+          },
+          {
             "type": "field",
             "named": true
           },
@@ -3634,10 +3638,6 @@
           },
           {
             "type": "subscript",
-            "named": true
-          },
-          {
-            "type": "tuple",
             "named": true
           },
           {

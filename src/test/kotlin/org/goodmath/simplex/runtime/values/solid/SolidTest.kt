@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.goodmath.simplex.runtime.values.csg
+package org.goodmath.simplex.runtime.values.solid
 
 import java.security.MessageDigest
 import kotlin.io.path.Path
@@ -30,8 +30,8 @@ import org.goodmath.simplex.runtime.values.manifold.SMaterial
 import org.goodmath.simplex.runtime.values.manifold.Solid
 import org.junit.jupiter.api.Test
 
-class CsgTest {
-    val csgTestProgram =
+class SolidTest {
+    val solidTestProgram =
         """
    fun cone(radius: Float, height: Float): Solid {
          cylinder(height + 2.0, radius, 0.1)
@@ -60,7 +60,7 @@ produce("shape") {
     @OptIn(ExperimentalStdlibApi::class)
     @Test
     fun testCsgProducingProgram() {
-        val stream = CharStreams.fromString(csgTestProgram)
+        val stream = CharStreams.fromString(solidTestProgram)
         val prog = SimplexParseListener().parse("test", stream) { i, a, b -> System.err.println(a) }
         val root = Env.createRootEnv()
         val env = Env(prog.defs, root)

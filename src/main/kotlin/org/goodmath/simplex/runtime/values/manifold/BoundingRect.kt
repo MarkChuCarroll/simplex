@@ -162,7 +162,7 @@ object BoundingRectValueType : ValueType() {
             },
             object :
                 PrimitiveMethod(
-                    "union",
+                    "plus",
                     MethodSignature.simple(asType, listOf(Param("other", asType)), asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {

@@ -79,7 +79,6 @@ class ExecutionTest {
             assertEquals(stderr, out.stderr)
             assertEquals(exp.keys, act.keys)
             for (k in exp.keys) {
-                System.err.println("Checking $k: does ${exp[k]} == ${act[k]}?")
                 val expTxt = exp[k]?.readText()!!
                 val actTxt = act[k]?.readText()!!
                 assertEquals(expTxt, actTxt, "Output $k")

@@ -15,6 +15,7 @@
  */
 package org.goodmath.simplex.runtime.values.primitives
 
+import org.goodmath.simplex.ast.types.FunctionType
 import kotlin.collections.all
 import kotlin.collections.isNotEmpty
 import kotlin.collections.map
@@ -163,6 +164,133 @@ class VectorValueType(val elementType: ValueType) : ValueType() {
                         this@VectorValueType.elementType,
                         a1.map { it.valueType.applyMethod(it, "neg", emptyList(), env) },
                     )
+                }
+            },
+            object: PrimitiveMethod("map",
+                MethodSignature.simple(asType,
+                    listOf(Param("f", Type.function(
+                        listOf(
+                            listOf(elementType.asType)),
+                        elementType.asType))), asType)) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env
+                ): Value {
+                    val self = assertIsVector(target)
+                    val function = FunctionValueType(Type.function(
+                        listOf(
+                            listOf(elementType.asType)),
+                        elementType.asType)).assertIs(args[0])
+                    val result = ArrayList<Value>()
+                    for (v in self) {
+                        result.add(function.applyTo(listOf(v)))
+                    }
+                    return VectorValue(elementType, result)
+
+                }
+
+            },
+            object: PrimitiveMethod("append",
+                MethodSignature.simple(asType, listOf(Param("other", asType)), asType)) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env
+                ): Value {
+                    val self = assertIsVector(target)
+                    val other = assertIsVector(args[0])
+                    val result = ArrayList<Value>()
+                    result.addAll(self)
+                    result.addAll(other)
+                    return VectorValue(elementType, result)
+                }
+
+            },
+            object: PrimitiveMethod("push",
+                MethodSignature.simple(asType, listOf(Param("el", elementType.asType)), asType)) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env
+                ): Value {
+                    val self = assertIsVector(target)
+                    val el = args[0]
+                    val result = ArrayList<Value>()
+                    result.addAll(self)
+                    result.add(el)
+                    return VectorValue(elementType, result)
+                }
+            },
+            object: PrimitiveMethod("insert",
+                MethodSignature.simple(asType, listOf(Param("el", elementType.asType)), asType)) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env
+                ): Value {
+                    val self = assertIsVector(target)
+                    val el = args[0]
+                    val result = ArrayList<Value>()
+                    result.addAll(self)
+                    result.add(0, el)
+                    return VectorValue(elementType, result)
+                }
+            },
+            object: PrimitiveMethod("insert_at",
+                MethodSignature.simple(asType, listOf(Param("el", elementType.asType),
+                    Param("idx", IntegerValueType.asType)), asType)) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env
+                ): Value {
+                    val self = assertIsVector(target)
+                    val el = args[0]
+                    val idx = assertIsInt(args[1])
+                    val result = ArrayList<Value>()
+                    result.addAll(self)
+                    result.add(idx, el)
+                    return VectorValue(elementType, result)
+                }
+            },
+            object: PrimitiveMethod("filter",
+                MethodSignature.simple(asType,
+                    listOf(Param("f", Type.function(
+                        listOf(
+                            listOf(elementType.asType)),
+                        BooleanValueType.asType))), asType)) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env
+                ): Value {
+                    val self = assertIsVector(target)
+                    val function = FunctionValueType(Type.function(
+                        listOf(
+                            listOf(elementType.asType)),
+                        BooleanValueType.asType)).assertIs(args[0])
+                    val result = ArrayList<Value>()
+                    for (v in self) {
+                        val maybe = assertIsBoolean(function.applyTo(listOf(v)))
+                        if (maybe) {
+                            result.add(v)
+                        }
+                    }
+                    return VectorValue(elementType, result)
+                }
+            },
+            object: PrimitiveMethod("sort",
+                MethodSignature.simple(asType, emptyList(), asType)) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env
+                ): Value {
+                    val self = assertIsVector(target)
+                    return VectorValue(elementType, self.sortedWith { l, r ->
+                        assertIsInt(l.valueType.applyMethod(l, "compare", listOf(r), env))
+                    })
                 }
             },
             object :
