@@ -26,10 +26,10 @@ class PolygonTest {
     @Test
     fun testPolygonCreators() {
         val rect = SliceValueType.providesFunctions.first { it.name == "rectangle" }
-        val r = rect.execute(listOf(FloatValue(20.0),FloatValue(10.0), BooleanValue(true)))
+        val r = rect.execute(listOf(FloatValue(20.0) ,FloatValue(10.0), BooleanValue(true)), emptyMap())
         r as Slice
         assertEquals(
-            """(obj CrossSection
+            """(obj Slice
                |   [array points
                |      (obj Vec2
                |         (x '0.0')

@@ -302,7 +302,8 @@ even be compared to itself.
       with the specified number of facets.
    * `ovoid(x: Float, y: Float, z: Float, segments: Int)`: ovoid with specified radii,
       made from the specified number of linear segments.
-   * `brick(v: Vec3)`: three-dimensional rectangle with edge sizes from the vector.
+   * `brick(v: Vec3)`: three-dimensional rectangle with edge sizes from the vector,
+      centered on the origin.
    * `brick(v: Vec3, center: Boolean)`: three-dimensional rectangle. If `center==true`, then
      the origin will be at the center of the brick, otherwise it will be at the corner.
    * `brick(x: Float, y: Float, z: Float)`
@@ -366,11 +367,13 @@ A slice is a two-dimensional shape that can be
 slided from a solid, or extruded into a solid.
 
 * Constructor Functions
-   * `circle(radius: Float): Slice`
-   * `circle(radius: Float, facets: Int): Slice`
-   * `oval(x:  Float, y: Float): Slice`
+   * `circle(radius: Float): Slice`: create a circular slice with the specified radius,
+     positioned with its center on the origin.
+   * `circle(radius: Float, facets: Int): Slice`: create an approximately circular faceted slice
+     with the specified _radius_ and number of _facets_, positioned with its center on the origin.
+   * `oval(x:  Float, y: Float): Slice`: create an oval centered on the origin.
    * `oval(x: Float, y: Float, facets: Int): Slice`
-   * `rectangle(x: Float, y: Float): Slice`
+   * `rectangle(x: Float, y: Float): Slice`: create a rectangle centered on the origin.
    * `batch_hull(slices: [Slice]): Slice`
 * Methods
    * `->area(): Float`

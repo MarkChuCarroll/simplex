@@ -18,10 +18,11 @@ package org.goodmath.simplex.runtime.values.manifold
 import manifold3d.glm.DoubleVec4Vector
 import manifold3d.manifold.Material
 import org.goodmath.simplex.ast.types.Type
+import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.FunctionSignature
 import org.goodmath.simplex.runtime.values.MethodSignature
-import org.goodmath.simplex.runtime.values.Param
+import org.goodmath.simplex.runtime.values.ParameterSignature
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.runtime.values.primitives.VectorValue
@@ -153,9 +154,9 @@ object SMaterialValueType : ValueType() {
             object :
                 PrimitiveFunctionValue(
                     "material",
-                    FunctionSignature.simple(listOf(Param("name", StringValueType.asType)), asType),
+                    FunctionSignature.simple(ParameterSignature(listOf(Parameter("name", StringValueType.asType))), asType),
                 ) {
-                override fun execute(args: List<Value>): Value {
+                override fun execute(args: List<Value>, kwArgs: Map<String, Value>): Value {
                     val name = assertIsString(args[0])
                     return SMaterial(name, Material())
                 }
@@ -170,11 +171,11 @@ object SMaterialValueType : ValueType() {
                     "set_roughness",
                     MethodSignature.simple(
                         asType,
-                        listOf(Param("roughness", FloatValueType.asType)),
+                        ParameterSignature(listOf(Parameter("roughness", FloatValueType.asType))),
                         NoneValueType.asType,
                     ),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     val roughness = assertIsFloat(args[0])
                     self.material.roughness(roughness.toFloat())
@@ -186,11 +187,11 @@ object SMaterialValueType : ValueType() {
                     "set_metalness",
                     MethodSignature.simple(
                         asType,
-                        listOf(Param("metalness", FloatValueType.asType)),
+                        ParameterSignature(listOf(Parameter("metalness", FloatValueType.asType))),
                         NoneValueType.asType,
                     ),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target).material
                     val metalness = assertIsFloat(args[0])
                     self.metalness(metalness.toFloat())
@@ -202,11 +203,11 @@ object SMaterialValueType : ValueType() {
                     "set_vert_colors",
                     MethodSignature.simple(
                         asType,
-                        listOf(Param("colors", Type.vector(RGBAValueType.asType))),
+                        ParameterSignature(listOf(Parameter("colors", Type.vector(RGBAValueType.asType)))),
                         NoneValueType.asType,
                     ),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     val colorList =
                         VectorValueType.of(RGBAValueType).assertIs(args[0]).elements.map {
@@ -222,9 +223,9 @@ object SMaterialValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "set_color",
-                    MethodSignature.simple(asType, listOf(Param("color", RGBAValueType.asType)), NoneValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("color", RGBAValueType.asType))), NoneValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     val color = RGBAValueType.assertIs(args[0])
                     self.material.color(color.toDVec4())
@@ -234,9 +235,9 @@ object SMaterialValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "get_color",
-                    MethodSignature.simple(asType, emptyList<Param>(), RGBAValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature.empty, RGBAValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target).material
                     val color = self.color()
                     return RGBA.fromDVec4(color)
@@ -245,9 +246,9 @@ object SMaterialValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "get_vert_colors",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.vector(RGBAValueType.asType)),
+                    MethodSignature.simple(asType, ParameterSignature.empty, Type.vector(RGBAValueType.asType)),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     val colorVec = self.material.vertColor().map { RGBA.fromDVec4(it) }
                     return VectorValue(RGBAValueType, colorVec)
@@ -256,9 +257,9 @@ object SMaterialValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "metalness",
-                    MethodSignature.simple(asType, emptyList<Param>(), FloatValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature.empty, FloatValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target).material
                     return FloatValue(self.metalness().toDouble())
                 }
@@ -266,9 +267,9 @@ object SMaterialValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "roughness",
-                    MethodSignature.simple(asType, emptyList<Param>(), FloatValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature.empty, FloatValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target).material
                     return FloatValue(self.roughness().toDouble())
                 }
@@ -276,9 +277,9 @@ object SMaterialValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "name",
-                    MethodSignature.simple(asType, emptyList<Param>(), StringValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature.empty, StringValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     return StringValue(self.name)
                 }

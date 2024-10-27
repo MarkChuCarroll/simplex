@@ -39,8 +39,6 @@ repositories {
 }
 
 dependencies {
-    implementation(files("src/main/resources/manifold3d-1.0.39.jar"))
-    implementation("org.bytedeco:javacpp:1.5.10")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     antlr("org.antlr:antlr4:$antlrVersion") // use ANTLR version 4
     implementation("org.jcommander:jcommander:1.83")
@@ -72,7 +70,6 @@ tasks.compileTestKotlin {
 }
 tasks.test {
     useJUnitPlatform()
-    systemProperty("java.library.path", "/usr/local/lib:/usr/lib")
 }
 
 kotlin {

@@ -21,32 +21,40 @@ import org.goodmath.simplex.ast.def.Definition
 import org.goodmath.simplex.ast.def.FunctionDefinition
 import org.goodmath.simplex.ast.expr.Expr
 import org.goodmath.simplex.ast.types.FunctionType
+import org.goodmath.simplex.ast.types.KwParameter
 import org.goodmath.simplex.ast.types.Type
-import org.goodmath.simplex.ast.types.TypedName
+import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexEvaluationError
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.values.FunctionSignature
+import org.goodmath.simplex.runtime.values.ParameterSignature
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.twist.Twist
 
 abstract class AbstractFunctionValue : Value {
-    abstract fun applyTo(args: List<Value>): Value
+    abstract fun applyTo(args: List<Value>,
+                         kwParams: Map<String, Value>): Value
 }
 
 class FunctionValue(
     val returnType: Type,
-    val params: List<TypedName>,
+    val params: List<Parameter>,
+    val kwParams: List<KwParameter>,
     val localDefs: List<Definition>,
     val body: List<Expr>,
     val staticScope: Env,
     val def: FunctionDefinition? = null,
 ) : AbstractFunctionValue() {
-    override val valueType: ValueType =
-        FunctionValueType(Type.function(listOf(params.map { it.type }), returnType))
+    val signature: FunctionSignature = FunctionSignature.simple(ParameterSignature(
+        params, kwParams), returnType)
 
-    override fun applyTo(args: List<Value>): Value {
+    override val valueType: ValueType =
+        FunctionValueType(Type.function(signature))
+
+    override fun applyTo(args: List<Value>,
+                         kwArgs: Map<String, Value>): Value {
         val localEnv = Env(localDefs, staticScope)
         localEnv.installStaticDefinitions()
         localEnv.installDefinitionValues()
@@ -56,7 +64,10 @@ class FunctionValue(
             )
         }
         params.zip(args).forEach { (param, value) -> localEnv.addVariable(param.name, value) }
-        var result: Value = IntegerValue(0)
+        for (kwParam in kwParams) {
+            val paramValue = kwArgs[kwParam.name] ?: kwParam.defaultValue.evaluateIn(localEnv)
+        }
+        var result: Value = NoneValue
         for (b in body) {
             result = b.evaluateIn(localEnv)
         }
@@ -124,12 +135,11 @@ abstract class PrimitiveFunctionValue(val name: String, val signature: FunctionS
 
     val resultType: Type = signature.returnType
 
-    abstract fun execute(args: List<Value>): Value
+    abstract fun execute(args: List<Value>, kwArgs: Map<String, Value>): Value
 
     override val valueType by lazy {
-        PrimitiveFunctionValueType(Type.function(signature.params.map {
-            pOpt -> pOpt.map { it.type} },
-            signature.returnType))
+        PrimitiveFunctionValueType(
+            Type.function(signature))
     }
 
     override fun twist(): Twist =
@@ -140,7 +150,7 @@ abstract class PrimitiveFunctionValue(val name: String, val signature: FunctionS
             Twist.value("signature", signature),
         )
 
-    override fun applyTo(args: List<Value>): Value {
-        return execute(args)
+    override fun applyTo(args: List<Value>, kwArgs: Map<String, Value>): Value {
+        return execute(args, kwArgs)
     }
 }

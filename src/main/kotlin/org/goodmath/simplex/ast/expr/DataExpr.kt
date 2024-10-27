@@ -25,6 +25,7 @@ import org.goodmath.simplex.ast.types.SimpleType
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexAnalysisError
+import org.goodmath.simplex.runtime.SimplexError
 import org.goodmath.simplex.runtime.SimplexEvaluationError
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.SimplexUndefinedError
@@ -60,25 +61,32 @@ class DataExpr(val dataType: String, val args: List<Expr>, loc: Location) : Expr
     }
 
     override fun validate(env: Env) {
-        val dataDef = env.getDef(dataType)
-        if (dataDef !is DataDefinition) {
-            throw SimplexEvaluationError(
-                "Cannot create a non-data type like $dataType with a data expression",
-                loc = loc,
-            )
-        }
-        val fieldTypes = dataDef.fields.map { it.type }
-        if (fieldTypes.size != args.size) {
-            throw SimplexEvaluationError(
-                "Data type ${dataDef.name} expects ${fieldTypes.size} field values, but received ${args.size}",
-                loc = loc,
-            )
-        }
-        fieldTypes.zip(args).forEach { (t, a) ->
-            val argType = a.resultType(env)
-            if (!t.matchedBy(argType)) {
-                throw SimplexTypeError(t.toString(), argType.toString(), location = a.loc)
+        try {
+            val dataDef = env.getDef(dataType)
+            if (dataDef !is DataDefinition) {
+                throw SimplexEvaluationError(
+                    "Cannot create a non-data type like $dataType with a data expression",
+                    loc = loc,
+                )
             }
+            val fieldTypes = dataDef.fields.map { it.type }
+            if (fieldTypes.size != args.size) {
+                throw SimplexEvaluationError(
+                    "Data type ${dataDef.name} expects ${fieldTypes.size} field values, but received ${args.size}",
+                    loc = loc,
+                )
+            }
+            fieldTypes.zip(args).forEach { (t, a) ->
+                val argType = a.resultType(env)
+                if (!t.matchedBy(argType)) {
+                    throw SimplexTypeError(t.toString(), argType.toString(), location = a.loc)
+                }
+            }
+        } catch (e: SimplexError) {
+            if (e.location == null) {
+                e.location = loc
+            }
+            throw e
         }
     }
 }
@@ -104,16 +112,23 @@ class FieldRefExpr(val dataExpr: Expr, val fieldName: String, loc: Location) : E
     override fun resultType(env: Env): Type {
         val dataTypeMaybe = dataExpr.resultType(env)
         if (dataTypeMaybe is SimpleType) {
-            val def = env.getDef(dataTypeMaybe.name)
-            if (def is DataDefinition) {
-                val field = def.fields.firstOrNull { it.name == fieldName }
-                if (field != null) {
-                    return field.type
+            try {
+                val def = env.getDef(dataTypeMaybe.name)
+                if (def is DataDefinition) {
+                    val field = def.fields.firstOrNull { it.name == fieldName }
+                    if (field != null) {
+                        return field.type
+                    } else {
+                        throw SimplexUndefinedError(fieldName, "data field name", loc = loc)
+                    }
                 } else {
-                    throw SimplexUndefinedError(fieldName, "data field name", loc = loc)
+                    throw SimplexAnalysisError("Field expression target is not a data value", loc = loc)
                 }
-            } else {
-                throw SimplexAnalysisError("Field expression target is not a data value", loc = loc)
+            } catch (e: SimplexError) {
+                if (e.location == null) {
+                    e.location = loc
+                }
+                throw e
             }
         } else {
             throw SimplexAnalysisError("Field expression target is not a data value", loc = loc)
@@ -121,22 +136,29 @@ class FieldRefExpr(val dataExpr: Expr, val fieldName: String, loc: Location) : E
     }
 
     override fun validate(env: Env) {
-        val dataType = dataExpr.resultType(env)
-        if (dataType !is SimpleType) {
-            throw SimplexAnalysisError(
-                "Field reference target must have a data type, not $dataType",
-                loc = loc,
-            )
+        try {
+            val dataType = dataExpr.resultType(env)
+            if (dataType !is SimpleType) {
+                throw SimplexAnalysisError(
+                    "Field reference target must have a data type, not $dataType",
+                    loc = loc,
+                )
+            }
+            val dataTypeDef = env.getDef(dataType.name)
+            if (dataTypeDef !is DataDefinition) {
+                throw SimplexAnalysisError(
+                    "Field reference target must be a data type, not $dataTypeDef",
+                    loc = loc,
+                )
+            }
+            dataTypeDef.fields.firstOrNull { it.name == fieldName }
+                ?: throw SimplexUndefinedError(fieldName, "data field", loc = loc)
+        } catch (e: SimplexError) {
+            if (e.location == null) {
+                e.location = loc
+            }
+            throw e
         }
-        val dataTypeDef = env.getDef(dataType.name)
-        if (dataTypeDef !is DataDefinition) {
-            throw SimplexAnalysisError(
-                "Field reference target must be a data type, not $dataTypeDef",
-                loc = loc,
-            )
-        }
-        dataTypeDef.fields.firstOrNull { it.name == fieldName }
-            ?: throw SimplexUndefinedError(fieldName, "data field", loc = loc)
     }
 }
 

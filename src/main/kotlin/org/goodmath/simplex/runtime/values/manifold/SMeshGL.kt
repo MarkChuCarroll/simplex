@@ -17,9 +17,10 @@ package org.goodmath.simplex.runtime.values.manifold
 
 import manifold3d.manifold.MeshGL
 import org.goodmath.simplex.ast.types.Type
+import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.MethodSignature
-import org.goodmath.simplex.runtime.values.Param
+import org.goodmath.simplex.runtime.values.ParameterSignature
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.runtime.values.primitives.VectorValue
@@ -61,9 +62,9 @@ object SMeshGLType : ValueType() {
             object :
                 PrimitiveMethod(
                     "num_vert",
-                    MethodSignature.simple(asType, emptyList<Param>(), IntegerValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature.empty, IntegerValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target).mesh
                     return IntegerValue(self.NumVert())
                 }
@@ -71,9 +72,9 @@ object SMeshGLType : ValueType() {
             object :
                 PrimitiveMethod(
                     "num_tri",
-                    MethodSignature.simple(asType, emptyList<Param>(), IntegerValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature.empty, IntegerValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target).mesh
                     return IntegerValue(self.NumTri())
                 }
@@ -81,9 +82,9 @@ object SMeshGLType : ValueType() {
             object :
                 PrimitiveMethod(
                     "num_prop",
-                    MethodSignature.simple(asType, emptyList<Param>(), IntegerValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature.empty, IntegerValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target).mesh
                     return IntegerValue(self.numProp())
                 }
@@ -91,9 +92,9 @@ object SMeshGLType : ValueType() {
             object :
                 PrimitiveMethod(
                     "vert_properties",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.vector(FloatValueType.asType)),
+                    MethodSignature.simple(asType, ParameterSignature.empty, Type.vector(FloatValueType.asType)),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target).mesh
                     val props = self.vertProperties()
 
@@ -110,9 +111,9 @@ object SMeshGLType : ValueType() {
             object :
                 PrimitiveMethod(
                     "tri_verts",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.vector(IntegerValueType.asType)),
+                    MethodSignature.simple(asType, ParameterSignature.empty, Type.vector(IntegerValueType.asType)),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target).mesh
                     val verts = self.triVerts()
                     val result = ArrayList<IntegerValue>()

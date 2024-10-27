@@ -18,11 +18,12 @@ package org.goodmath.simplex.runtime
 import com.github.ajalt.mordant.rendering.TextColors.*
 import java.util.UUID
 import org.goodmath.simplex.ast.def.Definition
+import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.ast.types.VectorType
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.values.AnyValueType
 import org.goodmath.simplex.runtime.values.FunctionSignature
-import org.goodmath.simplex.runtime.values.Param
+import org.goodmath.simplex.runtime.values.ParameterSignature
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.primitives.VectorValueType
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
@@ -150,11 +151,12 @@ open class Env(defList: List<Definition>, val parentEnv: Env?) : Twistable {
                     PrimitiveFunctionValue(
                         "print",
                         FunctionSignature.simple(
-                            listOf(Param("values", VectorType(AnyValueType.asType))),
+                            ParameterSignature(listOf(Parameter("values", VectorType(AnyValueType.asType))),
+                                emptyList()),
                             StringValueType.asType,
                         ),
                     ) {
-                    override fun execute(args: List<Value>): Value {
+                    override fun execute(args: List<Value>, kwArgs: Map<String, Value>): Value {
                         val arr = VectorValueType.of(AnyValueType).assertIsVector(args[0])
                         val result =
                             arr.map {

@@ -1,21 +1,25 @@
 package org.goodmath.simplex.runtime.values.primitives
 
 import org.goodmath.simplex.ast.def.MethodDefinition
+import org.goodmath.simplex.ast.expr.Arguments
 import org.goodmath.simplex.ast.expr.Expr
+import org.goodmath.simplex.ast.types.ArgumentListSpec
+import org.goodmath.simplex.ast.types.KwParameter
 import org.goodmath.simplex.ast.types.MethodType
 import org.goodmath.simplex.ast.types.Type
-import org.goodmath.simplex.ast.types.TypedName
+import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.values.MethodSignature
-import org.goodmath.simplex.runtime.values.Param
+import org.goodmath.simplex.runtime.values.ParameterSignature
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.twist.Twist
+import kotlin.math.sign
 
 /** The abstract superclass of both primitive and source methods */
 abstract class AbstractMethod(val name: String, val sig: MethodSignature) : Value {
-    abstract fun applyTo(target: Value, args: List<Value>, env: Env): Value
+    abstract fun applyTo(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value
 }
 
 /**
@@ -37,17 +41,22 @@ abstract class PrimitiveMethod(name: String, signature: MethodSignature) :
      * @param args the argument values.
      * @param env the execution environment.
      */
-    abstract fun execute(target: Value, args: List<Value>, env: Env): Value
+    abstract fun execute(target: Value, args: List<Value>,
+                         kwArgs: Map<String, Value>,
+                         env: Env): Value
 
     override fun twist(): Twist =
         Twist.obj("PrimitiveMethod", Twist.attr("name", name), Twist.attr("sig", sig.toString()))
 
-    override val valueType =
-        MethodValueType(Type.multiMethod(sig.self, sig.paramSets.map { paramSet ->
-            paramSet.map { it.type  } }, sig.returnType))
 
-    override fun applyTo(target: Value, args: List<Value>, env: Env): Value {
-        return execute(target, args, env)
+    override val valueType: ValueType =
+        MethodValueType(
+            Type.multiMethod(signature.self,
+                signature.paramSigs.map { ArgumentListSpec(it) },
+                sig.returnType))
+
+    override fun applyTo(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
+        return execute(target, args, kwArgs, env)
     }
 }
 
@@ -55,17 +64,24 @@ abstract class PrimitiveMethod(name: String, signature: MethodSignature) :
 class MethodValue(
     val targetType: Type,
     val returnType: Type,
-    val params: List<TypedName>,
+    val params: List<Parameter>,
+    val kwParams: List<KwParameter>,
     val body: List<Expr>,
     val def: MethodDefinition,
     val staticScope: Env,
-) :
-    AbstractMethod(
+) : AbstractMethod(
         def.methodName,
-        MethodSignature.simple(targetType, params.map { Param(it.name, it.type) }, returnType),
-    ) {
-    override val valueType: ValueType =
-        MethodValueType(Type.multiMethod(targetType, listOf(params.map { it.type }), returnType))
+        MethodSignature.simple(targetType,
+            ParameterSignature(
+                params,
+                kwParams),
+                returnType)) {
+
+    override val valueType = MethodValueType(
+        Type.simpleMethod(targetType,
+            ArgumentListSpec(params.map { it.type },
+                kwParams.associate { it.name to it.type }),
+            returnType))
 
     override fun twist(): Twist =
         Twist.obj(
@@ -77,8 +93,9 @@ class MethodValue(
             Twist.value("def", def),
         )
 
-    override fun applyTo(target: Value, args: List<Value>, env: Env): Value {
-        return def.applyTo(target, args, staticScope)
+    override fun applyTo(target: Value, args: List<Value>,
+                         kwArgs: Map<String, Value>, env: Env): Value {
+        return def.applyTo(target, args, kwArgs, staticScope)
     }
 }
 

@@ -31,6 +31,7 @@ import org.goodmath.simplex.ast.def.FunctionDefinition
 import org.goodmath.simplex.ast.def.MethodDefinition
 import org.goodmath.simplex.ast.def.DataDefinition
 import org.goodmath.simplex.ast.def.VariableDefinition
+import org.goodmath.simplex.ast.expr.Arguments
 import org.goodmath.simplex.ast.expr.VectorExpr
 import org.goodmath.simplex.ast.expr.AssignmentExpr
 import org.goodmath.simplex.ast.expr.BlockExpr
@@ -50,9 +51,12 @@ import org.goodmath.simplex.ast.expr.DataExpr
 import org.goodmath.simplex.ast.expr.DataFieldUpdateExpr
 import org.goodmath.simplex.ast.expr.VarRefExpr
 import org.goodmath.simplex.ast.expr.WhileExpr
+import org.goodmath.simplex.ast.types.ArgumentListSpec
+import org.goodmath.simplex.ast.types.KwParameter
 import org.goodmath.simplex.ast.types.Type
-import org.goodmath.simplex.ast.types.TypedName
+import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.runtime.SimplexError
+import org.goodmath.simplex.runtime.values.ParameterSignature
 
 @Suppress("UNCHECKED_CAST")
 class SimplexParseListener : SimplexListener {
@@ -138,14 +142,14 @@ class SimplexParseListener : SimplexListener {
 
     override fun exitDataDef(ctx: SimplexParser.DataDefContext) {
         val name = ctx.ID().text
-        val fields = getValueFor(ctx.params()) as List<TypedName>
+        val fields = getValueFor(ctx.params()) as List<Parameter>
         setValueFor(ctx, DataDefinition(name, fields, loc(ctx)))
     }
 
     override fun enterParams(ctx: SimplexParser.ParamsContext) {}
 
     override fun exitParams(ctx: SimplexParser.ParamsContext) {
-        val params = ctx.param().map { getValueFor(it) as TypedName }
+        val params = ctx.param().map { getValueFor(it) as Parameter }
         setValueFor(ctx, params)
     }
 
@@ -164,12 +168,30 @@ class SimplexParseListener : SimplexListener {
         val name = ctx.ID().text
         val type = getValueFor(ctx.type()) as Type
         val localDefs = ctx.funDef().map { getValueFor(it) as FunctionDefinition }
-        val params = ctx.params()?.let { getValueFor(it) as List<TypedName> }
-        val body = ctx.expr().map { getValueFor(it) as Expr }
+        val params = ctx.params()?.let { getValueFor(it) as List<Parameter> } ?: emptyList()
+        val kwParams = ctx.kwParams()?.let { getValueFor(it) as List<KwParameter> } ?: emptyList()
+        val body = getValueFor(ctx.exprs()) as List<Expr>
         setValueFor(
             ctx,
-            FunctionDefinition(name, type, params ?: emptyList(), localDefs, body, loc(ctx)),
+            FunctionDefinition(name, type, params, kwParams, localDefs, body, loc(ctx)),
         )
+    }
+
+    override fun enterKwParams(ctx: SimplexParser.KwParamsContext) {
+    }
+
+    override fun exitKwParams(ctx: SimplexParser.KwParamsContext) {
+        setValueFor(ctx, ctx.kwParam().map { getValueFor(it) as KwParameter })
+    }
+
+    override fun enterKwParam(ctx: SimplexParser.KwParamContext) {
+    }
+
+    override fun exitKwParam(ctx: SimplexParser.KwParamContext) {
+        val name = ctx.ID().text
+        val type = getValueFor(ctx.type()) as Type
+        val initValue = getValueFor(ctx.expr()) as Expr
+        setValueFor(ctx, KwParameter(name, type, initValue, loc(ctx)))
     }
 
     override fun enterMethDef(ctx: SimplexParser.MethDefContext) {}
@@ -178,9 +200,10 @@ class SimplexParseListener : SimplexListener {
         val type = getValueFor(ctx.target) as Type
         val result = getValueFor(ctx.result) as Type
         val name = ctx.ID().text
-        val params = ctx.params()?.let { getValueFor(it) as List<TypedName> } ?: emptyList()
-        val body = ctx.expr().map { getValueFor(it) as Expr }
-        setValueFor(ctx, MethodDefinition(type, name, params, result, body, loc(ctx)))
+        val params = ctx.params()?.let { getValueFor(it) as List<Parameter> } ?: emptyList()
+        val kwParams = ctx.kwParams()?.let { getValueFor(it) as List<KwParameter> } ?: emptyList()
+        val body = getValueFor(ctx.exprs()) as List<Expr>
+        setValueFor(ctx, MethodDefinition(type, name, params, kwParams, result, body, loc(ctx)))
     }
 
     override fun enterParam(ctx: SimplexParser.ParamContext) {}
@@ -188,7 +211,7 @@ class SimplexParseListener : SimplexListener {
     override fun exitParam(ctx: SimplexParser.ParamContext) {
         val name = ctx.ID().text
         val type = getValueFor(ctx.type()) as Type
-        setValueFor(ctx, TypedName(name, type, loc(ctx)))
+        setValueFor(ctx, Parameter(name, type, loc(ctx)))
     }
 
     override fun enterTypes(ctx: SimplexParser.TypesContext) {}
@@ -196,6 +219,15 @@ class SimplexParseListener : SimplexListener {
     override fun exitTypes(ctx: SimplexParser.TypesContext) {
         val t = ctx.type().map { getValueFor(it) as Type }
         setValueFor(ctx, t)
+    }
+
+    override fun enterParamSignature(ctx: SimplexParser.ParamSignatureContext) {
+    }
+
+    override fun exitParamSignature(ctx: SimplexParser.ParamSignatureContext) {
+        val positionals = getValueFor(ctx.types()) as List<Type>
+        val kws = (getValueFor(ctx.kwParams()) as List<Pair<String, Type>>).toMap()
+        setValueFor(ctx, ArgumentListSpec(positionals, kws))
     }
 
     override fun enterOptSimpleType(ctx: SimplexParser.OptSimpleTypeContext) {}
@@ -209,9 +241,9 @@ class SimplexParseListener : SimplexListener {
 
     override fun exitOptMethodType(ctx: SimplexParser.OptMethodTypeContext) {
         val target = getValueFor(ctx.target) as Type
-        val args = ctx.types()?.let { getValueFor(it) as List<Type> } ?: emptyList()
+        val paramSig = getValueFor(ctx.paramSignature()) as ParameterSignature
         val result = getValueFor(ctx.result) as Type
-        setValueFor(ctx, Type.simpleMethod(target, args, result))
+        setValueFor(ctx, Type.simpleMethod(target, ArgumentListSpec(paramSig), result))
     }
 
     override fun enterOptVectorType(ctx: SimplexParser.OptVectorTypeContext) {}
@@ -224,9 +256,9 @@ class SimplexParseListener : SimplexListener {
     override fun enterOptFunType(ctx: SimplexParser.OptFunTypeContext) {}
 
     override fun exitOptFunType(ctx: SimplexParser.OptFunTypeContext) {
-        val args = ctx.types()?.let { getValueFor(it) as List<Type> } ?: emptyList()
+        val sigs = getValueFor(ctx.paramSignature()) as ParameterSignature
         val result = getValueFor(ctx.type()) as Type
-        setValueFor(ctx, Type.function(listOf(args), result))
+        setValueFor(ctx, Type.function(listOf(ArgumentListSpec(sigs)), result))
     }
 
     override fun enterExprs(ctx: SimplexParser.ExprsContext) {}
@@ -234,6 +266,40 @@ class SimplexParseListener : SimplexListener {
     override fun exitExprs(ctx: SimplexParser.ExprsContext) {
         val exprs = ctx.expr().map { getValueFor(it) as Expr }
         setValueFor(ctx, exprs)
+    }
+
+    override fun enterExprList(ctx: SimplexParser.ExprListContext) {
+    }
+
+    override fun exitExprList(ctx: SimplexParser.ExprListContext) {
+        val exprs = ctx.expr().map { getValueFor(it) as Expr }
+        setValueFor(ctx, exprs)
+    }
+
+    override fun enterArgs(ctx: SimplexParser.ArgsContext) {
+    }
+
+    override fun exitArgs(ctx: SimplexParser.ArgsContext) {
+        val positionals = ctx.exprList()?.let { getValueFor(it) as List<Expr> } ?: emptyList()
+        val kws = ctx.kwArgs()?.let { getValueFor(it) as List<Pair<String, Expr>>}?.toMap() ?: emptyMap()
+        setValueFor(ctx, Arguments(positionals, kws))
+    }
+
+    override fun enterKwArgs(ctx: SimplexParser.KwArgsContext) {
+    }
+
+    override fun exitKwArgs(ctx: SimplexParser.KwArgsContext) {
+        setValueFor(ctx,
+            ctx.kwArg().map { getValueFor(it) as Pair<String, Expr>})
+    }
+
+    override fun enterKwArg(ctx: SimplexParser.KwArgContext) {
+    }
+
+    override fun exitKwArg(ctx: SimplexParser.KwArgContext) {
+        val name = ctx.ID().text
+        val value = getValueFor(ctx.expr()) as Expr
+        setValueFor(ctx, Pair(name, value))
     }
 
     override fun enterExprUpdate(ctx: SimplexParser.ExprUpdateContext) {}
@@ -257,7 +323,7 @@ class SimplexParseListener : SimplexListener {
     override fun exitExprMethod(ctx: SimplexParser.ExprMethodContext) {
         val lhs = getValueFor(ctx.expr()) as Expr
         val meth = ctx.ID().text
-        val args = ctx.exprs()?.let { getValueFor(it) as List<Expr> } ?: emptyList()
+        val args = getValueFor(ctx.args()) as Arguments
         setValueFor(ctx, MethodCallExpr(lhs, meth, args, loc(ctx)))
     }
 
@@ -265,7 +331,7 @@ class SimplexParseListener : SimplexListener {
 
     override fun exitExprCall(ctx: SimplexParser.ExprCallContext) {
         val funExpr = getValueFor(ctx.expr()) as Expr
-        val args = ctx.exprs()?.let { getValueFor(it) as List<Expr> } ?: emptyList()
+        val args = getValueFor(ctx.args()) as Arguments
         setValueFor(ctx, FunCallExpr(funExpr, args, loc(ctx)))
     }
 
@@ -389,9 +455,9 @@ class SimplexParseListener : SimplexListener {
 
     override fun exitComplexLambdaExpr(ctx: SimplexParser.ComplexLambdaExprContext) {
         val resultType = getValueFor(ctx.type()) as Type
-        val args = getValueFor(ctx.params()) as List<TypedName>
+        val positionalArgs = getValueFor(ctx.params()) as List<Parameter>
         val body = ctx.expr().map { getValueFor(it) as Expr }
-        setValueFor(ctx, LambdaExpr(resultType, args, body, loc(ctx)))
+        setValueFor(ctx, LambdaExpr(resultType, positionalArgs, emptyList(), body, loc(ctx)))
     }
 
 
@@ -418,7 +484,7 @@ class SimplexParseListener : SimplexListener {
     override fun enterOptVecExpr(ctx: SimplexParser.OptVecExprContext) {}
 
     override fun exitOptVecExpr(ctx: SimplexParser.OptVecExprContext) {
-        val es = getValueFor(ctx.exprs()) as List<Expr>
+        val es = getValueFor(ctx.exprList()) as List<Expr>
         setValueFor(ctx, VectorExpr(es, loc(ctx)))
     }
 
@@ -426,7 +492,7 @@ class SimplexParseListener : SimplexListener {
 
     override fun exitOptDataExpr(ctx: SimplexParser.OptDataExprContext) {
         val id = ctx.ID().text
-        val args = getValueFor(ctx.exprs()) as List<Expr>
+        val args = getValueFor(ctx.exprList()) as List<Expr>
         setValueFor(ctx, DataExpr(id, args, loc(ctx)))
     }
 

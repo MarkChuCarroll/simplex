@@ -2,12 +2,13 @@ package org.goodmath.simplex.runtime.values.manifold
 
 import manifold3d.pub.Smoothness
 import org.goodmath.simplex.ast.types.Type
+import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.FunctionSignature
 import org.goodmath.simplex.runtime.values.MethodSignature
+import org.goodmath.simplex.runtime.values.ParameterSignature
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.runtime.values.Value
-import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
 import org.goodmath.simplex.runtime.values.primitives.FloatValueType
 import org.goodmath.simplex.runtime.values.primitives.IntegerValue
@@ -50,11 +51,11 @@ object SSmoothnessType: ValueType() {
     override val providesFunctions: List<PrimitiveFunctionValue> by lazy {
         listOf(
             object: PrimitiveFunctionValue("smoothness",
-            FunctionSignature.simple(listOf(Param("smoothness", FloatValueType.asType),
-                Param("halfEdge", IntegerValueType.asType)),
+                FunctionSignature.simple(ParameterSignature(listOf(Parameter("smoothness", FloatValueType.asType),
+                Parameter("halfEdge", IntegerValueType.asType))),
                 asType)
             ) {
-                override fun execute(args: List<Value>): Value {
+                override fun execute(args: List<Value>, kwArgs: Map<String, Value>): Value {
                     val smoothness = assertIsFloat(args[0])
                     val halfEdge = assertIsInt(args[1])
                     return SSmoothness(smoothness.toFloat(), halfEdge)
@@ -65,11 +66,12 @@ object SSmoothnessType: ValueType() {
     override val providesPrimitiveMethods: List<PrimitiveMethod> by lazy {
         listOf(
             object: PrimitiveMethod("set_smoothness",
-                MethodSignature.simple(asType, listOf(Param("smoothness", FloatValueType.asType)),
+                MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("smoothness", FloatValueType.asType))),
                     asType)) {
                 override fun execute(
                     target: Value,
                     args: List<Value>,
+                     kwArgs: Map<String, Value>,
                     env: Env
                 ): Value {
                     val self = assertIs(target)
@@ -79,11 +81,11 @@ object SSmoothnessType: ValueType() {
                 }
             },
             object: PrimitiveMethod("set_halfedge",
-                MethodSignature.simple(asType, listOf(Param("halfedge", IntegerValueType.asType)),
+                MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("halfedge", IntegerValueType.asType))),
                     asType)) {
                 override fun execute(
                     target: Value,
-                    args: List<Value>,
+                    args: List<Value>, kwArgs: Map<String, Value>,
                     env: Env
                 ): Value {
                     val self = assertIs(target)
@@ -93,11 +95,11 @@ object SSmoothnessType: ValueType() {
                 }
             },
             object: PrimitiveMethod("set_smoothness",
-                MethodSignature.simple(asType, emptyList<Param>(),
+                MethodSignature.simple(asType, ParameterSignature.empty,
                     FloatValueType.asType)) {
                 override fun execute(
                     target: Value,
-                    args: List<Value>,
+                    args: List<Value>, kwArgs: Map<String, Value>,
                     env: Env
                 ): Value {
                     val self = assertIs(target)
@@ -105,11 +107,11 @@ object SSmoothnessType: ValueType() {
                 }
             },
             object: PrimitiveMethod("halfedge",
-                MethodSignature.simple(asType, emptyList<Param>(),
+                MethodSignature.simple(asType, ParameterSignature.empty,
                     FloatValueType.asType)) {
                 override fun execute(
                     target: Value,
-                    args: List<Value>,
+                    args: List<Value>, kwArgs: Map<String, Value>,
                     env: Env
                 ): Value {
                     val self = assertIs(target)

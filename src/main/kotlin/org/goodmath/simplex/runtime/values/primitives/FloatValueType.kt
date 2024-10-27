@@ -18,9 +18,10 @@ package org.goodmath.simplex.runtime.values.primitives
 import kotlin.isNaN
 import kotlin.math.pow
 import org.goodmath.simplex.ast.types.Type
+import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.MethodSignature
-import org.goodmath.simplex.runtime.values.Param
+import org.goodmath.simplex.runtime.values.ParameterSignature
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.twist.Twist
@@ -51,27 +52,27 @@ object FloatValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "isNaN",
-                    MethodSignature.simple(asType, emptyList<Param>(), BooleanValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature.empty, BooleanValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     return BooleanValue(assertIsFloat(target).isNaN())
                 }
             },
             object :
                 PrimitiveMethod(
                     "truncate",
-                    MethodSignature.simple(asType, emptyList<Param>(), IntegerValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature.empty, IntegerValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     return IntegerValue(assertIsFloat(target).toInt())
                 }
             },
             object :
                 PrimitiveMethod(
                     "plus",
-                    MethodSignature.simple(asType, listOf(Param("r", asType)), asType),
+                    MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("r", asType))), asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val l = assertIsFloat(target)
                     val r = assertIsFloat(args[0])
                     return FloatValue(l + r)
@@ -80,9 +81,9 @@ object FloatValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "minus",
-                    MethodSignature.simple(asType, listOf(Param("r", asType)), asType),
+                    MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("r", asType))), asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val l = assertIsFloat(target)
                     val r = assertIsFloat(args[0])
                     return FloatValue(l - r)
@@ -91,9 +92,9 @@ object FloatValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "times",
-                    MethodSignature.simple(asType, listOf(Param("r", asType)), asType),
+                    MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("r", asType))), asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val l = assertIsFloat(target)
                     val r = assertIsFloat(args[0])
                     return FloatValue(l * r)
@@ -102,9 +103,9 @@ object FloatValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "div",
-                    MethodSignature.simple(asType, listOf(Param("r", asType)), asType),
+                    MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("r", asType))), asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val l = assertIsFloat(target)
                     val r = assertIsFloat(args[0])
                     return FloatValue(l / r)
@@ -113,9 +114,9 @@ object FloatValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "mod",
-                    MethodSignature.simple(asType, listOf(Param("r", asType)), asType),
+                    MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("r", asType))), asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val l = assertIsFloat(target)
                     val r = assertIsFloat(args[0])
                     return FloatValue(l % r)
@@ -124,9 +125,9 @@ object FloatValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "pow",
-                    MethodSignature.simple(asType, listOf(Param("r", asType)), asType),
+                    MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("r", asType))), asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val l = assertIsFloat(target)
                     val r = assertIsFloat(args[0])
                     return FloatValue(l.pow(r))
@@ -135,9 +136,10 @@ object FloatValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "eq",
-                    MethodSignature.simple(asType, listOf(Param("r", asType)), BooleanValueType.asType),
+                    MethodSignature.simple(asType,
+                        ParameterSignature(listOf(Parameter("r", asType))), BooleanValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val l = assertIsFloat(target)
                     val r = assertIsFloat(args[0])
                     return BooleanValue(l == r)
@@ -146,24 +148,24 @@ object FloatValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "compare",
-                    MethodSignature.simple(asType, listOf(Param("r", asType)), IntegerValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("r", asType))), IntegerValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val l = assertIsFloat(target)
                     val r = assertIsFloat(args[0])
                     return IntegerValue(l.compareTo(r))
                 }
             },
-            object : PrimitiveMethod("neg", MethodSignature.simple(asType, emptyList<Param>(), asType)) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+            object : PrimitiveMethod("neg", MethodSignature.simple(asType, ParameterSignature.empty, asType)) {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val l = assertIsFloat(target)
                     return FloatValue(-l)
                 }
             },
-            object: PrimitiveMethod("sqrt", MethodSignature.simple(asType, emptyList<Param>(), asType)) {
+            object: PrimitiveMethod("sqrt", MethodSignature.simple(asType, ParameterSignature.empty, asType)) {
                 override fun execute(
                     target: Value,
-                    args: List<Value>,
+                    args: List<Value>, kwArgs: Map<String, Value>,
                     env: Env
                 ): Value {
                     val self = assertIsFloat(target)

@@ -34,19 +34,19 @@ class StringValueTypeTest {
         val s2 = StringValue("STRING TWO")
         val s3 = StringValue(PI.toString())
 
-        val a = StringValueType.applyMethod(s1, "plus", listOf(s2), RootEnv)
+        val a = StringValueType.applyMethod(s1, "plus", listOf(s2), emptyMap(), RootEnv)
         a as StringValue
         assertEquals("string oneSTRING TWO", a.s)
 
-        assertThrows<SimplexError> { StringValueType.applyMethod(s3, "minus", listOf(s2), RootEnv) }
+        assertThrows<SimplexError> { StringValueType.applyMethod(s3, "minus", listOf(s2), emptyMap(), RootEnv) }
 
-        val cmp1 = StringValueType.applyMethod(s1, "compare", listOf(s2), RootEnv) as IntegerValue
+        val cmp1 = StringValueType.applyMethod(s1, "compare", listOf(s2), emptyMap(), RootEnv) as IntegerValue
         assertTrue(cmp1.i > 0)
-        val cmp2 = StringValueType.applyMethod(s2, "compare", listOf(s1), RootEnv) as IntegerValue
+        val cmp2 = StringValueType.applyMethod(s2, "compare", listOf(s1), emptyMap(), RootEnv) as IntegerValue
         assertTrue(cmp2.i < 0)
-        val cmp3 = StringValueType.applyMethod(s2, "compare", listOf(s2), RootEnv) as IntegerValue
+        val cmp3 = StringValueType.applyMethod(s2, "compare", listOf(s2), emptyMap(), RootEnv) as IntegerValue
         assertTrue(cmp3.i == 0)
-        val i = StringValueType.applyMethod(s1, "length", emptyList(), RootEnv) as IntegerValue
+        val i = StringValueType.applyMethod(s1, "length", emptyList(), emptyMap(), RootEnv) as IntegerValue
         assertEquals(10, i.i)
     }
 }

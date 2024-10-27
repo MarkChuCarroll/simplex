@@ -87,12 +87,14 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location) : Expr
             val methodName = op.toMethod()
             if (methodName != null) {
                 if (methodName == "neg") {
-                    return target.valueType.applyMethod(target, methodName, emptyList(), env)
+                    return target.valueType.applyMethod(target, methodName,
+                        listOf(args[1].evaluateIn(env)), emptyMap(), env)
                 }
                 return target.valueType.applyMethod(
                     target,
                     methodName,
                     listOf(args[1].evaluateIn(env)),
+                    emptyMap(),
                     env,
                 )
             } else {
@@ -103,6 +105,7 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location) : Expr
                                 target,
                                 "eq",
                                 listOf(args[1].evaluateIn(env)),
+                                emptyMap(),
                                 env,
                             ) as BooleanValue
                         BooleanValue(!truthy.b)
@@ -114,6 +117,7 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location) : Expr
                                 target,
                                 "compare",
                                 listOf(args[1].evaluateIn(env)),
+                                emptyMap(),
                                 env,
                             )
                         BooleanValue((c as IntegerValue).i > 0)
@@ -125,6 +129,7 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location) : Expr
                                 target,
                                 "compare",
                                 listOf(args[1].evaluateIn(env)),
+                                emptyMap(),
                                 env,
                             )
                         BooleanValue((c as IntegerValue).i >= 0)
@@ -136,6 +141,7 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location) : Expr
                                 target,
                                 "compare",
                                 listOf(args[1].evaluateIn(env)),
+                                emptyMap(),
                                 env,
                             )
                         BooleanValue((c as IntegerValue).i < 0)
@@ -147,6 +153,7 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location) : Expr
                                 target,
                                 "compare",
                                 listOf(args[1].evaluateIn(env)),
+                                emptyMap(),
                                 env,
                             )
                         BooleanValue((c as IntegerValue).i < 0)
@@ -221,15 +228,15 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location) : Expr
                 target.getMethod(methodName)
                     ?: throw SimplexUndefinedError(methodName, "method", loc = loc)
             val realArgs = args.drop(1)
-            val methodArgSet = methodType.argSets.firstOrNull { args -> args.size == realArgs.size }
+            val methodArgSet = methodType.argSets.firstOrNull { args -> args.positional.size == realArgs.size }
             if (methodArgSet == null) {
                 throw SimplexParameterCountError(
-                    "Method $methodName", methodType.argSets.map { it.size},
+                    "Method $methodName", methodType.argSets.map { it.positional.size},
                     realArgs.size,
                     location = loc,
                 )
             }
-            methodArgSet.zip(realArgs).forEach { (t, a) ->
+            methodArgSet.positional.zip(realArgs).forEach { (t, a) ->
                 if (!t.matchedBy(a.resultType(env))) {
                     throw SimplexTypeError(
                         t.toString(),

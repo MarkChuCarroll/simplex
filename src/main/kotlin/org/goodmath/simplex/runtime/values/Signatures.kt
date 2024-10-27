@@ -15,10 +15,38 @@
  */
 package org.goodmath.simplex.runtime.values
 
+import org.goodmath.simplex.ast.types.ArgumentListSpec
+import org.goodmath.simplex.ast.types.KwParameter
 import org.goodmath.simplex.ast.types.MethodType
+import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
+
+data class ParameterSignature(
+    val positionalParameters: List<Parameter>,
+    val keywordParameters: List<KwParameter> = emptyList()
+): Twistable {
+    override fun twist(): Twist =
+        Twist.obj("ParameterSignature",
+            Twist.array("positionalParameters", positionalParameters),
+            Twist.array("keywordParameters", keywordParameters))
+
+    override fun toString(): String {
+        val posStr = positionalParameters.map { it.type.toString() }.joinToString(",")
+        return if (keywordParameters.isNotEmpty()) {
+            val kwStr = keywordParameters.map { "${it.name}:${it.type}" }.joinToString(",")
+            "$posStr;$kwStr"
+        } else {
+            posStr
+        }
+    }
+
+    companion object {
+        val empty: ParameterSignature = ParameterSignature(emptyList(), emptyList())
+    }
+
+}
 
 /**
  * Signatures for invokable values.
@@ -30,54 +58,70 @@ abstract class Signature : Twistable {
     abstract fun toStaticType(): Type
 }
 
-class FunctionSignature private constructor(val params: List<List<Param>>, val returnType: Type) : Signature() {
+class FunctionSignature private constructor(val paramSigs: List<ParameterSignature>, val returnType: Type) : Signature() {
 
     override fun twist(): Twist =
         Twist.obj(
             "FunctionSignature",
-            Twist.array("params", params.map { Twist.array("option", it) }),
+            Twist.array("paramSigs", paramSigs),
             Twist.value("resultType", returnType),
         )
 
-    override fun toStaticType(): Type = Type.function(params.map { it.map { it.type } }, returnType)
+    override fun toString(): String {
+        val paramStr = paramSigs.map { it.toString() }.joinToString("|")
+        return "($paramStr):$returnType"
+    }
+
+    override fun toStaticType(): Type {
+        val argSpecs = paramSigs.map { paramSig ->
+            ArgumentListSpec(
+                paramSig.positionalParameters.map { it.type },
+                paramSig.keywordParameters.associate { it.name to it.type }
+            )
+        }
+        return Type.function(argSpecs, returnType)
+    }
 
     companion object {
-        fun simple(params: List<Param>, returnType: Type): FunctionSignature {
+        fun simple(params: ParameterSignature, returnType: Type): FunctionSignature {
             return FunctionSignature(listOf(params), returnType)
         }
 
-        fun multi(params: List<List<Param>>, returnType: Type): FunctionSignature {
+        fun multi(params: List<ParameterSignature>, returnType: Type): FunctionSignature {
             return FunctionSignature(params, returnType)
         }
     }
 }
 
-data class Param(val name: String, val type: Type) : Twistable {
-    override fun twist(): Twist =
-        Twist.obj("Param", Twist.attr("name", name), Twist.attr("type", type.toString()))
-}
 
-class MethodSignature private constructor(val self: Type, val paramSets: List<List<Param>>, val returnType: Type) :
+class MethodSignature private constructor(val self: Type,
+                                          val paramSigs: List<ParameterSignature>,
+                                          val returnType: Type) :
     Signature() {
 
     override fun twist(): Twist =
         Twist.obj(
             "MethodSig",
             Twist.value("selfType", self),
-            Twist.array("params", paramSets.map { Twist.array("option", it) }),
+            Twist.array("params", paramSigs),
             Twist.value("returnType", returnType),
         )
 
-    override fun toStaticType(): MethodType = Type.multiMethod(self,
-        paramSets.map { alt -> alt.map { it.type } }, returnType)
+    override fun toStaticType(): MethodType {
+        val argSpecs = paramSigs.map { paramSig ->
+            ArgumentListSpec(
+                paramSig.positionalParameters.map { it.type },
+                paramSig.keywordParameters.associate { it.name to it.type }) }
+        return Type.multiMethod(self, argSpecs, returnType)
+    }
 
     companion object {
-        fun simple(target: Type, params: List<Param>, returnType: Type): MethodSignature {
+        fun simple(target: Type, params: ParameterSignature, returnType: Type): MethodSignature {
             return MethodSignature(target, listOf(params), returnType)
         }
 
-        fun multi(target: Type, paramSets: List<List<Param>>, returnType: Type): MethodSignature {
-            return MethodSignature(target, paramSets, returnType)
+        fun multi(target: Type, paramSigs: List<ParameterSignature>, returnType: Type): MethodSignature {
+            return MethodSignature(target, paramSigs, returnType)
         }
     }
 }

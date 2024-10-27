@@ -15,9 +15,13 @@
  */
 package org.goodmath.simplex.ast.types
 
+import org.goodmath.simplex.ast.expr.Arguments
+import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.SimplexAnalysisError
 import org.goodmath.simplex.runtime.values.AnyValueType
+import org.goodmath.simplex.runtime.values.FunctionSignature
+import org.goodmath.simplex.runtime.values.ParameterSignature
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.runtime.values.manifold.BoundingBoxValueType
 import org.goodmath.simplex.runtime.values.manifold.BoundingRectValueType
@@ -116,30 +120,36 @@ abstract class Type : Twistable {
             return result
         }
 
-        fun simpleMethod(target: Type, args: List<Type>, result: Type): MethodType {
-            val result = multiMethod(target, listOf(args), result)
+        fun simpleMethod(target: Type, argSpecs: ArgumentListSpec, result: Type): MethodType {
+            val result = multiMethod(target, listOf(argSpecs), result)
             return result
         }
 
-        fun multiMethod(target: Type, argSets: List<List<Type>>, result: Type): MethodType {
-            val argsStr = argSets.map { argSet ->
-                argSet.map { arg -> arg.toString() }.joinToString(", ")
-            }.joinToString("|")
+        fun multiMethod(target: Type, argSets: List<ArgumentListSpec>, result: Type): MethodType {
+            val argsStr = argSets.map { it.toString() }.joinToString("|")
             val name = "$target->($argsStr):$result"
             val result = Type.types.computeIfAbsent(name) { _ ->
                  MethodType(target, argSets, result)
             } as MethodType
-            if (!valueTypes.contains(result)) {
+            if (!valueTypes.containsKey(result)) {
                 valueTypes[result] = MethodValueType(result)
             }
             return result
         }
 
-        fun function(argOptions: List<List<Type>>, result: Type): FunctionType {
+        fun function(sig: FunctionSignature): FunctionType {
+            val result = Type.types.computeIfAbsent(sig.toString()) { _ ->
+                FunctionType(sig.paramSigs.map { ArgumentListSpec(it) }, sig.returnType)
+            } as FunctionType
+            if (!valueTypes.containsKey(result)) {
+                valueTypes[result] = FunctionValueType(result)
+            }
+            return result
+        }
+
+        fun function(argOptions: List<ArgumentListSpec>, result: Type): FunctionType {
             val argOptStrings =
-                argOptions
-                    .map { args -> args.map { it.toString() }.joinToString(",") }
-                    .joinToString("|")
+                argOptions.map { it.toString() }.joinToString("|")
             val name = "($argOptStrings):$result"
             val result = Type.types.computeIfAbsent(name) { _ -> FunctionType(argOptions, result) }
                 as FunctionType
@@ -209,56 +219,103 @@ class VectorType internal constructor(val elementType: Type) : Type() {
     }
 }
 
-class FunctionType internal constructor(val argLists: List<List<Type>>, val returnType: Type) :
-    Type() {
+data class ArgumentListSpec(val positional: List<Type>, val keyword: Map<String, Type>): Twistable {
+    constructor(params: ParameterSignature): this(params.positionalParameters.map { it.type },
+        params.keywordParameters.associate { it.name to it.type })
 
-    private data class ArgTypeList(val argList: List<Type>) : Twistable {
-        override fun twist(): Twist {
-            return Twist.array("ArgList", argList)
+    override fun twist(): Twist = Twist.obj("ArgumentListSpec",
+        Twist.array("positional", positional),
+        Twist.array("keyword", keyword.map { (k, v) -> Twist.value(k, v) }))
+
+    override fun toString(): String {
+        val pos = positional.map { it.toString() }.joinToString(",")
+        return if (keyword.isEmpty()) {
+            pos
+        } else {
+            val kw = keyword.map { (k, v) -> "$k:$v" }.joinToString(",")
+            return "$pos;$kw"
         }
     }
 
+    fun matchedBy(args: Arguments, env: Env): Boolean {
+        System.err.println("Expected count = ${positional.size}, actual = ${args.positionalArgs.size}")
+        if (args.positionalArgs.size != positional.size) {
+            return false
+        }
+        if (!positional.zip(args.positionalArgs).all { (spec, arg) ->
+                val argType = arg.resultType(env)
+                spec.matchedBy(argType)
+            }) {
+            System.err.println("Mismatch in positionals")
+            return false
+        }
+        if (!args.kwArgs.all { (kwArgName, kwArgExpr) ->
+                val kwSpec = keyword[kwArgName]
+                kwSpec != null && kwSpec.matchedBy(kwArgExpr.resultType(env))
+            }) {
+            System.err.println("Mismatch in KW")
+            return false
+        }
+        return true
+    }
+}
+
+
+class FunctionType internal constructor(
+    val argOptions: List<ArgumentListSpec>, val returnType: Type
+) : Type() {
     override fun twist(): Twist =
         Twist.obj(
             "FunctionType",
             Twist.value("return", returnType),
-            Twist.array("args", argLists.map { ArgTypeList(it) }),
+            Twist.array("args", argOptions)
         )
 
     override fun toString(): String {
         val argOptStrings =
-            argLists.map { args -> args.map { it.toString() }.joinToString(",") }.joinToString("|")
+            argOptions.map { it.toString() }.joinToString(",")
         return "($argOptStrings):$returnType"
     }
 
     override fun matchedBy(t: Type): Boolean {
-        return if (t is FunctionType) {
-            returnType == t.returnType &&
-                argLists.all { myArgOption ->
-                    t.argLists.any { theirArgOption ->
-                        myArgOption.size == theirArgOption.size &&
-                            myArgOption.zip(theirArgOption).all { (l, r) -> l.matchedBy(r) }
-                    }
-                }
-        } else {
+        // function type A is matched by function type B if:
+        // - A and B  have the same return type
+        // - Every possible argument list in A has a matching list in B.
+        //
+        // Argument lists match if:
+        // - for every positional argument a_i in A and b_i in B, a_i is matched by b_i;
+        // - for every keyword argument k_a in A, B contains a keyword argument k_b with
+        //   the same name, and the type of k_a is matched by the type of k_b.
+        return if (t !is FunctionType ||  t.returnType != returnType) {
             false
+        } else {
+            argOptions.all { myArgOpt ->
+                t.argOptions.any { theirArgOpt ->
+                    myArgOpt.positional.size == theirArgOpt.positional.size &&
+                            myArgOpt.positional.zip(theirArgOpt.positional).all { (l, r) -> l.matchedBy(r) } &&
+                            myArgOpt.keyword.all { (k, v) ->
+                                theirArgOpt.keyword.containsKey(k) &&
+                                        v.matchedBy(theirArgOpt.keyword[k]!!)
+                            }
+                }
+            }
         }
     }
 }
 
 class MethodType
-internal constructor(val target: Type, val argSets: List<List<Type>>, val returnType: Type) : Type() {
+internal constructor(val target: Type, val argSets: List<ArgumentListSpec>, val returnType: Type) : Type() {
     override fun twist(): Twist =
         Twist.obj(
             "MethodType",
             Twist.value("target", target),
             Twist.value("return", returnType),
-            Twist.array("args", argSets.map { Twist.array("option", it) }),
+            Twist.array("args", argSets)
         )
 
     override fun toString(): String {
         val argStr = argSets.map { argSet ->
-            argSet.map { arg -> arg.toString() }.joinToString(", ")
+            argSet.toString()
         }.joinToString("|")
         val resultStr = returnType.toString()
         val targetStr = target.toString()
@@ -266,19 +323,20 @@ internal constructor(val target: Type, val argSets: List<List<Type>>, val return
     }
 
     override fun matchedBy(t: Type): Boolean {
-        return if (t is MethodType) {
+        return (t is MethodType) &&
             target.matchedBy(t.target) &&
-                    argSets.all { args ->
-                        t.argSets.any { tArgs ->
-                            (args.size == tArgs.size) &&
-                                    args.zip(tArgs).all { (l, r) ->
+                returnType.matchedBy(t.returnType) &&
+                argSets.all { myArgs ->
+                    t.argSets.any { theirArgs ->
+                            (myArgs.positional.size == theirArgs.positional.size&&
+                                    myArgs.positional.zip(theirArgs.positional).all { (l, r) ->
                                         l.matchedBy(r)
-                                    }
-                        }
-                    } &&
-                returnType.matchedBy(t.returnType)
-        } else {
-            false
-        }
+                                    }) &&
+                                    (myArgs.keyword.all { (kwName, kwType) ->
+                                        theirArgs.keyword.containsKey(kwName) &&
+                                                kwType.matchedBy(theirArgs.keyword[kwName]!!)
+                                    })
+                    }
+                }
     }
 }

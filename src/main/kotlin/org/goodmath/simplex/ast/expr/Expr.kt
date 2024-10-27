@@ -23,9 +23,11 @@ import kotlin.toString
 import org.goodmath.simplex.ast.AstNode
 import org.goodmath.simplex.ast.Location
 import org.goodmath.simplex.ast.def.DataDefinition
+import org.goodmath.simplex.ast.types.ArgumentListSpec
+import org.goodmath.simplex.ast.types.KwParameter
 import org.goodmath.simplex.ast.types.SimpleType
 import org.goodmath.simplex.ast.types.Type
-import org.goodmath.simplex.ast.types.TypedName
+import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexAnalysisError
 import org.goodmath.simplex.runtime.SimplexError
@@ -46,7 +48,7 @@ import org.goodmath.simplex.runtime.values.primitives.StringValueType
 import org.goodmath.simplex.runtime.values.primitives.DataValue
 import org.goodmath.simplex.twist.Twist
 
-abstract class Expr(loc: Location) : AstNode(loc) {
+abstract class Expr(loc: Location?) : AstNode(loc) {
     abstract fun evaluateIn(env: Env): Value
 
     abstract fun resultType(env: Env): Type
@@ -125,7 +127,7 @@ class LetExpr(val name: String, val type: Type?, val value: Expr, loc: Location)
     }
 }
 
-class LiteralExpr<T>(val v: T, loc: Location) : Expr(loc) {
+class LiteralExpr<T>(val v: T, loc: Location?) : Expr(loc) {
     override fun twist(): Twist = Twist.obj("LiteralExpr", Twist.attr("value", v.toString()))
 
     override fun evaluateIn(env: Env): Value {
@@ -312,22 +314,31 @@ class WithExpr(val focus: Expr, val body: List<Expr>, loc: Location) : Expr(loc)
 
 class LambdaExpr(
     val declaredResultType: Type,
-    val params: List<TypedName>,
+    val positionalParams: List<Parameter>,
+    val keywordParams: List<KwParameter>,
     val body: List<Expr>,
     loc: Location,
 ) : Expr(loc) {
+
     override fun evaluateIn(env: Env): Value {
-        return FunctionValue(declaredResultType, params, emptyList(), body, env)
+        return FunctionValue(declaredResultType, positionalParams, keywordParams, emptyList(), body, env)
     }
 
     override fun resultType(env: Env): Type {
-        return Type.function(listOf(params.map { it.type }), declaredResultType)
+        return Type.function(
+            listOf(ArgumentListSpec(
+                positionalParams.map { it.type },
+                keywordParams.associate { it.name to it.type }
+            )), declaredResultType)
     }
 
     override fun validate(env: Env) {
         val localEnv = Env(emptyList(), env)
-        for (param in params) {
+        for (param in positionalParams) {
             localEnv.declareTypeOf(param.name, param.type)
+        }
+        for (kwParam in keywordParams) {
+            localEnv.declareTypeOf(kwParam.name, kwParam.type)
         }
         for (b in body) {
             b.validate(localEnv)
@@ -346,7 +357,8 @@ class LambdaExpr(
         Twist.obj(
             "LambdaExpr",
             Twist.value("resultType", declaredResultType),
-            Twist.array("params", params),
+            Twist.array("positionalParams", positionalParams),
+            Twist.array("keywordParams", keywordParams),
             Twist.array("body", body),
         )
 }

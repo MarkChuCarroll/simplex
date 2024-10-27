@@ -18,9 +18,10 @@ package org.goodmath.simplex.runtime.values.primitives
 import kotlin.text.indexOf
 import kotlin.text.isNotEmpty
 import org.goodmath.simplex.ast.types.Type
+import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.MethodSignature
-import org.goodmath.simplex.runtime.values.Param
+import org.goodmath.simplex.runtime.values.ParameterSignature
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.twist.Twist
@@ -55,18 +56,19 @@ object StringValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "length",
-                    MethodSignature.simple(asType, emptyList<Param>(), IntegerValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature.empty, IntegerValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     return IntegerValue(assertIsString(target).length)
                 }
             },
             object: PrimitiveMethod("substring",
-                MethodSignature.multi(asType, listOf(listOf(Param("start", IntegerValueType.asType)),
-                    listOf(Param("start", IntegerValueType.asType), Param("length", IntegerValueType.asType))), asType)) {
+                MethodSignature.multi(asType, listOf(
+                    ParameterSignature(listOf(Parameter("start", IntegerValueType.asType))),
+                    ParameterSignature(listOf(Parameter("start", IntegerValueType.asType), Parameter("length", IntegerValueType.asType)))), asType)) {
                 override fun execute(
                     target: Value,
-                    args: List<Value>,
+                    args: List<Value>, kwArgs: Map<String, Value>,
                     env: Env
                 ): Value {
                     val self = assertIsString(target)
@@ -80,10 +82,10 @@ object StringValueType : ValueType() {
                 }
             },
             object: PrimitiveMethod("to_upper",
-                MethodSignature.simple(asType, emptyList(), asType)) {
+                MethodSignature.simple(asType, ParameterSignature.empty, asType)) {
                 override fun execute(
                     target: Value,
-                    args: List<Value>,
+                    args: List<Value>, kwArgs: Map<String, Value>,
                     env: Env
                 ): Value {
                     val self = assertIsString(target)
@@ -91,10 +93,10 @@ object StringValueType : ValueType() {
                 }
             },
             object: PrimitiveMethod("to_lower",
-                MethodSignature.simple(asType, emptyList(), asType)) {
+                MethodSignature.simple(asType, ParameterSignature.empty, asType)) {
                 override fun execute(
                     target: Value,
-                    args: List<Value>,
+                    args: List<Value>, kwArgs: Map<String, Value>,
                     env: Env
                 ): Value {
                     val self = assertIsString(target)
@@ -104,15 +106,15 @@ object StringValueType : ValueType() {
             object: PrimitiveMethod("replace",
                 MethodSignature.multi(asType,
                     listOf(
-                        listOf(Param("to_replace", asType),
-                            Param("with", asType)),
-                        listOf(Param("to_replace", asType),
-                            Param("with", asType),
-                            Param("ignore_case", BooleanValueType.asType))
+                        ParameterSignature(listOf(Parameter("to_replace", asType),
+                            Parameter("with", asType))),
+                        ParameterSignature(listOf(Parameter("to_replace", asType),
+                            Parameter("with", asType),
+                            Parameter("ignore_case", BooleanValueType.asType)))
                     ), asType)) {
                 override fun execute(
                     target: Value,
-                    args: List<Value>,
+                    args: List<Value>, kwArgs: Map<String, Value>,
                     env: Env
                 ): Value {
                     val self = assertIsString(target)
@@ -131,11 +133,11 @@ object StringValueType : ValueType() {
                     "find",
                     MethodSignature.multi(asType,
                         listOf(
-                            listOf(Param("s", asType)),
-                            listOf(Param("s", asType), Param("start_at", IntegerValueType.asType))),
+                            ParameterSignature(listOf(Parameter("s", asType))),
+                            ParameterSignature(listOf(Parameter("s", asType), Parameter("start_at", IntegerValueType.asType)))),
                             IntegerValueType.asType)
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIsString(target)
                     val pat = assertIsString(args[0])
                     val startAt = if (args.size > 1) {
@@ -149,9 +151,10 @@ object StringValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "plus",
-                    MethodSignature.simple(asType, listOf(Param("r", asType)), asType),
+                    MethodSignature.simple(asType,
+                        ParameterSignature(listOf(Parameter("r", asType))), asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val l = assertIs(target).s
                     val r = assertIs(args[0]).s
                     return StringValue(l + r)
@@ -160,9 +163,9 @@ object StringValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "eq",
-                    MethodSignature.simple(asType, listOf(Param("r", asType)), BooleanValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("r", asType))), BooleanValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val l = assertIs(target).s
                     val r = assertIs(args[0]).s
                     return BooleanValue(l == r)
@@ -171,9 +174,9 @@ object StringValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "compare",
-                    MethodSignature.simple(asType, listOf(Param("r", asType)), IntegerValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("r", asType))), IntegerValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val l = assertIs(target).s
                     val r = assertIs(args[0]).s
                     return IntegerValue(l.compareTo(r))

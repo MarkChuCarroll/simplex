@@ -21,6 +21,7 @@ import kotlin.io.path.readText
 import kotlin.test.assertEquals
 import org.antlr.v4.runtime.CharStreams
 import org.goodmath.simplex.ast.Location
+import org.goodmath.simplex.ast.expr.Arguments
 import org.goodmath.simplex.ast.expr.FunCallExpr
 import org.goodmath.simplex.ast.expr.LiteralExpr
 import org.goodmath.simplex.ast.expr.VarRefExpr
@@ -70,7 +71,9 @@ produce("shape") {
         val runner =
             FunCallExpr(
                 VarRefExpr("compoundShape", mockLoc()),
-                listOf(LiteralExpr(30.0, mockLoc())),
+                Arguments(
+                    listOf(LiteralExpr(30.0, mockLoc())),
+                    emptyMap()),
                 mockLoc(),
             )
         val result = runner.evaluateIn(env) as Solid

@@ -16,11 +16,14 @@
 package org.goodmath.simplex.runtime.values.manifold
 
 import manifold3d.pub.Box
+import org.goodmath.simplex.ast.expr.LiteralExpr
+import org.goodmath.simplex.ast.types.KwParameter
+import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.FunctionSignature
 import org.goodmath.simplex.runtime.values.MethodSignature
-import org.goodmath.simplex.runtime.values.Param
+import org.goodmath.simplex.runtime.values.ParameterSignature
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.runtime.values.primitives.BooleanValue
@@ -36,7 +39,6 @@ import org.goodmath.simplex.twist.Twist
 /** Simplex wrapper for the manifold BoundingBox type. */
 class BoundingBox(val box: Box) : Value {
     override val valueType: ValueType = BoundingBoxValueType
-
     val size: Vec3 by lazy {
         Vec3.fromDoubleVec3(box.Size())
     }
@@ -127,11 +129,13 @@ object BoundingBoxValueType : ValueType() {
                 PrimitiveFunctionValue(
                     "Box",
                     FunctionSignature.simple(
-                        listOf(Param("low", Vec3ValueType.asType), Param("high", Vec2ValueType.asType)),
+                        ParameterSignature(listOf(Parameter("low", Vec3ValueType.asType), Parameter("high", Vec2ValueType.asType)),
+                            listOf(KwParameter("center", BooleanValueType.asType,
+                                LiteralExpr(true, null), null))),
                         asType,
                     ),
                 ) {
-                override fun execute(args: List<Value>): Value {
+                override fun execute(args: List<Value>, kwArgs: Map<String, Value>): Value {
                     val low = Vec3ValueType.assertIs(args[0]).toDoubleVec3()
                     val high = Vec3ValueType.assertIs(args[1]).toDoubleVec3()
                     return BoundingBox(Box(low, high))
@@ -145,9 +149,12 @@ object BoundingBoxValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "size",
-                    MethodSignature.simple(asType, emptyList<Param>(), Vec3ValueType.asType),
+                    MethodSignature.simple(asType,
+                        ParameterSignature(emptyList(), emptyList()),
+                        Vec3ValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>,
+                                     env: Env): Value {
                     val self = assertIs(args[0])
                     return self.size
                 }
@@ -155,9 +162,11 @@ object BoundingBoxValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "center",
-                    MethodSignature.simple(asType, emptyList<Param>(), Vec3ValueType.asType),
+                    MethodSignature.simple(asType,
+                        ParameterSignature(emptyList(), emptyList()), Vec3ValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>,
+                                     kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(args[0])
                     return self.center
                 }
@@ -165,9 +174,11 @@ object BoundingBoxValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "low",
-                    MethodSignature.simple(asType, emptyList<Param>(), Vec3ValueType.asType),
+                    MethodSignature.simple(asType,
+                        ParameterSignature(emptyList(), emptyList()), Vec3ValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>,
+                                     kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(args[0])
                     return self.low
                 }
@@ -175,9 +186,10 @@ object BoundingBoxValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "high",
-                    MethodSignature.simple(asType, emptyList<Param>(), Vec3ValueType.asType),
+                    MethodSignature.simple(asType,
+                        ParameterSignature(emptyList(), emptyList()), Vec3ValueType.asType)
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(args[0])
                     return self.high
                 }
@@ -185,9 +197,10 @@ object BoundingBoxValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "contains_point",
-                    MethodSignature.simple(asType, listOf(Param("p", Vec3ValueType.asType)), BooleanValueType.asType),
+                    MethodSignature.simple(asType,
+                        ParameterSignature(listOf(Parameter("p", Vec3ValueType.asType))), BooleanValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(args[0])
                     val pt = Vec3ValueType.assertIs(args[1])
                     return self.contains(pt)
@@ -196,9 +209,9 @@ object BoundingBoxValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "contains_box",
-                    MethodSignature.simple(asType, listOf(Param("b", asType)), BooleanValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("b", asType))), BooleanValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(args[0])
                     val b = assertIs(args[1])
                     return self.contains(b)
@@ -207,20 +220,21 @@ object BoundingBoxValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "union",
-                    MethodSignature.simple(asType, listOf(Param("other", asType)), asType),
+                    MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("other", asType))), asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(args[0])
                     val other = assertIs(args[1])
                     return self.union(other)
                 }
             },
             object: PrimitiveMethod("expand_to",
-                MethodSignature.simple(asType, listOf(Param("point", Vec3ValueType.asType)),
+                MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("point", Vec3ValueType.asType))),
                     asType)) {
                 override fun execute(
                     target: Value,
                     args: List<Value>,
+                    kwArgs: Map<String, Value>,
                     env: Env
                 ): Value {
                     val self = assertIs(target)
@@ -232,13 +246,13 @@ object BoundingBoxValueType : ValueType() {
                 PrimitiveMethod("move",
                     MethodSignature.multi(asType,
                         listOf(
-                            listOf(Param("pt", Vec3ValueType.asType)),
-                            listOf(Param("x", FloatValueType.asType),
-                                Param("y", FloatValueType.asType),
-                                        Param("z", FloatValueType.asType))),
+                            ParameterSignature(listOf(Parameter("pt", Vec3ValueType.asType))),
+                            ParameterSignature(listOf(Parameter("x", FloatValueType.asType),
+                                Parameter("y", FloatValueType.asType),
+                                        Parameter("z", FloatValueType.asType)))),
                                 asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     if (args.size == 1) {
                         val pt = Vec3ValueType.assertIs(args[0])
@@ -256,11 +270,11 @@ object BoundingBoxValueType : ValueType() {
                     "scale",
                     MethodSignature.multi(asType,
                         listOf(
-                            listOf(Param("pt", Vec3ValueType.asType)),
-                            listOf(Param("x", FloatValueType.asType),
-                                Param("y", FloatValueType.asType),
-                                Param("z", FloatValueType.asType))), asType)) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                            ParameterSignature(listOf(Parameter("pt", Vec3ValueType.asType))),
+                            ParameterSignature(listOf(Parameter("x", FloatValueType.asType),
+                                Parameter("y", FloatValueType.asType),
+                                Parameter("z", FloatValueType.asType)))), asType)) {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     return if (args.size == 1) {
                         val pt = Vec3ValueType.assertIs(args[0])
@@ -276,17 +290,18 @@ object BoundingBoxValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "doesOverlap",
-                    MethodSignature.simple(asType, listOf(Param("other", asType)), BooleanValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("other", asType))),
+                        BooleanValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(args[0]).box
                     val other = assertIs(args[1]).box
                     return BooleanValue(self.DoesOverlap(other))
                 }
             },
             object :
-                PrimitiveMethod("is_finite", MethodSignature.simple(asType, emptyList<Param>(), asType)) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                PrimitiveMethod("is_finite", MethodSignature.simple(asType, ParameterSignature(emptyList()), asType)) {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(args[0]).box
                     return BooleanValue(self.IsFinite())
                 }

@@ -19,8 +19,10 @@ import kotlin.collections.last
 import kotlin.collections.map
 import org.goodmath.simplex.ast.Location
 import org.goodmath.simplex.ast.expr.Expr
+import org.goodmath.simplex.ast.types.ArgumentListSpec
+import org.goodmath.simplex.ast.types.KwParameter
 import org.goodmath.simplex.ast.types.Type
-import org.goodmath.simplex.ast.types.TypedName
+import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.values.primitives.FunctionValue
@@ -29,15 +31,26 @@ import org.goodmath.simplex.twist.Twist
 sealed class InvokableDefinition(
     name: String,
     val returnType: Type,
-    val params: List<TypedName>,
+    val positionalParams: List<Parameter>,
+    val kwParams: List<KwParameter>,
     val body: List<Expr>,
     loc: Location,
     val localDefs: List<FunctionDefinition> = emptyList()
 ) : Definition(name, loc) {
 
     fun validateParamsAndBody(localEnv: Env) {
-        for (p in params) {
+        for (p in positionalParams) {
             localEnv.declareTypeOf(p.name, p.type)
+        }
+        for (k in kwParams) {
+            localEnv.declareTypeOf(k.name, k.type)
+            val defaultType = k.defaultValue.resultType(localEnv)
+            if (!k.type.matchedBy(defaultType)) {
+                throw SimplexTypeError(
+                    k.type.toString(),
+                    defaultType.toString(),
+                    k.loc)
+            }
         }
         for (l in localDefs) {
             localEnv.declareTypeOf(l.name, l.type)
@@ -60,27 +73,32 @@ sealed class InvokableDefinition(
  * A function definition.
  *
  * @param name
- * @param params a list of the function's parameters, with optional types.
- * @param localDefs a list of local definitions declared within the function.
+ * @param positionalParameters a list of the function's parameters, with types.
+ * @param localDefs a list of local functions declared within the function.
  * @param body the function body.
  * @param loc the source location.
  */
 class FunctionDefinition(
     name: String,
     returnType: Type,
-    params: List<TypedName>,
+    positionalParameters: List<Parameter>,
+    kwParameters: List<KwParameter>,
     localDefs: List<FunctionDefinition>,
     body: List<Expr>,
     loc: Location,
-) : InvokableDefinition(name, returnType, params, body, loc, localDefs) {
+) : InvokableDefinition(name, returnType, positionalParameters, kwParameters,
+    body, loc, localDefs) {
 
-    val type = Type.function(listOf(params.map { it.type }), returnType)
+    val type = Type.function(listOf(ArgumentListSpec(positionalParameters.map { it.type },
+                                                     kwParameters.associate { kw -> kw.name to kw.type })),
+                             returnType)
 
     override fun twist(): Twist =
         Twist.obj(
             "FunctionDefinition",
             Twist.attr("name", name),
-            Twist.array("params", params),
+            Twist.array("params", positionalParams),
+            Twist.array("kwParams", kwParams),
             Twist.array("localDefs", localDefs),
             Twist.array("body", body),
         )
@@ -90,7 +108,7 @@ class FunctionDefinition(
     }
 
     override fun installValues(env: Env) {
-        val funValue = FunctionValue(returnType, params, localDefs, body, env, this)
+        val funValue = FunctionValue(returnType, positionalParams, kwParams, localDefs, body, env, this)
         env.addVariable(name, funValue)
     }
 

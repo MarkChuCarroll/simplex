@@ -17,10 +17,11 @@ package org.goodmath.simplex.runtime.values.manifold
 
 import manifold3d.glm.DoubleVec4
 import org.goodmath.simplex.ast.types.Type
+import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.FunctionSignature
 import org.goodmath.simplex.runtime.values.MethodSignature
-import org.goodmath.simplex.runtime.values.Param
+import org.goodmath.simplex.runtime.values.ParameterSignature
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.runtime.values.primitives.FloatValueType
@@ -87,15 +88,16 @@ object RGBAValueType : ValueType() {
                 PrimitiveFunctionValue(
                     "rgb",
                     FunctionSignature.simple(
-                    listOf(
-                            Param("red", FloatValueType.asType),
-                            Param("green", FloatValueType.asType),
-                            Param("blue", FloatValueType.asType),
+                        ParameterSignature(listOf(
+                            Parameter("red", FloatValueType.asType),
+                            Parameter("green", FloatValueType.asType),
+                            Parameter("blue", FloatValueType.asType)),
                     ),
                         asType,
                     ),
                 ) {
-                override fun execute(args: List<Value>): Value {
+                override fun execute(args: List<Value>,
+                                     kwArgs: Map<String, Value>): Value {
                     val r = assertIsFloat(args[0])
                     val g = assertIsFloat(args[1])
                     val b = assertIsFloat(args[2])
@@ -106,16 +108,17 @@ object RGBAValueType : ValueType() {
                 PrimitiveFunctionValue(
                     "rgba",
                     FunctionSignature.simple(
-                        listOf(
-                            Param("red", FloatValueType.asType),
-                            Param("green", FloatValueType.asType),
-                            Param("blue", FloatValueType.asType),
-                            Param("alpha", FloatValueType.asType),
-                        ),
+                        ParameterSignature(listOf(
+                            Parameter("red", FloatValueType.asType),
+                            Parameter("green", FloatValueType.asType),
+                            Parameter("blue", FloatValueType.asType),
+                            Parameter("alpha", FloatValueType.asType),
+                        )),
                         asType,
                     ),
                 ) {
-                override fun execute(args: List<Value>): Value {
+                override fun execute(args: List<Value>,
+                                     kwArgs: Map<String, Value>): Value {
                     val r = assertIsFloat(args[0])
                     val g = assertIsFloat(args[1])
                     val b = assertIsFloat(args[2])
@@ -131,9 +134,10 @@ object RGBAValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "dim",
-                    MethodSignature.simple(asType, listOf(Param("factor", FloatValueType.asType)), asType),
+                    MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("factor", FloatValueType.asType))), asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>,
+                                     kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     val factor = assertIsFloat(args[0])
                     return self.dim(factor)
@@ -142,9 +146,9 @@ object RGBAValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "fade",
-                    MethodSignature.simple(asType, listOf(Param("factor", FloatValueType.asType)), asType),
+                    MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("factor", FloatValueType.asType))), asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     val factor = assertIsFloat(args[0])
                     return self.fade(factor)
@@ -153,9 +157,9 @@ object RGBAValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "blend",
-                    MethodSignature.simple(asType, listOf(Param("other", asType)), asType),
+                    MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("other", asType))), asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     val other = assertIs(args[0])
                     return self.blend(other)

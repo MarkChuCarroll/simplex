@@ -31,14 +31,14 @@ class IntValueTypeTest {
         val v2 = IntegerValue(4)
         val v3 = IntegerValue(5)
 
-        val sum = IntegerValueType.applyMethod(v1, "plus", listOf(v2), RootEnv)
+        val sum = IntegerValueType.applyMethod(v1, "plus", listOf(v2), emptyMap(), RootEnv)
         sum as IntegerValue
 
-        val prod = IntegerValueType.applyMethod(v2, "times", listOf(v3), RootEnv)
+        val prod = IntegerValueType.applyMethod(v2, "times", listOf(v3), emptyMap(), RootEnv)
         prod as IntegerValue
-        val divI = IntegerValueType.applyMethod(v3, "div", listOf(v1), RootEnv)
+        val divI = IntegerValueType.applyMethod(v3, "div", listOf(v1), emptyMap(), RootEnv)
         divI as IntegerValue
-        val modI = IntegerValueType.applyMethod(prod, "mod", listOf(sum), RootEnv)
+        val modI = IntegerValueType.applyMethod(prod, "mod", listOf(sum), emptyMap(), RootEnv)
         modI as IntegerValue
 
         assertEquals(7, sum.i)
@@ -47,21 +47,21 @@ class IntValueTypeTest {
         assertEquals(6, modI.i)
 
         val eq1 =
-            IntegerValueType.applyMethod(divI, "eq", listOf(IntegerValue(1)), RootEnv)
+            IntegerValueType.applyMethod(divI, "eq", listOf(IntegerValue(1)), emptyMap(), RootEnv)
                 as BooleanValue
         assertTrue(eq1.b)
         val eq2 =
-            IntegerValueType.applyMethod(prod, "eq", listOf(IntegerValue(6)), RootEnv)
+            IntegerValueType.applyMethod(prod, "eq", listOf(IntegerValue(6)), emptyMap(), RootEnv)
                 as BooleanValue
         assertFalse(eq2.b)
 
         val eq3 =
             IntegerValueType.applyMethod(
-                IntegerValueType.applyMethod(modI, "neg", emptyList(), RootEnv),
+                IntegerValueType.applyMethod(modI, "neg", emptyList(), emptyMap(), RootEnv),
                 "eq",
                 listOf(
-                    IntegerValueType.applyMethod(IntegerValue(0), "minus", listOf(modI), RootEnv)
-                ),
+                    IntegerValueType.applyMethod(IntegerValue(0), "minus", listOf(modI), emptyMap(), RootEnv)
+                ), emptyMap(),
                 RootEnv,
             ) as BooleanValue
 
@@ -71,28 +71,28 @@ class IntValueTypeTest {
             IntegerValueType.applyMethod(
                 IntegerValue(-1),
                 "compare",
-                listOf(IntegerValue(-2)),
+                listOf(IntegerValue(-2)), emptyMap(),
                 RootEnv,
             ) as IntegerValue
         val cmp2 =
             IntegerValueType.applyMethod(
                 IntegerValue(-1),
                 "compare",
-                listOf(IntegerValue(2)),
+                listOf(IntegerValue(2)), emptyMap(),
                 RootEnv,
             ) as IntegerValue
         val cmp3 =
             IntegerValueType.applyMethod(
                 IntegerValue(13),
                 "compare",
-                listOf(IntegerValue(13)),
+                listOf(IntegerValue(13)), emptyMap(),
                 RootEnv,
             ) as IntegerValue
         assertEquals(1, cmp1.i)
         assertEquals(-1, cmp2.i)
         assertEquals(0, cmp3.i)
         val p =
-            IntegerValueType.applyMethod(IntegerValue(3), "pow", listOf(IntegerValue(4)), RootEnv)
+            IntegerValueType.applyMethod(IntegerValue(3), "pow", listOf(IntegerValue(4)), emptyMap(), RootEnv)
                 as IntegerValue
 
         assertEquals(81, p.i)

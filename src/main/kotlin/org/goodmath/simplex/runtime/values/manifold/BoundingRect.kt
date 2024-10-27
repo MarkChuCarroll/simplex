@@ -16,11 +16,12 @@
 package org.goodmath.simplex.runtime.values.manifold
 
 import manifold3d.manifold.Rect
+import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.FunctionSignature
 import org.goodmath.simplex.runtime.values.MethodSignature
-import org.goodmath.simplex.runtime.values.Param
+import org.goodmath.simplex.runtime.values.ParameterSignature
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.runtime.values.primitives.BooleanValue
@@ -62,11 +63,11 @@ object BoundingRectValueType : ValueType() {
                 PrimitiveFunctionValue(
                     "bounding_rect",
                     FunctionSignature.simple(
-                        listOf(Param("low", Vec2ValueType.asType), Param("high", Vec2ValueType.asType)),
+                        ParameterSignature(listOf(Parameter("low", Vec2ValueType.asType), Parameter("high", Vec2ValueType.asType))),
                         asType,
                     ),
                 ) {
-                override fun execute(args: List<Value>): Value {
+                override fun execute(args: List<Value>, kwArgs: Map<String, Value>): Value {
                     val low = Vec2ValueType.assertIs(args[0]).toDoubleVec2()
                     val high = Vec2ValueType.assertIs(args[1]).toDoubleVec2()
                     return BoundingRect(Rect(low, high))
@@ -80,9 +81,11 @@ object BoundingRectValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "size",
-                    MethodSignature.simple(asType, emptyList<Param>(), Vec2ValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature.empty,
+                        Vec2ValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>,
+                                     kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target).rect
                     return Vec2.fromDoubleVec2(self.Size())
                 }
@@ -90,9 +93,9 @@ object BoundingRectValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "scale",
-                    MethodSignature.simple(asType, emptyList<Param>(), FloatValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature.empty, FloatValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target).rect
                     return FloatValue(self.Scale().toDouble())
                 }
@@ -100,9 +103,9 @@ object BoundingRectValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "center",
-                    MethodSignature.simple(asType, emptyList<Param>(), Vec2ValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature.empty, Vec2ValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>,  env: Env): Value {
                     val self = assertIs(target).rect
                     return Vec2.fromDoubleVec2(self.Center())
                 }
@@ -110,9 +113,9 @@ object BoundingRectValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "contains_point",
-                    MethodSignature.simple(asType, listOf(Param("pt", Vec2ValueType.asType)), BooleanValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("pt", Vec2ValueType.asType))), BooleanValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target).rect
                     val pt = Vec2ValueType.assertIs(args[0]).toDoubleVec2()
                     return BooleanValue(self.Contains(pt))
@@ -121,9 +124,9 @@ object BoundingRectValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "contains_rect",
-                    MethodSignature.simple(asType, listOf(Param("other", asType)), BooleanValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("other", asType))), BooleanValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>,kwArgs: Map<String, Value>,  env: Env): Value {
                     val self = assertIs(target).rect
                     val other = assertIs(args[0]).rect
                     return BooleanValue(self.Contains(other))
@@ -132,9 +135,9 @@ object BoundingRectValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "overlaps",
-                    MethodSignature.simple(asType, listOf(Param("other", asType)), BooleanValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("other", asType))), BooleanValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target).rect
                     val other = assertIs(args[0]).rect
                     return BooleanValue(self.DoesOverlap(other))
@@ -143,9 +146,9 @@ object BoundingRectValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "is_empty",
-                    MethodSignature.simple(asType, emptyList<Param>(), BooleanValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature.empty, BooleanValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target).rect
                     return BooleanValue(self.IsEmpty())
                 }
@@ -153,9 +156,9 @@ object BoundingRectValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "is_finite",
-                    MethodSignature.simple(asType, emptyList<Param>(), BooleanValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature.empty, BooleanValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target).rect
                     return BooleanValue(self.IsFinite())
                 }
@@ -163,9 +166,9 @@ object BoundingRectValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "plus",
-                    MethodSignature.simple(asType, listOf(Param("other", asType)), asType),
+                    MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("other", asType))), asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>,  env: Env): Value {
                     val self = assertIs(target).rect
                     val other = assertIs(args[0]).rect
                     return BoundingRect(self.Union(other))
@@ -174,9 +177,9 @@ object BoundingRectValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "plus",
-                    MethodSignature.simple(asType, listOf(Param("vec", Vec2ValueType.asType)), asType),
+                    MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("vec", Vec2ValueType.asType))), asType)
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target).rect
                     val other = Vec2ValueType.assertIs(args[0]).toDoubleVec2()
                     return BoundingRect(self.add(other))
@@ -185,9 +188,9 @@ object BoundingRectValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "times",
-                    MethodSignature.simple(asType, listOf(Param("vec", Vec2ValueType.asType)), asType),
+                    MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("vec", Vec2ValueType.asType))), asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target).rect
                     val other = Vec2ValueType.assertIs(args[0]).toDoubleVec2()
                     return BoundingRect(self.multiply(other))

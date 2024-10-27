@@ -44,16 +44,24 @@ varDef:
 ;
 
 funDef:
-
-   'fun' ID '(' params? ')' ':' type '{'
+   'fun' ID '(' params? ( ';' kwParams )? ')' ':' type '{'
     funDef*
-    expr*
+    exprs
   '}'
- ;
+;
+
+kwParams:
+  kwParam (',' kwParam)*
+;
+
+kwParam:
+  ID ':' type '=' expr
+;
+
 
  methDef:
-    'meth' target=type '->' ID '(' params? ')' ':' result=type '{'
-       expr+
+    'meth' target=type '->' ID '(' params? ( ';' kwParams )? ')' ':' result=type '{'
+       exprs
     '}'
 ;
 
@@ -65,23 +73,43 @@ types:
    type (',' type)*
 ;
 
+paramSignature:
+   ( types )? ( ';' kwParams)?
+;
+
 type:
   ID #optSimpleType
 | '[' type ']' #optVectorType
-| '(' types? ')' ':' type # optFunType
-| target=type '->' '(' types? ')' ':' result=type #optMethodType
+| '(' paramSignature ')' ':' type # optFunType
+| target=type '->' '(' paramSignature ')' ':' result=type #optMethodType
 ;
 
 exprs:
+   ( expr ( ';' )? )*
+;
+
+exprList:
   expr (',' expr)*
+;
+
+args:
+  ( exprList )? (';' kwArgs )?
+;
+
+kwArgs:
+  kwArg ( ',' kwArg )*
+;
+
+kwArg:
+  ID '=' expr
 ;
 
 expr:
   '(' expr ')' #exprParen
 | primary  #exprPrimary
 | complex  #exprComplex
-| expr '->' ID '(' exprs? ')' #exprMethod
-| expr '(' exprs? ')' #exprCall
+| expr '->' ID '(' args ')' #exprMethod
+| expr '(' args ')' #exprCall
 | expr '[' expr ']' #exprSubscript
 | expr '.' ID  #exprField
 | target=expr '.' ID ':=' value=expr #exprUpdate
@@ -104,8 +132,8 @@ complex:
 
 primary:
   ID (':=' expr)? #optIdExpr
-| '['  exprs   ']' #optVecExpr
-| '#' ID '(' exprs ')' #optDataExpr
+| '['  exprList   ']' #optVecExpr
+| '#' ID '(' exprList ')' #optDataExpr
 | LIT_INT #optLitInt
 | LIT_FLOAT #optLitFloat
 | LIT_STRING #optLitStr

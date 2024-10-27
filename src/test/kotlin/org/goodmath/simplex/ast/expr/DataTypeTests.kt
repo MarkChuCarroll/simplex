@@ -24,7 +24,7 @@ import kotlin.test.assertTrue
 import org.goodmath.simplex.ast.Location
 import org.goodmath.simplex.ast.def.DataDefinition
 import org.goodmath.simplex.ast.types.Type
-import org.goodmath.simplex.ast.types.TypedName
+import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.primitives.BooleanValue
 import org.goodmath.simplex.runtime.values.primitives.IntegerValue
@@ -51,9 +51,9 @@ class DataTypeTests {
             DataDefinition(
                 "TestDataOne",
                 listOf(
-                    TypedName("iFoo", Type.simple("Int"), mockLoc()),
-                    TypedName("sBar", Type.simple("String"), mockLoc()),
-                    TypedName("fBaz", Type.simple("Float"), mockLoc()),
+                    Parameter("iFoo", Type.simple("Int"), mockLoc()),
+                    Parameter("sBar", Type.simple("String"), mockLoc()),
+                    Parameter("fBaz", Type.simple("Float"), mockLoc()),
                 ),
                 mockLoc(),
             )
@@ -61,8 +61,8 @@ class DataTypeTests {
             DataDefinition(
                 "TestDataTwo",
                 listOf(
-                    TypedName("tOne", Type.simple("TestDataOne"), mockLoc()),
-                    TypedName("oops", Type.simple("String"), mockLoc()),
+                    Parameter("tOne", Type.simple("TestDataOne"), mockLoc()),
+                    Parameter("oops", Type.simple("String"), mockLoc()),
                 ),
                 mockLoc(),
             )
@@ -95,7 +95,7 @@ class DataTypeTests {
             DataExpr("TestDataTwo", listOf(createOne, LiteralExpr("oops", mockLoc())), mockLoc())
         val w = createTwo.evaluateIn(env)
         assertIs<DataValue>(w)
-        val eq = v.valueType.applyMethod(v, "eq", listOf(w.fields[0]), env)
+        val eq = v.valueType.applyMethod(v, "eq", listOf(w.fields[0]), emptyMap(), env)
         assertTrue(eq is BooleanValue && eq.b)
         val wOne = w.fields[1] as StringValue
         assertEquals("oops", wOne.s)

@@ -17,10 +17,11 @@ package org.goodmath.simplex.runtime.values.primitives
 
 import org.goodmath.simplex.ast.def.DataDefinition
 import org.goodmath.simplex.ast.types.Type
+import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.values.MethodSignature
-import org.goodmath.simplex.runtime.values.Param
+import org.goodmath.simplex.runtime.values.ParameterSignature
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.twist.Twist
@@ -69,9 +70,10 @@ class DataValueType(val dataDef: DataDefinition) : ValueType() {
             object :
                 PrimitiveMethod(
                     "eq",
-                    MethodSignature.simple(asType, listOf(Param("other", asType)), BooleanValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("other", asType))), BooleanValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>,
+                                     kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     return if (args[0].valueType != self.valueType) {
                         BooleanValue(false)
@@ -82,7 +84,7 @@ class DataValueType(val dataDef: DataDefinition) : ValueType() {
                         } else {
                             BooleanValue(
                                 self.fields.zip(other.fields).all { (l, r) ->
-                                    val result = l.valueType.applyMethod(l, "eq", listOf(r), env)
+                                    val result = l.valueType.applyMethod(l, "eq", listOf(r), emptyMap(), env)
                                     result.valueType.isTruthy(result)
                                 }
                             )

@@ -15,6 +15,8 @@
  */
 package org.goodmath.simplex.runtime.values
 
+import org.goodmath.simplex.ast.expr.Arguments
+import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.RootEnv
@@ -145,9 +147,10 @@ abstract class ValueType : Twistable {
      * @param args a list of argument values for the call.
      * @param env the environment to use for retrieving variables.
      */
-    fun applyMethod(target: Value, name: String, args: List<Value>, env: Env): Value {
+    fun applyMethod(target: Value, name: String, args: List<Value>,
+                    kwArgs: Map<String, Value>, env: Env): Value {
         val meth = target.valueType.getMethod(name)
-        return meth.applyTo(target, args, env)
+        return meth.applyTo(target, args, kwArgs, env)
     }
 
     /**
@@ -249,10 +252,12 @@ object AnyValueType : ValueType() {
     override val providesFunctions: List<PrimitiveFunctionValue> by lazy {
         listOf(
             object: PrimitiveFunctionValue("print",
-                FunctionSignature.simple(listOf(
-                    Param("args", VectorValueType.of(AnyValueType).asType)),
+                FunctionSignature.simple(
+                    ParameterSignature(
+                    listOf(Parameter("args", VectorValueType.of(AnyValueType).asType)),
+                        emptyList()),
                     NoneValueType.asType)) {
-                override fun execute(args: List<Value>): Value {
+                override fun execute(args: List<Value>, kwArgs: Map<String, Value>): Value {
                     val v = VectorValueType.of(AnyValueType).assertIsVector(args[0])
                     RootEnv.echo(0,
                         "${

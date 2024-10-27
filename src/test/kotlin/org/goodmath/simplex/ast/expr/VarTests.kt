@@ -25,8 +25,10 @@ import org.goodmath.simplex.ast.def.VariableDefinition
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
+import org.goodmath.simplex.runtime.values.primitives.FloatValueType
 import org.goodmath.simplex.runtime.values.primitives.IntegerValue
 import org.goodmath.simplex.runtime.values.primitives.StringValue
+import org.goodmath.simplex.runtime.values.primitives.StringValueType
 import org.junit.jupiter.api.BeforeEach
 
 class VarTests {
@@ -43,9 +45,9 @@ class VarTests {
     @BeforeEach
     fun setupEnvironment() {
         var varDefOne =
-            VariableDefinition("one", Type.FloatType, LiteralExpr(PI, mockLoc()), mockLoc())
+            VariableDefinition("one", FloatValueType.asType, LiteralExpr(PI, mockLoc()), mockLoc())
         var varDefTwo =
-            VariableDefinition("two", Type.StringType, LiteralExpr("PI", mockLoc()), mockLoc())
+            VariableDefinition("two", StringValueType.asType, LiteralExpr("PI", mockLoc()), mockLoc())
         env = Env(listOf(varDefOne, varDefTwo), rootEnv)
         env.installStaticDefinitions()
         env.installDefinitionValues()

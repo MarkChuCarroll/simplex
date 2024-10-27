@@ -18,13 +18,13 @@ package org.goodmath.simplex.ast.def
 import kotlin.collections.indexOfFirst
 import org.goodmath.simplex.ast.Location
 import org.goodmath.simplex.ast.types.Type
-import org.goodmath.simplex.ast.types.TypedName
+import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexUndefinedError
 import org.goodmath.simplex.runtime.values.primitives.DataValueType
 import org.goodmath.simplex.twist.Twist
 
-class DataDefinition(name: String, val fields: List<TypedName>, loc: Location) :
+class DataDefinition(name: String, val fields: List<Parameter>, loc: Location) :
     Definition(name, loc) {
 
     val valueType = DataValueType(this)

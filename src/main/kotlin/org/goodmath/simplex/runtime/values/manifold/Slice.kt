@@ -20,10 +20,11 @@ import manifold3d.glm.DoubleVec2
 import manifold3d.manifold.CrossSection
 import manifold3d.manifold.CrossSectionVector
 import org.goodmath.simplex.ast.types.Type
+import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.FunctionSignature
 import org.goodmath.simplex.runtime.values.MethodSignature
-import org.goodmath.simplex.runtime.values.Param
+import org.goodmath.simplex.runtime.values.ParameterSignature
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.runtime.values.primitives.VectorValue
@@ -47,7 +48,7 @@ class Slice(val cross: CrossSection) : Value {
 
     override fun twist(): Twist =
         Twist.obj(
-            "CrossSection",
+            "Slice",
             Twist.array("points", toPoints())
         )
 
@@ -61,9 +62,9 @@ class Slice(val cross: CrossSection) : Value {
 
     val bounds = BoundingRect(cross.bounds())
 
-    fun translate(x: Double, y: Double): Slice = Slice(cross.translate(x, y))
+    fun move(x: Double, y: Double): Slice = Slice(cross.translate(x, y))
 
-    fun translate(v: Vec2): Slice = translate(v.x, v.y)
+    fun move(v: Vec2): Slice = move(v.x, v.y)
 
     fun rotate(angle: Double): Slice = Slice(cross.rotate(angle.toFloat()))
 
@@ -149,10 +150,10 @@ object SliceValueType : ValueType() {
             object: PrimitiveFunctionValue("circle",
                 FunctionSignature.multi(
                     listOf(
-                        listOf(Param("radius", FloatValueType.asType)),
-                        listOf(Param("radius", FloatValueType.asType), Param("facets", IntegerValueType.asType))),
+                        ParameterSignature(listOf(Parameter("radius", FloatValueType.asType))),
+                        ParameterSignature(listOf(Parameter("radius", FloatValueType.asType), Parameter("facets", IntegerValueType.asType)))),
                     asType)) {
-                override fun execute(args: List<Value>): Value {
+                override fun execute(args: List<Value>, kwArgs: Map<String, Value>): Value {
                     val radius = assertIsFloat(args[0])
                     val facets = if (args.size > 1) {
                         assertIsInt(args[1])
@@ -165,17 +166,17 @@ object SliceValueType : ValueType() {
             object: PrimitiveFunctionValue("oval",
                 FunctionSignature.multi(
                     listOf(
-                        listOf(
-                            Param("x", FloatValueType.asType),
-                            Param("y", FloatValueType.asType),
-                        ),
-                        listOf(
-                            Param("x", FloatValueType.asType),
-                            Param("y", FloatValueType.asType),
-                            Param("facets", IntegerValueType.asType))
-                        ),
+                        ParameterSignature(listOf(
+                            Parameter("x", FloatValueType.asType),
+                            Parameter("y", FloatValueType.asType),
+                        )),
+                        ParameterSignature(listOf(
+                            Parameter("x", FloatValueType.asType),
+                            Parameter("y", FloatValueType.asType),
+                            Parameter("facets", IntegerValueType.asType))
+                        )),
                     asType)) {
-                override fun execute(args: List<Value>): Value {
+                override fun execute(args: List<Value>, kwArgs: Map<String, Value>): Value {
                     val x = assertIsFloat(args[0])
                     val y = assertIsFloat(args[1])
                     val facets = if (args.size > 2) {
@@ -188,22 +189,22 @@ object SliceValueType : ValueType() {
             },
             object: PrimitiveFunctionValue("rectangle",
                 FunctionSignature.simple(
-                        listOf(Param("x", FloatValueType.asType),
-                            Param("y", FloatValueType.asType)),
+                    ParameterSignature(listOf(Parameter("x", FloatValueType.asType),
+                            Parameter("y", FloatValueType.asType))),
                     asType)) {
-                override fun execute(args: List<Value>): Value {
+                override fun execute(args: List<Value>, kwArgs: Map<String, Value>): Value {
                     val x = assertIsFloat(args[0])
                     val y = assertIsFloat(args[1])
-                    return Slice.rectangle(x, y)
+                    return Slice.rectangle(x, y).move(-x/2.0, -y/2.0)
                 }
             },
             object :
                 PrimitiveFunctionValue(
                     "batch_hull",
                     FunctionSignature.simple(
-                        listOf(Param("css", Type.vector(asType))), asType),
+                        ParameterSignature(listOf(Parameter("css", Type.vector(asType)))), asType),
                 ) {
-                override fun execute(args: List<Value>): Value {
+                override fun execute(args: List<Value>, kwArgs: Map<String, Value>): Value {
                     val css =
                         ArrayList(
                             VectorValueType.of(SliceValueType).assertIs(args[0]).elements.map {
@@ -216,9 +217,9 @@ object SliceValueType : ValueType() {
             object :
                 PrimitiveFunctionValue(
                     "cross_section_compose",
-                    FunctionSignature.simple(listOf(Param("css", Type.vector(asType))), asType),
+                    FunctionSignature.simple(ParameterSignature(listOf(Parameter("css", Type.vector(asType)))), asType),
                 ) {
-                override fun execute(args: List<Value>): Value {
+                override fun execute(args: List<Value>, kwArgs: Map<String, Value>): Value {
                     val css =
                         ArrayList(
                             VectorValueType.of(SliceValueType).assertIs(args[0]).elements.map {
@@ -232,17 +233,17 @@ object SliceValueType : ValueType() {
                 PrimitiveFunctionValue(
                     "text_cross_section",
                     FunctionSignature.simple(
-                        listOf(
-                            Param("font_file", StringValueType.asType),
-                            Param("text", StringValueType.asType),
-                            Param("pixelHeight", IntegerValueType.asType),
-                            Param("interpRes", IntegerValueType.asType),
-                            Param("fillRule", IntegerValueType.asType),
-                        ),
+                        ParameterSignature(listOf(
+                            Parameter("font_file", StringValueType.asType),
+                            Parameter("text", StringValueType.asType),
+                            Parameter("pixelHeight", IntegerValueType.asType),
+                            Parameter("interpRes", IntegerValueType.asType),
+                            Parameter("fillRule", IntegerValueType.asType),
+                        )),
                         asType,
                     ),
                 ) {
-                override fun execute(args: List<Value>): Value {
+                override fun execute(args: List<Value>, kwArgs: Map<String, Value>): Value {
                     return Slice(
                         CrossSection.Text(
                             assertIsString(args[0]),
@@ -262,9 +263,9 @@ object SliceValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "area",
-                    MethodSignature.simple(asType, emptyList<Param>(), FloatValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature.empty, FloatValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>,  env: Env): Value {
                     val self = assertIs(target)
                     return self.area
                 }
@@ -272,9 +273,9 @@ object SliceValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "num_vert",
-                    MethodSignature.simple(asType, emptyList<Param>(), IntegerValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature.empty, IntegerValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     return self.numVert
                 }
@@ -282,9 +283,9 @@ object SliceValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "contours",
-                    MethodSignature.simple(asType, emptyList<Param>(), FloatValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature.empty, FloatValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     return self.contours
                 }
@@ -292,9 +293,9 @@ object SliceValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "is_empty",
-                    MethodSignature.simple(asType, emptyList<Param>(), BooleanValueType.asType),
+                    MethodSignature.simple(asType, ParameterSignature.empty, BooleanValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     return self.isEmpty()
                 }
@@ -302,10 +303,10 @@ object SliceValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "bounds",
-                    MethodSignature.simple(asType, emptyList<Param>(),
+                    MethodSignature.simple(asType, ParameterSignature.empty,
                         BoundingRectValueType.asType)
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     return self.bounds
                 }
@@ -316,30 +317,30 @@ object SliceValueType : ValueType() {
                     MethodSignature.multi(
                         asType,
                         listOf(
-                            listOf(Param("x", FloatValueType.asType), Param("y", FloatValueType.asType)),
-                            listOf(Param("v", Vec2ValueType.asType)),
+                            ParameterSignature(listOf(Parameter("x", FloatValueType.asType), Parameter("y", FloatValueType.asType))),
+                            ParameterSignature(listOf(Parameter("v", Vec2ValueType.asType))),
                         ),
                         asType,
                     ),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     return if (args.size == 1) {
                         val v = Vec2ValueType.assertIs(args[0])
-                        self.translate(v)
+                        self.move(v)
                     } else {
                         val x = assertIsFloat(args[0])
                         val y = assertIsFloat(args[1])
-                        self.translate(x, y)
+                        self.move(x, y)
                     }
                 }
             },
             object :
                 PrimitiveMethod(
                     "rotate",
-                    MethodSignature.simple(asType, listOf(Param("angle", FloatValueType.asType)), asType),
+                    MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("angle", FloatValueType.asType))), asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     val angle = assertIsFloat(args[0])
                     return self.rotate(angle)
@@ -351,13 +352,13 @@ object SliceValueType : ValueType() {
                     MethodSignature.multi(
                         asType,
                         listOf(
-                            listOf(Param("x", FloatValueType.asType), Param("y", FloatValueType.asType)),
-                            listOf(Param("factor", Vec2ValueType.asType)),
+                            ParameterSignature(listOf(Parameter("x", FloatValueType.asType), Parameter("y", FloatValueType.asType))),
+                            ParameterSignature(listOf(Parameter("factor", Vec2ValueType.asType))),
                         ),
                         asType,
                     ),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     if (args.size == 1) {
                         return self.scale(Vec2ValueType.assertIs(args[0]))
@@ -371,9 +372,10 @@ object SliceValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "mirror",
-                    MethodSignature.simple(asType, listOf(Param("norm", Vec2ValueType.asType)), asType),
+                    MethodSignature.simple(asType,
+                        ParameterSignature(listOf(Parameter("norm", Vec2ValueType.asType))), asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     val norm = Vec2ValueType.assertIs(args[0])
                     return self.mirror(norm)
@@ -382,9 +384,10 @@ object SliceValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "simplify",
-                    MethodSignature.simple(asType, listOf(Param("epsilon", FloatValueType.asType)), asType),
+                    MethodSignature.simple(asType,
+                        ParameterSignature(listOf(Parameter("epsilon", FloatValueType.asType))), asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     val epsilon = assertIsFloat(args[0])
                     return self.simplify(epsilon)
@@ -396,27 +399,27 @@ object SliceValueType : ValueType() {
                     MethodSignature.multi(
                         asType,
                         listOf(
-                            listOf(Param("offset", FloatValueType.asType)),
-                            listOf(
-                                Param("offset", FloatValueType.asType),
-                                Param("join_type", IntegerValueType.asType),
-                            ),
-                            listOf(
-                                Param("offset", FloatValueType.asType),
-                                Param("join_type", IntegerValueType.asType),
-                                Param("circle_segments", IntegerValueType.asType),
-                            ),
-                            listOf(
-                                Param("offset", FloatValueType.asType),
-                                Param("join_type", IntegerValueType.asType),
-                                Param("circle_segments", IntegerValueType.asType),
-                                Param("miter_limit", FloatValueType.asType),
-                            ),
+                            ParameterSignature(listOf(Parameter("offset", FloatValueType.asType))),
+                            ParameterSignature(listOf(
+                                Parameter("offset", FloatValueType.asType),
+                                Parameter("join_type", IntegerValueType.asType),
+                            )),
+                            ParameterSignature(listOf(
+                                Parameter("offset", FloatValueType.asType),
+                                Parameter("join_type", IntegerValueType.asType),
+                                Parameter("circle_segments", IntegerValueType.asType),
+                            )),
+                            ParameterSignature(listOf(
+                                Parameter("offset", FloatValueType.asType),
+                                Parameter("join_type", IntegerValueType.asType),
+                                Parameter("circle_segments", IntegerValueType.asType),
+                                Parameter("miter_limit", FloatValueType.asType),
+                            )),
                         ),
                         asType,
                     ),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     val offset = assertIsFloat(args[0])
                     val joinType =
@@ -443,9 +446,9 @@ object SliceValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "hull",
-                    MethodSignature.simple(asType, emptyList<Param>(), asType),
+                    MethodSignature.simple(asType, ParameterSignature.empty, asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     return self.convexHull()
                 }
@@ -453,9 +456,9 @@ object SliceValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "plus",
-                    MethodSignature.simple(asType, listOf(Param("other", asType)), asType),
+                    MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("other", asType))), asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     val other = assertIs(args[0])
                     return self + other
@@ -464,9 +467,10 @@ object SliceValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "minus",
-                    MethodSignature.simple(asType, listOf(Param("other", asType)), asType),
+                    MethodSignature.simple(asType,
+                        ParameterSignature(listOf(Parameter("other", asType))), asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     val other = assertIs(args[0])
                     return self - other
@@ -475,9 +479,10 @@ object SliceValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "intersect",
-                    MethodSignature.simple(asType, listOf(Param("other", asType)), asType),
+                    MethodSignature.simple(asType,
+                        ParameterSignature(listOf(Parameter("other", asType))), asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     val other = assertIs(args[0])
                     return self.intersect(other)
@@ -486,9 +491,9 @@ object SliceValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "to_polygons",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.vector(SPolygonType.asType)),
+                    MethodSignature.simple(asType, ParameterSignature.empty, Type.vector(SPolygonType.asType)),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     return self.toPolygons()
                 }
@@ -496,9 +501,9 @@ object SliceValueType : ValueType() {
             object :
                 PrimitiveMethod(
                     "decompose",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.vector(asType)),
+                    MethodSignature.simple(asType, ParameterSignature.empty, Type.vector(asType)),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     return self.decompose()
                 }
@@ -509,23 +514,23 @@ object SliceValueType : ValueType() {
                     MethodSignature.multi(
                         SolidValueType.asType,
                         listOf(
-                            listOf(Param("height", FloatValueType.asType), Param("steps", IntegerValueType.asType)),
-                            listOf(
-                                Param("height", FloatValueType.asType),
-                                Param("steps", IntegerValueType.asType),
-                                Param("scaleTop", Vec2ValueType.asType),
-                            ),
-                            listOf(
-                                Param("height", FloatValueType.asType),
-                                Param("n_divisions", IntegerValueType.asType),
-                                Param("twist_degrees", FloatValueType.asType),
-                                Param("scaleTop", Vec2ValueType.asType),
-                            ),
+                            ParameterSignature(listOf(Parameter("height", FloatValueType.asType), Parameter("steps", IntegerValueType.asType))),
+                            ParameterSignature(listOf(
+                                Parameter("height", FloatValueType.asType),
+                                Parameter("steps", IntegerValueType.asType),
+                                Parameter("scaleTop", Vec2ValueType.asType),
+                            )),
+                            ParameterSignature(listOf(
+                                Parameter("height", FloatValueType.asType),
+                                Parameter("n_divisions", IntegerValueType.asType),
+                                Parameter("twist_degrees", FloatValueType.asType),
+                                Parameter("scaleTop", Vec2ValueType.asType),
+                            )),
                         ),
                         SolidValueType.asType,
                     ),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     val height = assertIsFloat(args[0])
                     val steps =
@@ -555,16 +560,16 @@ object SliceValueType : ValueType() {
                     MethodSignature.multi(
                         asType,
                         listOf(
-                            listOf(Param("segments", IntegerValueType.asType)),
-                            listOf(
-                                Param("segments", IntegerValueType.asType),
-                                Param("degrees", FloatValueType.asType),
-                            ),
+                            ParameterSignature(listOf(Parameter("segments", IntegerValueType.asType))),
+                            ParameterSignature(listOf(
+                                Parameter("segments", IntegerValueType.asType),
+                                Parameter("degrees", FloatValueType.asType),
+                            )),
                         ),
                         SolidValueType.asType,
                     ),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
                     val self = assertIs(target)
                     val segments = assertIsInt(args[0])
                     val degrees =

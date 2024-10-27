@@ -17,14 +17,24 @@ package org.goodmath.simplex.ast.types
 
 import org.goodmath.simplex.ast.AstNode
 import org.goodmath.simplex.ast.Location
+import org.goodmath.simplex.ast.expr.Expr
 import org.goodmath.simplex.twist.Twist
 
-/** A name with an optional type declaration, used in several places in the code. */
-class TypedName(val name: String, val type: Type, loc: Location) : AstNode(loc) {
+open class Parameter(val name: String, val type: Type, loc: Location? = null) : AstNode(loc) {
     override fun twist(): Twist =
-        Twist.obj("TypedName", Twist.attr("name", name), Twist.value("type", type))
+        Twist.obj("Parameter", Twist.attr("name", name), Twist.value("type", type))
 
     override fun toString(): String {
-        return "TypedName(${name}:${type})"
+        return "Parameter(${name}:${type})"
+    }
+}
+
+class KwParameter(name: String, type: Type, val defaultValue: Expr, loc: Location?): Parameter(name, type, loc) {
+    override fun twist(): Twist =
+        Twist.obj("KwParameter", Twist.attr("name", name), Twist.value("type", type),
+            Twist.value("defaultValue", defaultValue))
+
+    override fun toString(): String {
+        return "KwParameter(${name}:${type}=${defaultValue})"
     }
 }
