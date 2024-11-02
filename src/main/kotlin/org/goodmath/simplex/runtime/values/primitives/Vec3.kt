@@ -15,6 +15,7 @@
  */
 package org.goodmath.simplex.runtime.values.primitives
 
+import eu.mihosoft.vvecmath.Vector3d
 import kotlin.math.sqrt
 import manifold3d.glm.DoubleVec3
 import org.goodmath.simplex.ast.types.Type
@@ -27,72 +28,38 @@ import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.twist.Twist
 
-class Vec3(val x: Double, val y: Double, val z: Double) : Value {
+class Vec3(val v3: Vector3d): Value {
+    constructor(x: Double, y: Double, z: Double): this(Vector3d.xyz(x, y, z))
     override val valueType: ValueType = Vec3ValueType
 
     override fun twist(): Twist {
         return Twist.obj(
             "Vec3",
-            Twist.attr("x", x.toString()),
-            Twist.attr("y", y.toString()),
-            Twist.attr("z", z.toString()),
+            Twist.attr("x", v3.x.toString()),
+            Twist.attr("y", v3.y.toString()),
+            Twist.attr("z", v3.z.toString()),
         )
     }
 
     override fun toString(): String {
-        return "(x=$x, y=$y, z=$z)"
+        return "(x=${v3.x}, y=${v3.y}, z=${v3.z})"
     }
 
-    fun toDoubleVec3(): DoubleVec3 {
-        return DoubleVec3(x, y, z)
-    }
-
-    operator fun plus(other: Vec3): Vec3 {
-        return Vec3(x + other.x, y + other.y, z + other.z)
-    }
-
-    operator fun minus(other: Vec3): Vec3 {
-        return Vec3(x - other.x, y - other.y, z - other.z)
-    }
-
-    fun dot(other: Vec3): Double {
-        return x * other.x + y * other.y + z * other.z
-    }
-
-    fun magnitude(): Double {
-        return sqrt(x * x + y * y + z * z)
-    }
 
     fun compareTo(other: Vec3): Int {
         return when {
-            x < other.x -> -1
-            x > other.x -> 1
-            y < other.y -> -1
-            y > other.y -> 1
-            z < other.z -> -1
-            z > other.z -> 1
+            v3.x < other.v3.x -> -1
+            v3.x > other.v3.x -> 1
+            v3.y < other.v3.y -> -1
+            v3.y > other.v3.y -> 1
+            v3.z < other.v3.z -> -1
+            v3.z > other.v3.z -> 1
             else -> 0
         }
     }
 
     fun eq(other: Any?): Boolean {
-        return other is Vec3 && x == other.x && y == other.y && z == other.z
-    }
-
-    operator fun times(other: Double): Vec3 {
-        return Vec3(x * other, y * other, z * other)
-    }
-
-    operator fun div(other: Double): Vec3 {
-        return Vec3(x / other, y / other, z / other)
-    }
-
-    operator fun unaryMinus(): Vec3 = Vec3(-x, -y, -z)
-
-    companion object {
-        fun fromDoubleVec3(doubleVec3: DoubleVec3): Vec3 {
-            return Vec3(doubleVec3.x(), doubleVec3.y(), doubleVec3.z())
-        }
+        return other is Vec3 && v3 == other.v3
     }
 }
 
@@ -111,7 +78,7 @@ object Vec3ValueType : ValueType() {
 
     override fun isTruthy(v: Value): Boolean {
         return if (v is Vec3) {
-            v.x != 0.0 || v.y != 0.0 || v.z != 0.0
+            v.v3.x != 0.0 || v.v3.y != 0.0 || v.v3.z != 0.0
         } else {
             false
         }
@@ -150,9 +117,9 @@ object Vec3ValueType : ValueType() {
                     MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("other", asType))), asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
-                    val self = assertIs(target)
-                    val other = assertIs(args[0])
-                    return self + other
+                    val self = assertIs(target).v3
+                    val other = assertIs(args[0]).v3
+                    return Vec3(self.plus(other))
                 }
             },
             object :
@@ -162,9 +129,9 @@ object Vec3ValueType : ValueType() {
                         ParameterSignature(listOf(Parameter("other", asType))), asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
-                    val self = assertIs(target)
-                    val other = assertIs(args[0])
-                    return self - other
+                    val self = assertIs(target).v3
+                    val other = assertIs(args[0]).v3
+                    return Vec3(self - other)
                 }
             },
             object :
@@ -174,9 +141,9 @@ object Vec3ValueType : ValueType() {
                         ParameterSignature(listOf(Parameter("other", FloatValueType.asType))), asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
-                    val self = assertIs(target)
+                    val self = assertIs(target).v3
                     val other = assertIsFloat(args[0])
-                    return self * other
+                    return Vec3(self.times(other))
                 }
             },
             object :
@@ -186,16 +153,16 @@ object Vec3ValueType : ValueType() {
                         ParameterSignature(listOf(Parameter("other", FloatValueType.asType))), asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
-                    val self = assertIs(target)
+                    val self = assertIs(target).v3
                     val other = assertIsFloat(args[0])
-                    return self / other
+                    return Vec3(self.divided(other))
                 }
             },
             object :
                 PrimitiveMethod("negate", MethodSignature.simple(asType, ParameterSignature.empty, asType)) {
                 override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
-                    val self = assertIs(target)
-                    return -self
+                    val self = assertIs(target).v3
+                    return Vec3(self.negated())
                 }
             },
             object :
@@ -226,8 +193,8 @@ object Vec3ValueType : ValueType() {
                     MethodSignature.simple(asType, ParameterSignature(listOf(Parameter("other", asType))), FloatValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, kwArgs: Map<String, Value>, env: Env): Value {
-                    val self = assertIs(target)
-                    val other = assertIs(args[0])
+                    val self = assertIs(target).v3
+                    val other = assertIs(args[0]).v3
                     return FloatValue(self.dot(other))
                 }
             },

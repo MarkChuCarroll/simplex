@@ -29,7 +29,7 @@ open class Parameter(val name: String, val type: Type, loc: Location? = null) : 
     }
 }
 
-class KwParameter(name: String, type: Type, val defaultValue: Expr, loc: Location?): Parameter(name, type, loc) {
+class KwParameter(name: String, type: Type, val defaultValue: Expr, loc: Location? = null): Parameter(name, type, loc) {
     override fun twist(): Twist =
         Twist.obj("KwParameter", Twist.attr("name", name), Twist.value("type", type),
             Twist.value("defaultValue", defaultValue))

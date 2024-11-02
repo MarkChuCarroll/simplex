@@ -24,9 +24,6 @@ import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.SimplexError
 import org.goodmath.simplex.runtime.SimplexEvaluationError
-import org.goodmath.simplex.runtime.values.manifold.SMaterial
-import org.goodmath.simplex.runtime.values.manifold.Solid
-import org.goodmath.simplex.runtime.values.manifold.SolidValueType
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.plus
 
