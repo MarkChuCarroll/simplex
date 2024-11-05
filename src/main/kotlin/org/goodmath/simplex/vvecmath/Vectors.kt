@@ -133,6 +133,6 @@ object Vectors3d {
             throw IllegalArgumentException("Number of specified values must be a multiple of 3!")
         }
 
-        return (0 until xyzValues.size / 3).map { Vector3d.xyz(xyzValues[i], xyzValues[i + 1], xyzValues[i + 2]) }
+        return (0 until xyzValues.size / 3).map { Vector3d.xyz(xyzValues[it], xyzValues[it + 1], xyzValues[it + 2]) }
     }
 }

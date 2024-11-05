@@ -40,7 +40,7 @@ package org.goodmath.simplex.vvecmath
      *
      * @author Michael Hoffer &lt;info@michaelhoffer.de&gt;
      */
-class Vector3dImpl(var x: Double, var y: Double, var z: Double): Vector3d, Cloneable{
+data class Vector3dImpl(override val x: Double, override val y: Double, override val z: Double): Vector3d, Cloneable{
 
         /**
          * Creates a new vector with specified {@code x}, {@code y} and
@@ -69,25 +69,25 @@ class Vector3dImpl(var x: Double, var y: Double, var z: Double): Vector3d, Clone
         }
 
         fun set(i: Int,  value: Double): Vector3d {
-            when (i) {
-                0 -> x = value
-                1 -> y = value
-                2 -> z = value
-                else -> throw new RuntimeException("Illegal index: " + i);
+            return when (i) {
+                0 -> copy(x = value)
+                1 -> copy(y = value)
+                2 -> copy(z = value)
+                else -> throw RuntimeException("Illegal index: " + i);
             }
             return this
         }
 
         override fun toString(): String {
-            return VectorUtilInternal.toString(this)
+            return Vector3d.toString(this)
         }
 
         override fun equals(obj: Any?): Boolean {
-            return VectorUtilInternal.equals(this, obj)
+            return Vector3d.equals(this, obj)
         }
 
         override fun hashCode(): Int {
-            return VectorUtilInternal.getHashCode(this)
+            return Vector3d.getHashCode(this)
         }
 
     }

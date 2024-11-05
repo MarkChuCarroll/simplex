@@ -242,9 +242,6 @@ interface Vector3d {
         return times(a.x, a.y, a.z)
     }
 
-    fun multiplied(a: Vector3d): Vector3d {
-        return clone() * a
-    }
 
     /**
      * Returns the product of this vector and the specified vector.

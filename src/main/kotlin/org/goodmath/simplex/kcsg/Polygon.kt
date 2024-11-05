@@ -1,5 +1,6 @@
 package org.goodmath.simplex.kcsg
 
+import org.goodmath.simplex.kcsg.poly2tri.PolygonUtil
 import org.goodmath.simplex.vvecmath.Transform
 import org.goodmath.simplex.vvecmath.Vector3d
 import kotlin.math.absoluteValue
@@ -17,10 +18,10 @@ import org.goodmath.simplex.vvecmath.Plane as VVPlane
  */
 class Polygon(
     var vertices: List<Vertex>,
-    var shared: PropertyStorage = PropertyStorage(),
+    shared: PropertyStorage = PropertyStorage(),
 ): Cloneable {
     var isValid = true
-    val storage = shared
+    var storage = shared
     var plane: VVPlane
     var csgPlane: Plane = Plane.createFromPoints(
         vertices[0].pos,

@@ -199,7 +199,7 @@ class CSG(var storage: PropertyStorage = PropertyStorage()): Cloneable {
         csgs.forEach { csg ->
             csgsUnion.polygons.addAll(csg.clone().polygons)
         }
-        csgsUnion.polygons.forEach { p -> p.setStorage(storage) }
+        csgsUnion.polygons.forEach { p -> p.storage = storage }
         return csgsUnion.hull()
     }
 
@@ -693,60 +693,60 @@ class CSG(var storage: PropertyStorage = PropertyStorage()): Cloneable {
                 // multiple triangles:
                 val firstVertex = p.vertices[0]
                 for (i in 0 until p.vertices.size - 2) {
-                    if (firstVertex.pos.x() < minX) {
-                        minX = firstVertex.pos.x()
+                    if (firstVertex.pos.x < minX) {
+                        minX = firstVertex.pos.x
                     }
-                    if (firstVertex.pos.y() < minY) {
-                        minY = firstVertex.pos.y()
+                    if (firstVertex.pos.y < minY) {
+                        minY = firstVertex.pos.y
                     }
-                    if (firstVertex.pos.z() < minZ) {
-                        minZ = firstVertex.pos.z()
+                    if (firstVertex.pos.z < minZ) {
+                        minZ = firstVertex.pos.z
                     }
 
-                    if (firstVertex.pos.x() > maxX) {
-                        maxX = firstVertex.pos.x()
+                    if (firstVertex.pos.x > maxX) {
+                        maxX = firstVertex.pos.x
                     }
-                    if (firstVertex.pos.y() > maxY) {
-                        maxY = firstVertex.pos.y()
+                    if (firstVertex.pos.y > maxY) {
+                        maxY = firstVertex.pos.y
                     }
-                    if (firstVertex.pos.z() > maxZ) {
-                        maxZ = firstVertex.pos.z()
+                    if (firstVertex.pos.z > maxZ) {
+                        maxZ = firstVertex.pos.z
                     }
 
                     mesh.points.addAll(
-                        firstVertex.pos.x().toFloat(),
-                        firstVertex.pos.y().toFloat(),
-                        firstVertex.pos.z().toFloat())
+                        firstVertex.pos.x.toFloat(),
+                        firstVertex.pos.y.toFloat(),
+                        firstVertex.pos.z.toFloat())
 
                     mesh.getTexCoords().addAll(0f) // texture (not covered)
                     mesh.getTexCoords().addAll(0f)
 
                     val secondVertex = p.vertices[i + 1]
 
-                    if (secondVertex.pos.x() < minX) {
-                        minX = secondVertex.pos.x()
+                    if (secondVertex.pos.x < minX) {
+                        minX = secondVertex.pos.x
                     }
-                    if (secondVertex.pos.y() < minY) {
-                        minY = secondVertex.pos.y()
+                    if (secondVertex.pos.y < minY) {
+                        minY = secondVertex.pos.y
                     }
-                    if (secondVertex.pos.z() < minZ) {
-                        minZ = secondVertex.pos.z()
+                    if (secondVertex.pos.z < minZ) {
+                        minZ = secondVertex.pos.z
                     }
 
-                    if (secondVertex.pos.x() > maxX) {
-                        maxX = firstVertex.pos.x()
+                    if (secondVertex.pos.x > maxX) {
+                        maxX = firstVertex.pos.x
                     }
-                    if (secondVertex.pos.y() > maxY) {
-                        maxY = firstVertex.pos.y()
+                    if (secondVertex.pos.y > maxY) {
+                        maxY = firstVertex.pos.y
                     }
-                    if (secondVertex.pos.z() > maxZ) {
-                        maxZ = firstVertex.pos.z()
+                    if (secondVertex.pos.z > maxZ) {
+                        maxZ = firstVertex.pos.z
                     }
 
                     mesh.getPoints().addAll(
-                        secondVertex.pos.x().toFloat(),
-                        secondVertex.pos.y().toFloat(),
-                        secondVertex.pos.z().toFloat())
+                        secondVertex.pos.x.toFloat(),
+                        secondVertex.pos.y.toFloat(),
+                        secondVertex.pos.z.toFloat())
 
                     mesh.getTexCoords().addAll(0f) // texture (not covered)
                     mesh.getTexCoords().addAll(0f)
@@ -754,28 +754,28 @@ class CSG(var storage: PropertyStorage = PropertyStorage()): Cloneable {
                     val thirdVertex = p.vertices[i + 2]
 
                     mesh.getPoints().addAll(
-                        thirdVertex.pos.x().toFloat(),
-                        thirdVertex.pos.y().toFloat(),
-                        thirdVertex.pos.z().toFloat())
+                        thirdVertex.pos.x.toFloat(),
+                        thirdVertex.pos.y.toFloat(),
+                        thirdVertex.pos.z.toFloat())
 
-                    if (thirdVertex.pos.x() < minX) {
-                        minX = thirdVertex.pos.x()
+                    if (thirdVertex.pos.x < minX) {
+                        minX = thirdVertex.pos.x
                     }
-                    if (thirdVertex.pos.y() < minY) {
-                        minY = thirdVertex.pos.y()
+                    if (thirdVertex.pos.y < minY) {
+                        minY = thirdVertex.pos.y
                     }
-                    if (thirdVertex.pos.z() < minZ) {
-                        minZ = thirdVertex.pos.z()
+                    if (thirdVertex.pos.z < minZ) {
+                        minZ = thirdVertex.pos.z
                     }
 
-                    if (thirdVertex.pos.x() > maxX) {
-                        maxX = firstVertex.pos.x()
+                    if (thirdVertex.pos.x > maxX) {
+                        maxX = firstVertex.pos.x
                     }
-                    if (thirdVertex.pos.y() > maxY) {
-                        maxY = firstVertex.pos.y()
+                    if (thirdVertex.pos.y > maxY) {
+                        maxY = firstVertex.pos.y
                     }
-                    if (thirdVertex.pos.z() > maxZ) {
-                        maxZ = firstVertex.pos.z()
+                    if (thirdVertex.pos.z > maxZ) {
+                        maxZ = firstVertex.pos.z
                     }
 
                     mesh.getTexCoords().addAll(0f) // texture (not covered)
@@ -893,17 +893,12 @@ class CSG(var storage: PropertyStorage = PropertyStorage()): Cloneable {
             csg.storage = storage
 
             for (polygon in polygons) {
-                polygon.setStorage(storage)
+                polygon.storage = storage
             }
             return csg
         }
 
-        /**
-         * @param optType the optType to set
-         */
-        fun setDefaultOptType(optType: OptType) {
-            defaultOptType = optType
-        }
+
     }
 
     /**

@@ -23,13 +23,6 @@ import org.goodmath.simplex.runtime.values.AnyValueType
 import org.goodmath.simplex.runtime.values.FunctionSignature
 import org.goodmath.simplex.runtime.values.ParameterSignature
 import org.goodmath.simplex.runtime.values.ValueType
-import org.goodmath.simplex.runtime.values.manifold.BoundingBoxValueType
-import org.goodmath.simplex.runtime.values.manifold.BoundingRectValueType
-import org.goodmath.simplex.runtime.values.manifold.SMeshGLType
-import org.goodmath.simplex.runtime.values.manifold.SPolygonType
-import org.goodmath.simplex.runtime.values.manifold.SSmoothnessType
-import org.goodmath.simplex.runtime.values.manifold.SliceValueType
-import org.goodmath.simplex.runtime.values.manifold.SolidValueType
 import org.goodmath.simplex.runtime.values.primitives.VectorValueType
 import org.goodmath.simplex.runtime.values.primitives.BooleanValueType
 import org.goodmath.simplex.runtime.values.primitives.FloatValueType
@@ -39,7 +32,6 @@ import org.goodmath.simplex.runtime.values.primitives.MethodValueType
 import org.goodmath.simplex.runtime.values.primitives.NoneValueType
 import org.goodmath.simplex.runtime.values.primitives.StringValueType
 import org.goodmath.simplex.runtime.values.primitives.Vec2ValueType
-import org.goodmath.simplex.runtime.values.primitives.Vec3ValueType
 import java.util.HashMap
 import kotlin.collections.all
 import kotlin.collections.joinToString
@@ -65,13 +57,13 @@ abstract class Type : Twistable {
         val builtinValueTypes = listOf(
             IntegerValueType, FloatValueType, StringValueType,
             BooleanValueType,
-            Vec2ValueType, Vec3ValueType,
-            BoundingBoxValueType,
+            Vec2ValueType,
+/*            BoundingBoxValueType,
             SolidValueType,
             BoundingRectValueType,
             SPolygonType,
             SliceValueType,
-            SMeshGLType, SSmoothnessType,
+            SMeshGLType, SSmoothnessType,*/
             NoneValueType, AnyValueType
         )
 

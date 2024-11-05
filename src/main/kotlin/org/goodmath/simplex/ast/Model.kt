@@ -96,6 +96,7 @@ class Product(val name: String?, val body: List<Expr>, loc: Location) : AstNode(
                     throw SimplexEvaluationError("Error evaluating model", cause = e, loc = loc)
                 }
             }
+        /*
         val bodies = results.filter { it is Solid }.map { it as Solid }
         if (bodies.isNotEmpty()) {
             var combined = bodies.first()
@@ -130,6 +131,6 @@ class Product(val name: String?, val body: List<Expr>, loc: Location) : AstNode(
                 echo(1, cyan("Writing twisted products to $prefixLastSegment-$name.twist"), false)
                 Path("$prefix-$name.twist").writeText(twistOut)
             }
-        }
+        }*/
     }
 }

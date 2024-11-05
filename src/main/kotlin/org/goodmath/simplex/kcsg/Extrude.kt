@@ -1,5 +1,6 @@
 package org.goodmath.simplex.kcsg
 
+import org.goodmath.simplex.kcsg.poly2tri.PolygonUtil
 import org.goodmath.simplex.vvecmath.Transform
 import org.goodmath.simplex.vvecmath.Vector3d
 

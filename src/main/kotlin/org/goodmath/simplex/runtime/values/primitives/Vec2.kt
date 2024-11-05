@@ -16,7 +16,6 @@
 package org.goodmath.simplex.runtime.values.primitives
 
 import kotlin.math.sqrt
-import manifold3d.glm.DoubleVec2
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.runtime.Env
@@ -26,6 +25,7 @@ import org.goodmath.simplex.runtime.values.ParameterSignature
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.twist.Twist
+import org.goodmath.simplex.vvecmath.Vector3d
 
 class Vec2(val x: Double, val y: Double) : Value {
     override val valueType: ValueType = Vec2ValueType
@@ -34,9 +34,6 @@ class Vec2(val x: Double, val y: Double) : Value {
         return Twist.obj("Vec2", Twist.attr("x", x.toString()), Twist.attr("y", y.toString()))
     }
 
-    fun toDoubleVec2(): DoubleVec2 {
-        return DoubleVec2(x, y)
-    }
 
     operator fun plus(other: Vec2): Vec2 {
         return Vec2(x + other.x, y + other.y)
@@ -78,15 +75,10 @@ class Vec2(val x: Double, val y: Double) : Value {
 
     operator fun unaryMinus(): Vec2 = Vec2(-x, -y)
 
-    fun at(z: Double): Vec3 {
-        return Vec3(x, y, z)
+    fun at(z: Double): Vector3d {
+        return Vector3d.xyz(x, y, z)
     }
 
-    companion object {
-        fun fromDoubleVec2(doubleVec2: DoubleVec2): Vec2 {
-            return Vec2(doubleVec2.x(), doubleVec2.y())
-        }
-    }
 }
 
 object Vec2ValueType : ValueType() {
@@ -97,11 +89,8 @@ object Vec2ValueType : ValueType() {
     }
 
     override fun isTruthy(v: Value): Boolean {
-        return if (v is Vec3) {
-            v.x != 0.0 || v.y != 0.0 || v.z != 0.0
-        } else {
-            false
-        }
+        return true
+
     }
 
     override val providesFunctions: List<PrimitiveFunctionValue> by lazy {
@@ -209,7 +198,7 @@ object Vec2ValueType : ValueType() {
                     val other = assertIs(args[0])
                     return FloatValue(self.dot(other))
                 }
-            },
+            } /*,
             object :
                 PrimitiveMethod(
                     "at",
@@ -220,7 +209,7 @@ object Vec2ValueType : ValueType() {
                     val z = assertIsFloat(args[0])
                     return self.at(z)
                 }
-            },
+            },*/
         )
     }
     override val providesVariables: Map<String, Value> by lazy {
