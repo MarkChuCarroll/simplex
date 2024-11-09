@@ -26,6 +26,7 @@ import org.goodmath.simplex.ast.def.DataDefinition
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.runtime.Env
+import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.values.primitives.BooleanValue
 import org.goodmath.simplex.runtime.values.primitives.IntegerValue
 import org.goodmath.simplex.runtime.values.primitives.StringValue
@@ -47,6 +48,7 @@ class DataTypeTests {
 
     @BeforeEach
     fun setupEnvironment() {
+        RootEnv.initialize()
         val dataTypeOne =
             DataDefinition(
                 "TestDataOne",

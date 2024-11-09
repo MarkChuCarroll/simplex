@@ -20,6 +20,7 @@ import org.goodmath.simplex.ast.Location
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.runtime.Env
+import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.SimplexUndefinedError
 import org.goodmath.simplex.runtime.values.primitives.DataValueType
 import org.goodmath.simplex.twist.Twist
@@ -50,6 +51,6 @@ class DataDefinition(name: String, val fields: List<Parameter>, loc: Location) :
     override fun installStatic(env: Env) {
         val dataType = DataValueType(this)
         val tt = Type.simple(name)
-        Type.registerValueType(tt, dataType)
+        Type.registerValueType(RootEnv, tt, dataType)
     }
 }

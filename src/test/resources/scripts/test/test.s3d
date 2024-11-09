@@ -11,11 +11,12 @@ fun dbl(radius: Float, height: Float): Solid {
 let conic = dbl(50.0, 30.0)
 
 fun goof (base: Solid, radius: Float): Solid {
-   (base + ovoid(radius)->move(0.0, 0.0, 30.0)) -
-     ovoid(radius)->move(0.0, 0.0, 50.0)
+   (base + sphere(radius)->move(0.0, 0.0, 30.0)) -
+     sphere(radius)->move(0.0, 0.0, 50.0)
 }
 
 produce("conic") {
    goof(conic, 10.0)->move(0.0, 0.0, 0.0)
+   conic->bounds()
    print(["bounds = ", conic->bounds()])
 }

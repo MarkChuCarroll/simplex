@@ -2,8 +2,8 @@ package org.goodmath.simplex.ast.types
 
 import org.goodmath.simplex.ast.Location
 import org.goodmath.simplex.ast.def.DataDefinition
-import org.goodmath.simplex.ast.expr.Arguments
 import org.goodmath.simplex.runtime.Env
+import org.goodmath.simplex.runtime.RootEnv
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -19,14 +19,15 @@ class TypeTests {
 
     @Test
     fun testTypeCreation() {
+        RootEnv.initialize()
         val s1 = Type.simple("foo")
         val s2 = Type.simple("bar")
         val zip = DataDefinition("zip",
             listOf(), Location("none", 0, 0))
         val foo = DataDefinition("foo",
             listOf(), Location("none", 0, 0))
-        Type.registerValueType(s1, foo.valueType)
-        Type.registerValueType(s2, zip.valueType)
+        Type.registerValueType(RootEnv, s1, foo.valueType)
+        Type.registerValueType(RootEnv, s2, zip.valueType)
         val a1 = Type.vector(Type.simple("zip"))
         val a2 = Type.vector(Type.simple("foo"))
         val a3 = Type.vector(s1)
@@ -53,6 +54,7 @@ class TypeTests {
 
     @Test
     fun testMethodTypes() {
+        RootEnv.initialize()
         val same1 =
             Type.simpleMethod(
                 Type.simple("Test"),

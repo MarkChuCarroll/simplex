@@ -24,6 +24,8 @@ import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.SimplexError
 import org.goodmath.simplex.runtime.SimplexEvaluationError
+import org.goodmath.simplex.runtime.values.csg.Solid
+import org.goodmath.simplex.runtime.values.csg.SolidValueType
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.plus
 
@@ -37,6 +39,7 @@ class Model(val defs: List<Definition>, val products: List<Product>, loc: Locati
     override fun twist(): Twist = Twist.obj("Model", Twist.array("defs", defs))
 
     fun analyze() {
+        RootEnv.initialize()
         for (d in defs) {
             RootEnv.addDefinition(d)
         }
@@ -107,7 +110,7 @@ class Product(val name: String?, val body: List<Expr>, loc: Location) : AstNode(
                 cyan("Rendering 3d model of ${bodies.size} bodies to $prefixLastSegment-$name.stl"),
                 false,
             )
-            combined.export("$prefix-$name.stl", SMaterial.smoothGray)
+            Path("$prefix-$name.stl").writeText(combined.csg.toStlString())
         }
         val others = results.filter { it.valueType != SolidValueType }
         if (others.isNotEmpty()) {
@@ -115,8 +118,10 @@ class Product(val name: String?, val body: List<Expr>, loc: Location) : AstNode(
             val twists = StringBuilder()
             for (other in others) {
                 if (other.valueType.supportsText) {
+                    System.err.println("Text: ${other.valueType.name}")
                     text + other.valueType.toText(other) + "\n"
                 } else {
+                    System.err.println("Twist: ${other.valueType.name}")
                     twists + other.twist().consStr() + "\n\n"
                 }
             }

@@ -44,7 +44,7 @@ sealed class InvokableDefinition(
         }
         for (k in kwParams) {
             localEnv.declareTypeOf(k.name, k.type)
-            val defaultType = k.defaultValue.resultType(localEnv)
+            val defaultType = k.defaultValue.valueType.asType
             if (!k.type.matchedBy(defaultType)) {
                 throw SimplexTypeError(
                     k.type.toString(),

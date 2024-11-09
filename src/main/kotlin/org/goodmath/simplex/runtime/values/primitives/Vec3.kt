@@ -17,7 +17,6 @@ package org.goodmath.simplex.runtime.values.primitives
 
 import eu.mihosoft.vvecmath.Vector3d
 import kotlin.math.sqrt
-import manifold3d.glm.DoubleVec3
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.runtime.Env
@@ -31,6 +30,10 @@ import org.goodmath.simplex.twist.Twist
 class Vec3(val v3: Vector3d): Value {
     constructor(x: Double, y: Double, z: Double): this(Vector3d.xyz(x, y, z))
     override val valueType: ValueType = Vec3ValueType
+    val x: Double get() = v3.x
+    val y: Double get() = v3.y
+    val z: Double get() = v3.z
+
 
     override fun twist(): Twist {
         return Twist.obj(
@@ -42,7 +45,7 @@ class Vec3(val v3: Vector3d): Value {
     }
 
     override fun toString(): String {
-        return "(x=${v3.x}, y=${v3.y}, z=${v3.z})"
+        return String.format("(x=%.3f, y=%.3f, z=%.3f)", x, y, z)
     }
 
 

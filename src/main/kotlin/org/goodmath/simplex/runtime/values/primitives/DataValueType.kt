@@ -19,6 +19,7 @@ import org.goodmath.simplex.ast.def.DataDefinition
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.runtime.Env
+import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.values.MethodSignature
 import org.goodmath.simplex.runtime.values.ParameterSignature
@@ -31,7 +32,7 @@ class DataValueType(val dataDef: DataDefinition) : ValueType() {
 
     override val asType: Type by lazy {
         val t = Type.simple(dataDef.name)
-        Type.registerValueType(t, this)
+        Type.registerValueType(RootEnv, t, this)
         t
     }
 

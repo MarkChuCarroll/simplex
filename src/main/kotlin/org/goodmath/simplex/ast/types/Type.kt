@@ -23,13 +23,9 @@ import org.goodmath.simplex.runtime.values.AnyValueType
 import org.goodmath.simplex.runtime.values.FunctionSignature
 import org.goodmath.simplex.runtime.values.ParameterSignature
 import org.goodmath.simplex.runtime.values.ValueType
-import org.goodmath.simplex.runtime.values.manifold.BoundingBoxValueType
-import org.goodmath.simplex.runtime.values.manifold.BoundingRectValueType
-import org.goodmath.simplex.runtime.values.manifold.SMeshGLType
-import org.goodmath.simplex.runtime.values.manifold.SPolygonType
-import org.goodmath.simplex.runtime.values.manifold.SSmoothnessType
-import org.goodmath.simplex.runtime.values.manifold.SliceValueType
-import org.goodmath.simplex.runtime.values.manifold.SolidValueType
+import org.goodmath.simplex.runtime.values.csg.BoundingBoxValueType
+import org.goodmath.simplex.runtime.values.csg.PolygonValueType
+import org.goodmath.simplex.runtime.values.csg.SolidValueType
 import org.goodmath.simplex.runtime.values.primitives.VectorValueType
 import org.goodmath.simplex.runtime.values.primitives.BooleanValueType
 import org.goodmath.simplex.runtime.values.primitives.FloatValueType
@@ -38,7 +34,6 @@ import org.goodmath.simplex.runtime.values.primitives.IntegerValueType
 import org.goodmath.simplex.runtime.values.primitives.MethodValueType
 import org.goodmath.simplex.runtime.values.primitives.NoneValueType
 import org.goodmath.simplex.runtime.values.primitives.StringValueType
-import org.goodmath.simplex.runtime.values.primitives.Vec2ValueType
 import org.goodmath.simplex.runtime.values.primitives.Vec3ValueType
 import java.util.HashMap
 import kotlin.collections.all
@@ -57,28 +52,22 @@ abstract class Type : Twistable {
     abstract fun matchedBy(t: Type): Boolean
 
     companion object {
-
         private val types: HashMap<String, Type> = HashMap()
-
         val valueTypes: HashMap<Type, ValueType> = HashMap()
-
         val builtinValueTypes = listOf(
             IntegerValueType, FloatValueType, StringValueType,
             BooleanValueType,
-            Vec2ValueType, Vec3ValueType,
+            Vec3ValueType,
             BoundingBoxValueType,
             SolidValueType,
-            BoundingRectValueType,
-            SPolygonType,
-            SliceValueType,
-            SMeshGLType, SSmoothnessType,
+            PolygonValueType,
             NoneValueType, AnyValueType
         )
 
-        init {
+        fun registerBuiltinTypes(rootEnv: Env) {
             builtinValueTypes.forEach {
                 val simp = SimpleType(it.name)
-                registerValueType(simp, it)
+                registerValueType(rootEnv, simp, it)
             }
         }
 
@@ -92,13 +81,13 @@ abstract class Type : Twistable {
             return types.values.toList()
         }
 
-        fun registerValueType(type: Type, valueType: ValueType) {
+        fun registerValueType(rootEnv: Env, type: Type, valueType: ValueType) {
             if (!valueTypes.containsKey(type)) {
                 valueTypes[type] = valueType
                 valueType.methods
                 for (f in valueType.providesFunctions) {
-                    RootEnv.declareTypeOf(f.name, f.valueType.asType)
-                    RootEnv.addVariable(f.name, f)
+                    rootEnv.declareTypeOf(f.name, f.valueType.asType)
+                    rootEnv.addVariable(f.name, f)
                 }
             }
         }
@@ -115,7 +104,7 @@ abstract class Type : Twistable {
                 VectorType(baseType)
             } as VectorType
             if (!valueTypes.containsKey(result)) {
-                registerValueType(result, VectorValueType(valueTypes[baseType]!!))
+                registerValueType(RootEnv, result, VectorValueType(valueTypes[baseType]!!))
             }
             return result
         }
@@ -238,7 +227,6 @@ data class ArgumentListSpec(val positional: List<Type>, val keyword: Map<String,
     }
 
     fun matchedBy(args: Arguments, env: Env): Boolean {
-        System.err.println("Expected count = ${positional.size}, actual = ${args.positionalArgs.size}")
         if (args.positionalArgs.size != positional.size) {
             return false
         }

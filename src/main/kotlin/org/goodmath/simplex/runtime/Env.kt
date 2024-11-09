@@ -187,6 +187,11 @@ open class Env(defList: List<Definition>, val parentEnv: Env?) : Twistable {
 
 /** The root scope of a model. This is the scope where builtins are defined and installed. */
 object RootEnv : Env(emptyList(), null) {
+
+    fun initialize() {
+        Type.registerBuiltinTypes(this)
+    }
+
     fun addDefinition(def: Definition) {
         defs[def.name] = def
     }

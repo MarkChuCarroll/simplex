@@ -18,6 +18,7 @@ package org.goodmath.simplex.ast.types
 import org.goodmath.simplex.ast.AstNode
 import org.goodmath.simplex.ast.Location
 import org.goodmath.simplex.ast.expr.Expr
+import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.twist.Twist
 
 open class Parameter(val name: String, val type: Type, loc: Location? = null) : AstNode(loc) {
@@ -29,7 +30,7 @@ open class Parameter(val name: String, val type: Type, loc: Location? = null) : 
     }
 }
 
-class KwParameter(name: String, type: Type, val defaultValue: Expr, loc: Location? = null): Parameter(name, type, loc) {
+class KwParameter(name: String, type: Type, val defaultValue: Value, loc: Location? = null): Parameter(name, type, loc) {
     override fun twist(): Twist =
         Twist.obj("KwParameter", Twist.attr("name", name), Twist.value("type", type),
             Twist.value("defaultValue", defaultValue))

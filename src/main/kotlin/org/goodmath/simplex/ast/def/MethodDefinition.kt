@@ -76,7 +76,7 @@ class MethodDefinition(
         localEnv.addVariable("self", target)
         this@MethodDefinition.positionalParams.zip(args).map { (param, arg) -> localEnv.addVariable(param.name, arg) }
         for (kwParam in kwParams) {
-            val paramValue = kwArgs[kwParam.name] ?: kwParam.defaultValue.evaluateIn(env)
+            val paramValue = kwArgs[kwParam.name] ?: kwParam.defaultValue
             localEnv.addVariable(kwParam.name, paramValue)
         }
         var result: Value = NoneValue

@@ -1,5 +1,6 @@
 package org.goodmath.simplex.runtime.values.csg
 
+import eu.mihosoft.jcsg.Bounds
 import eu.mihosoft.vvecmath.Vector3d
 import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.ast.types.Type
@@ -20,22 +21,22 @@ import org.goodmath.simplex.twist.Twist
 class BoundingBox(val bb: Bounds): Value {
     constructor(min: Vector3d, max: Vector3d): this(Bounds(min, max))
 
-    val center: Vector3d by lazy { bb.center }
-    val max: Vector3d
-        get() = bb.max
+    val center: Vec3 by lazy { Vec3(bb.center) }
+    val max: Vec3
+        get() = Vec3(bb.max)
 
-    val min: Vector3d
-        get() = bb.min
+    val min: Vec3
+        get() = Vec3(bb.min)
 
-    val size: Vector3d
-        get() = bb.bounds
+    val size: Vec3
+        get() = Vec3(bb.bounds)
 
     fun containsPoint(pt: Vector3d): Boolean {
         return bb.contains(pt)
     }
 
     fun containsPolygon(p: Polygon): Boolean {
-        return bb.contains(p)
+        return bb.contains(p.poly)
     }
 
     override val valueType: ValueType =
@@ -50,8 +51,14 @@ class BoundingBox(val bb: Bounds): Value {
 object BoundingBoxValueType: ValueType() {
     override val name: String = "BoundingBox"
 
-    override val asType: Type
-        get() = TODO("Not yet implemented")
+    override val asType: Type by lazy { Type.simple(name) }
+
+    override val supportsText = true
+
+    override fun toText(v: Value): String {
+        val bb = assertIs(v)
+        return "[min=${bb.min}, max=${bb.max}]"
+    }
 
     override fun isTruthy(v: Value): Boolean {
         return true
@@ -93,7 +100,7 @@ object BoundingBoxValueType: ValueType() {
                     env: Env,
                 ): Value {
                     val self = assertIs(target)
-                    return Vec3(self.min)
+                    return self.min
                 }
             },
             object: PrimitiveMethod("max",
@@ -109,7 +116,7 @@ object BoundingBoxValueType: ValueType() {
                     env: Env,
                 ): Value {
                     val self = assertIs(target)
-                    return Vec3(self.max)
+                    return self.max
                 }
             },
             object: PrimitiveMethod("center",
@@ -125,7 +132,7 @@ object BoundingBoxValueType: ValueType() {
                     env: Env,
                 ): Value {
                     val self = assertIs(target)
-                    return Vec3(self.center)
+                    return self.center
                 }
             },
             object: PrimitiveMethod("size",
@@ -141,7 +148,7 @@ object BoundingBoxValueType: ValueType() {
                     env: Env,
                 ): Value {
                     val self = assertIs(target)
-                    return Vec3(self.size)
+                    return self.size
                 }
             },
             object: PrimitiveMethod("containsPoint",

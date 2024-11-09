@@ -65,7 +65,7 @@ class FunctionValue(
         }
         params.zip(args).forEach { (param, value) -> localEnv.addVariable(param.name, value) }
         for (kwParam in kwParams) {
-            val paramValue = kwArgs[kwParam.name] ?: kwParam.defaultValue.evaluateIn(localEnv)
+            val paramValue = kwArgs[kwParam.name] ?: kwParam.defaultValue
         }
         var result: Value = NoneValue
         for (b in body) {

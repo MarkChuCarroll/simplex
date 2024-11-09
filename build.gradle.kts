@@ -48,7 +48,7 @@ dependencies {
     implementation("com.github.ajalt.clikt:clikt:$cliktVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
-    implementation("eu.mihosoft.vvecmath:vvecmath:0.3.8")
+    implementation("eu.mihosoft.vrl.jcsg:jcsg:0.5.7")
 
     testImplementation(kotlin("test"))
 

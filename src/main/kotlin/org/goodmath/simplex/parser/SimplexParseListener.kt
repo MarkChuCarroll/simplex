@@ -57,6 +57,11 @@ import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.runtime.SimplexError
 import org.goodmath.simplex.runtime.values.ParameterSignature
+import org.goodmath.simplex.runtime.values.Value
+import org.goodmath.simplex.runtime.values.primitives.BooleanValue
+import org.goodmath.simplex.runtime.values.primitives.FloatValue
+import org.goodmath.simplex.runtime.values.primitives.IntegerValue
+import org.goodmath.simplex.runtime.values.primitives.StringValue
 
 @Suppress("UNCHECKED_CAST")
 class SimplexParseListener : SimplexListener {
@@ -190,8 +195,46 @@ class SimplexParseListener : SimplexListener {
     override fun exitKwParam(ctx: SimplexParser.KwParamContext) {
         val name = ctx.ID().text
         val type = getValueFor(ctx.type()) as Type
-        val initValue = getValueFor(ctx.expr()) as Expr
+        val initValue = getValueFor(ctx.literal_value()) as Value
         setValueFor(ctx, KwParameter(name, type, initValue, loc(ctx)))
+    }
+
+    override fun enterLvFloat(ctx: SimplexParser.LvFloatContext) {
+    }
+
+    override fun exitLvFloat(ctx: SimplexParser.LvFloatContext) {
+        val fl = ctx.LIT_FLOAT().text.toDouble()
+        setValueFor(ctx, FloatValue(fl))
+    }
+
+    override fun enterLvInt(ctx: SimplexParser.LvIntContext) {
+    }
+
+    override fun exitLvInt(ctx: SimplexParser.LvIntContext) {
+        val il = IntegerValue(ctx.LIT_INT().text.toInt())
+        setValueFor(ctx, il)
+    }
+
+    override fun enterLvStr(ctx: SimplexParser.LvStrContext) {
+    }
+
+    override fun exitLvStr(ctx: SimplexParser.LvStrContext) {
+        val sl = ctx.LIT_STRING().text
+        setValueFor(ctx, StringValue(sl))
+    }
+
+    override fun enterLvTrue(ctx: SimplexParser.LvTrueContext) {
+    }
+
+    override fun exitLvTrue(ctx: SimplexParser.LvTrueContext) {
+        setValueFor(ctx, BooleanValue(true))
+    }
+
+    override fun enterLvFalse(ctx: SimplexParser.LvFalseContext) {
+    }
+
+    override fun exitLvFalse(ctx: SimplexParser.LvFalseContext) {
+        setValueFor(ctx, BooleanValue(false))
     }
 
     override fun enterMethDef(ctx: SimplexParser.MethDefContext) {}

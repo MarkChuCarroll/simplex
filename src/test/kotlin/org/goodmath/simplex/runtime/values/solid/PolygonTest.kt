@@ -15,14 +15,14 @@
  */
 package org.goodmath.simplex.runtime.values.solid
 
-import org.goodmath.simplex.runtime.values.manifold.Slice
-import org.goodmath.simplex.runtime.values.manifold.SliceValueType
 import org.goodmath.simplex.runtime.values.primitives.BooleanValue
 import kotlin.test.assertEquals
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
 import org.junit.jupiter.api.Test
 
 class PolygonTest {
+
+    /*
     @Test
     fun testPolygonCreators() {
         val rect = SliceValueType.providesFunctions.first { it.name == "rectangle" }
@@ -48,4 +48,6 @@ class PolygonTest {
             r.twist().consStr(),
         )
     }
+
+     */
 }

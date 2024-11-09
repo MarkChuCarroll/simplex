@@ -55,9 +55,16 @@ kwParams:
 ;
 
 kwParam:
-  ID ':' type '=' expr
+  ID ':' type '=' literal_value
 ;
 
+literal_value:
+   LIT_FLOAT  #lvFloat
+| LIT_INT  #lvInt
+| LIT_STRING  #lvStr
+| 'true'  #lvTrue
+| 'false' #lvFalse
+;
 
  methDef:
     'meth' target=type '->' ID '(' params? ( ';' kwParams )? ')' ':' result=type '{'

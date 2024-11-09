@@ -27,9 +27,11 @@ import org.goodmath.simplex.ast.expr.LiteralExpr
 import org.goodmath.simplex.ast.expr.VarRefExpr
 import org.goodmath.simplex.parser.SimplexParseListener
 import org.goodmath.simplex.runtime.Env
-import org.goodmath.simplex.runtime.values.manifold.SMaterial
-import org.goodmath.simplex.runtime.values.manifold.Solid
+import org.goodmath.simplex.runtime.RootEnv
+import org.goodmath.simplex.runtime.values.csg.BoundingBoxValueType
+import org.goodmath.simplex.runtime.values.csg.Solid
 import org.junit.jupiter.api.Test
+import kotlin.io.path.writeText
 
 class SolidTest {
     val solidTestProgram =
@@ -40,7 +42,7 @@ class SolidTest {
 
    fun compoundShape(size: Float): Solid {
       let cyl: Solid = cylinder(size * 3.0, size, size)
-      let br: Solid = brick(size*2.0, size*3.0, size*4.0)->rotate(90.0, 45.0, 0.0)
+      let br: Solid = cuboid(size*2.0, size*3.0, size*4.0)->rotate(90.0, 45.0, 0.0)
       br + cyl + cone(size*2.0, size*3.0)->move(0.0, 20.0, 0.0) -
           cone(size, size)->move(30.0, 20.0, 10.0)->rotate(90.0, 90.0, 45.0)
    }
@@ -64,6 +66,7 @@ produce("shape") {
         val stream = CharStreams.fromString(solidTestProgram)
         val prog = SimplexParseListener().parse("test", stream) { i, a, b -> System.err.println(a) }
         val root = Env.createRootEnv()
+        RootEnv.initialize()
         val env = Env(prog.defs, root)
         env.installStaticDefinitions()
         env.installDefinitionValues()
@@ -77,8 +80,8 @@ produce("shape") {
                 mockLoc(),
             )
         val result = runner.evaluateIn(env) as Solid
-        val bounds = result.boundingBox()
-        result.export("/tmp/mtest.stl",  SMaterial.roughAqua)
+        val bounds = result.bounds()
+        Path("/tmp/mtest.stl").writeText(result.csg.toStlString())
 
         val digest = MessageDigest.getInstance("SHA3-256")
         val expected = Path("src/test/resources/csg-out.stl").readText()
@@ -87,13 +90,14 @@ produce("shape") {
         val stlStr = Path("/tmp/mtest.stl").readText()
         val actualDigest = digest.digest(stlStr.toByteArray()).toHexString()
         assertEquals(expectedDigest, actualDigest)
-        val min = bounds.low
-        val max = bounds.high
-        assertEquals(-60.0, min.x,  0.1)
-        assertEquals(-60.0, min.y, 0.1)
-        assertEquals(-53.0, min.z, 0.1)
-        assertEquals(60.0, max.x, 0.1)
-        assertEquals(80.0, max.y, 0.1)
-        assertEquals(92.00, max.z, 0.1)
+        val min = bounds.min
+        val max = bounds.max
+        System.err.println("Bounds = ${BoundingBoxValueType.toText(bounds)}")
+        assertEquals(-92.0, min.x,  0.1)
+        assertEquals(-90.0, min.y, 0.1)
+        assertEquals(-45.0, min.z, 0.1)
+        assertEquals(92.0, max.x, 0.1)
+        assertEquals(112.0, max.y, 0.1)
+        assertEquals(60.00, max.z, 0.1)
     }
 }

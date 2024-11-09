@@ -15,7 +15,6 @@
  */
 package org.goodmath.simplex.ast.expr
 
-import manifold3d.manifold.CrossSection
 import kotlin.math.PI
 import kotlin.math.sqrt
 import kotlin.test.Test
@@ -24,6 +23,8 @@ import org.goodmath.simplex.ast.Location
 import org.goodmath.simplex.ast.def.VariableDefinition
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
+import org.goodmath.simplex.runtime.RootEnv
+import org.goodmath.simplex.runtime.values.csg.Polygon
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
 import org.goodmath.simplex.runtime.values.primitives.FloatValueType
 import org.goodmath.simplex.runtime.values.primitives.IntegerValue
@@ -44,6 +45,7 @@ class VarTests {
 
     @BeforeEach
     fun setupEnvironment() {
+        RootEnv.initialize()
         var varDefOne =
             VariableDefinition("one", FloatValueType.asType, LiteralExpr(PI, mockLoc()), mockLoc())
         var varDefTwo =
@@ -51,7 +53,7 @@ class VarTests {
         env = Env(listOf(varDefOne, varDefTwo), rootEnv)
         env.installStaticDefinitions()
         env.installDefinitionValues()
-        val c = CrossSection.Square(10.0, 20.0)
+        val c = Polygon.rect(10.0, 20.0)
     }
 
     @Test
