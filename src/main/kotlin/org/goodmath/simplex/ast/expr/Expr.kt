@@ -22,10 +22,8 @@ import kotlin.collections.toSet
 import kotlin.toString
 import org.goodmath.simplex.ast.AstNode
 import org.goodmath.simplex.ast.Location
-import org.goodmath.simplex.ast.def.DataDefinition
 import org.goodmath.simplex.ast.types.ArgumentListSpec
 import org.goodmath.simplex.ast.types.KwParameter
-import org.goodmath.simplex.ast.types.SimpleType
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.runtime.Env
@@ -45,7 +43,6 @@ import org.goodmath.simplex.runtime.values.primitives.IntegerValue
 import org.goodmath.simplex.runtime.values.primitives.IntegerValueType
 import org.goodmath.simplex.runtime.values.primitives.StringValue
 import org.goodmath.simplex.runtime.values.primitives.StringValueType
-import org.goodmath.simplex.runtime.values.primitives.DataValue
 import org.goodmath.simplex.twist.Twist
 
 abstract class Expr(loc: Location?) : AstNode(loc) {
@@ -76,18 +73,6 @@ class BlockExpr(val body: List<Expr>, loc: Location) : Expr(loc) {
         for (expr in body) {
             expr.validate(env)
         }
-    }
-}
-
-data class Binding(val name: String, val type: Type, val value: Expr, override val loc: Location) :
-    AstNode(loc) {
-    override fun twist(): Twist {
-        return Twist.obj(
-            "binding",
-            Twist.attr("name", name),
-            Twist.value("type", type),
-            Twist.value("value", value),
-        )
     }
 }
 
@@ -244,70 +229,6 @@ class VectorExpr(val elements: List<Expr>, loc: Location) : Expr(loc) {
         resultType(env)
         for (e in elements) {
             e.validate(env)
-        }
-    }
-}
-
-class WithExpr(val focus: Expr, val body: List<Expr>, loc: Location) : Expr(loc) {
-    override fun twist(): Twist =
-        Twist.obj("WithExpr", Twist.value("focus", focus), Twist.array("body", body))
-
-    override fun evaluateIn(env: Env): Value {
-        val focusVal = focus.evaluateIn(env)
-        if (focusVal !is DataValue) {
-            throw SimplexTypeError("Data", focusVal.valueType.name, location = loc)
-        }
-        val def = focusVal.valueType.dataDef
-        val localEnv = Env(emptyList(), env)
-        for ((name, idx) in def.fields.map { Pair(it.name, def.indexOf(it.name)) }) {
-            localEnv.addVariable(name, focusVal.fields[idx])
-        }
-        var result: Value = IntegerValue(0)
-        for (b in body) {
-            result = b.evaluateIn(localEnv)
-        }
-        return result
-    }
-
-    override fun resultType(env: Env): Type {
-        // We know it's a simple type, because validation would have failed otherwise.
-        val focusType = focus.resultType(env) as SimpleType
-        // similarly, we know it's a data-def
-        val focusDef = env.getDef(focusType.name) as DataDefinition
-        val localEnv = Env(emptyList(), env)
-        for (field in focusDef.fields) {
-            localEnv.declareTypeOf(field.name, field.type)
-        }
-        return body.last().resultType(localEnv)
-    }
-
-    override fun validate(env: Env) {
-        try {
-            val focusType = focus.resultType(env)
-            if (focusType !is SimpleType) {
-                throw SimplexAnalysisError(
-                    "With expression focus must be a data value type, not $focusType",
-                    loc = loc,
-                )
-            }
-            val focusDef = env.getDef(focusType.name)
-            if (focusDef !is DataDefinition) {
-                throw SimplexAnalysisError(
-                    "With expression focus must be a data value type, not $focusDef",
-                    loc = loc,
-                )
-            }
-            val localEnv = Env(emptyList(), env)
-            for (field in focusDef.fields) {
-                localEnv.declareTypeOf(field.name, field.type)
-            }
-            for (e in body) {
-                e.validate(localEnv)
-            }
-        }catch (e: SimplexError) {
-            if (e.location == null) {
-                e.location = loc
-            }
         }
     }
 }

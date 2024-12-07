@@ -22,7 +22,6 @@ import kotlin.let
 import org.goodmath.simplex.ast.Location
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
-import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.SimplexError
 import org.goodmath.simplex.runtime.SimplexEvaluationError
 import org.goodmath.simplex.runtime.SimplexParameterCountError
@@ -48,7 +47,7 @@ enum class Operator {
     Ge,
     Lt,
     Le,
-    Uminus,
+    UMinus,
     Not,
     And,
     Or,
@@ -71,7 +70,7 @@ enum class Operator {
             Not -> "not"
             And -> null
             Or -> null
-            Uminus -> "neg"
+            UMinus -> "neg"
             Subscript -> "sub"
         }
     }
@@ -267,7 +266,7 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location) : Expr
             Operator.And -> BooleanValueType.asType
             Operator.Or -> BooleanValueType.asType
             Operator.Subscript -> targetType.getMethod("sub")?.returnType
-            Operator.Uminus -> targetType.getMethod("neg")?.returnType
+            Operator.UMinus -> targetType.getMethod("neg")?.returnType
         } ?: throw SimplexUnsupportedOperation(targetType.toString(), op.toString(), loc = loc)
 
     }

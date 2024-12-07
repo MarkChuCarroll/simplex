@@ -25,7 +25,6 @@ import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.Value
-import org.goodmath.simplex.runtime.values.primitives.IntegerValue
 import org.goodmath.simplex.runtime.values.primitives.MethodValue
 import org.goodmath.simplex.runtime.values.primitives.NoneValue
 import org.goodmath.simplex.twist.Twist

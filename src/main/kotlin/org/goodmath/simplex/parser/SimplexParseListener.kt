@@ -77,7 +77,6 @@ class SimplexParseListener : SimplexListener {
         val errorListener = SimplexErrorListener()
         parser.addErrorListener(errorListener)
         val tree = parser.model()
-        val t = Type
         if (errorListener.errorCount > 0) {
             for (e in errorListener.getLoggedErrors()) {
                 echo(0, e, true)
@@ -293,6 +292,7 @@ class SimplexParseListener : SimplexListener {
 
     override fun exitOptVectorType(ctx: SimplexParser.OptVectorTypeContext) {
         val elementType = getValueFor(ctx.type()) as Type
+        System.out.println("In opt vector type, element type = $elementType")
         setValueFor(ctx, Type.vector(elementType))
     }
 
@@ -665,7 +665,7 @@ class SimplexParseListener : SimplexListener {
     override fun enterOpUnaryNeg(ctx: SimplexParser.OpUnaryNegContext) {}
 
     override fun exitOpUnaryNeg(ctx: SimplexParser.OpUnaryNegContext) {
-        setValueFor(ctx, Operator.Uminus)
+        setValueFor(ctx, Operator.UMinus)
     }
 
     override fun enterCondClause(ctx: SimplexParser.CondClauseContext) {}

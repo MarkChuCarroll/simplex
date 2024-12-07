@@ -11,6 +11,7 @@ import org.goodmath.simplex.runtime.values.ParameterSignature
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.runtime.values.primitives.BooleanValue
+import org.goodmath.simplex.runtime.values.primitives.BooleanValueType
 import org.goodmath.simplex.runtime.values.primitives.FloatValueType
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveMethod
@@ -87,12 +88,16 @@ object BoundingBoxValueType: ValueType() {
 
     override val providesPrimitiveMethods: List<PrimitiveMethod> by lazy {
         listOf(
-            object: PrimitiveMethod("min",
+            object : PrimitiveMethod(
+                "min",
                 MethodSignature.simple(
                     asType,
                     ParameterSignature(
-                        emptyList(), emptyList()),
-                    Vec3ValueType.asType)) {
+                        emptyList(), emptyList()
+                    ),
+                    Vec3ValueType.asType
+                )
+            ) {
                 override fun execute(
                     target: Value,
                     args: List<Value>,
@@ -103,12 +108,16 @@ object BoundingBoxValueType: ValueType() {
                     return self.min
                 }
             },
-            object: PrimitiveMethod("max",
+            object : PrimitiveMethod(
+                "max",
                 MethodSignature.simple(
                     asType,
                     ParameterSignature(
-                        emptyList(), emptyList()),
-                    Vec3ValueType.asType)) {
+                        emptyList(), emptyList()
+                    ),
+                    Vec3ValueType.asType
+                )
+            ) {
                 override fun execute(
                     target: Value,
                     args: List<Value>,
@@ -119,12 +128,16 @@ object BoundingBoxValueType: ValueType() {
                     return self.max
                 }
             },
-            object: PrimitiveMethod("center",
+            object : PrimitiveMethod(
+                "center",
                 MethodSignature.simple(
                     asType,
                     ParameterSignature(
-                        emptyList(), emptyList()),
-                    Vec3ValueType.asType)) {
+                        emptyList(), emptyList()
+                    ),
+                    Vec3ValueType.asType
+                )
+            ) {
                 override fun execute(
                     target: Value,
                     args: List<Value>,
@@ -135,12 +148,16 @@ object BoundingBoxValueType: ValueType() {
                     return self.center
                 }
             },
-            object: PrimitiveMethod("size",
+            object : PrimitiveMethod(
+                "size",
                 MethodSignature.simple(
                     asType,
                     ParameterSignature(
-                        emptyList(), emptyList()),
-                    Vec3ValueType.asType)) {
+                        emptyList(), emptyList()
+                    ),
+                    Vec3ValueType.asType
+                )
+            ) {
                 override fun execute(
                     target: Value,
                     args: List<Value>,
@@ -151,12 +168,16 @@ object BoundingBoxValueType: ValueType() {
                     return self.size
                 }
             },
-            object: PrimitiveMethod("containsPoint",
+            object : PrimitiveMethod(
+                "contains_point",
                 MethodSignature.simple(
                     asType,
                     ParameterSignature(
-                        listOf(Parameter("point", Vec3ValueType.asType)), emptyList()),
-                    Vec3ValueType.asType)) {
+                        listOf(Parameter("point", Vec3ValueType.asType)), emptyList()
+                    ),
+                    Vec3ValueType.asType
+                )
+            ) {
                 override fun execute(
                     target: Value,
                     args: List<Value>,
@@ -168,15 +189,25 @@ object BoundingBoxValueType: ValueType() {
                     return BooleanValue(self.containsPoint(pt))
                 }
             },
-            object: PrimitiveMethod("move",
+            object : PrimitiveMethod(
+                "move",
                 MethodSignature.multi(
                     asType,
-                    listOf(ParameterSignature(
-                        listOf(Parameter("offset", Vec3ValueType.asType))),
-                        ParameterSignature(listOf(Parameter("x", FloatValueType.asType),
-                            Parameter("y", FloatValueType.asType),
-                            Parameter("z", FloatValueType.asType)))),
-                    asType)) {
+                    listOf(
+                        ParameterSignature(
+                            listOf(Parameter("offset", Vec3ValueType.asType))
+                        ),
+                        ParameterSignature(
+                            listOf(
+                                Parameter("x", FloatValueType.asType),
+                                Parameter("y", FloatValueType.asType),
+                                Parameter("z", FloatValueType.asType)
+                            )
+                        )
+                    ),
+                    asType
+                )
+            ) {
                 override fun execute(
                     target: Value,
                     args: List<Value>,
@@ -194,6 +225,24 @@ object BoundingBoxValueType: ValueType() {
                         val offset = Vec3(x, y, z)
                         return BoundingBox(self.bb.min.plus(offset.v3), self.bb.max.plus(offset.v3))
                     }
+                }
+            },
+            object : PrimitiveMethod(
+                "contains_polygon",
+                MethodSignature.simple(
+                    asType,
+                    ParameterSignature(listOf(Parameter("poly", PolygonValueType.asType))),
+                    BooleanValueType.asType
+                )) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    kwArgs: Map<String, Value>,
+                    env: Env,
+                ): Value {
+                    val self = assertIs(target)
+                    val polygon = PolygonValueType.assertIs(args[0])
+                    return BooleanValue(self.containsPolygon(polygon))
                 }
             })
     }

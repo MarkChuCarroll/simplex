@@ -27,6 +27,7 @@ import kotlin.io.path.exists
 import kotlin.system.exitProcess
 import org.antlr.v4.runtime.CharStreams
 import org.goodmath.simplex.parser.SimplexParseListener
+import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.SimplexError
 
 /** The simplex command line! */
@@ -63,7 +64,9 @@ class Simplex : CliktCommand(help = "Evaluate a Simplex model") {
             if (verbosity >= 1) {
                 echo(cyan("Loading model from $inputPath"))
             }
+            RootEnv.initialize()
             val result = SimplexParseListener().parse(input, stream, captiveEcho)
+
             result.execute(products?.toSet(), pre, captiveEcho)
         } catch (e: SimplexError) {
             echo(e.message, err = true)

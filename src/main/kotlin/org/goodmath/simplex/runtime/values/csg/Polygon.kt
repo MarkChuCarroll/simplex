@@ -1,11 +1,10 @@
+@file:Suppress("UNCHECKED_CAST")
+
 package org.goodmath.simplex.runtime.values.csg
 
 import eu.mihosoft.jcsg.Extrude
-import eu.mihosoft.jcsg.Primitive
-import eu.mihosoft.jcsg.ext.org.poly2tri.PolygonUtil
 import eu.mihosoft.vvecmath.Plane
 import eu.mihosoft.vvecmath.Transform
-import org.goodmath.simplex.ast.expr.LiteralExpr
 import org.goodmath.simplex.ast.types.KwParameter
 import org.goodmath.simplex.ast.types.Parameter
 import org.goodmath.simplex.ast.types.Type
@@ -75,7 +74,7 @@ class Polygon(val poly: JPolygon): Value  {
         )
     }
 
-    fun extrude(dir: Vec3, top: Boolean = true, bottom: Boolean = true): Solid {
+    fun extrude(dir: Vec3): Solid {
         return Solid(Extrude.points(dir.v3,
             poly.vertices.map { it.pos }))
     }
@@ -217,9 +216,7 @@ object PolygonValueType: ValueType() {
         listOf(
             object: PrimitiveMethod("extrude",
                 MethodSignature.simple(asType,
-                    ParameterSignature(listOf(Parameter("dir", Vec3ValueType.asType)),
-                        listOf(KwParameter("top", BooleanValueType.asType, BooleanValue(true)),
-                            KwParameter("bottom", BooleanValueType.asType, BooleanValue(true)))),
+                    ParameterSignature(listOf(Parameter("dir", Vec3ValueType.asType))),
                     SolidValueType.asType)) {
                 override fun execute(
                     target: Value,
@@ -229,9 +226,7 @@ object PolygonValueType: ValueType() {
                 ): Value {
                     val self = assertIs(target)
                     val dir = Vec3ValueType.assertIs(args[0])
-                    val top = kwArgs["top"]?.let { assertIsBoolean(it) } != false
-                    val bottom = kwArgs["bottom"]?.let { assertIsBoolean(it) } != false
-                    return self.extrude(dir, top, bottom)
+                    return self.extrude(dir)
                 }
             },
             object: PrimitiveMethod("move",

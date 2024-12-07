@@ -17,7 +17,6 @@ package org.goodmath.simplex.ast.types
 
 import org.goodmath.simplex.ast.AstNode
 import org.goodmath.simplex.ast.Location
-import org.goodmath.simplex.ast.expr.Expr
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.twist.Twist
 

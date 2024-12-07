@@ -93,14 +93,14 @@ abstract class Type : Twistable {
         }
 
         fun simple(name: String): SimpleType {
-            return Type.types.computeIfAbsent(name) { n ->
+            return types.computeIfAbsent(name) { n ->
              SimpleType(n)
             } as SimpleType
         }
 
         fun vector(baseType: Type): VectorType {
             val name = "[$baseType]"
-            val result = Type.types.computeIfAbsent(name) { n ->
+            val result = types.computeIfAbsent(name) { n ->
                 VectorType(baseType)
             } as VectorType
             if (!valueTypes.containsKey(result)) {
@@ -117,7 +117,7 @@ abstract class Type : Twistable {
         fun multiMethod(target: Type, argSets: List<ArgumentListSpec>, result: Type): MethodType {
             val argsStr = argSets.map { it.toString() }.joinToString("|")
             val name = "$target->($argsStr):$result"
-            val result = Type.types.computeIfAbsent(name) { _ ->
+            val result = types.computeIfAbsent(name) { _ ->
                  MethodType(target, argSets, result)
             } as MethodType
             if (!valueTypes.containsKey(result)) {
@@ -127,7 +127,7 @@ abstract class Type : Twistable {
         }
 
         fun function(sig: FunctionSignature): FunctionType {
-            val result = Type.types.computeIfAbsent(sig.toString()) { _ ->
+            val result = types.computeIfAbsent(sig.toString()) { _ ->
                 FunctionType(sig.paramSigs.map { ArgumentListSpec(it) }, sig.returnType)
             } as FunctionType
             if (!valueTypes.containsKey(result)) {
@@ -140,7 +140,7 @@ abstract class Type : Twistable {
             val argOptStrings =
                 argOptions.map { it.toString() }.joinToString("|")
             val name = "($argOptStrings):$result"
-            val result = Type.types.computeIfAbsent(name) { _ -> FunctionType(argOptions, result) }
+            val result = types.computeIfAbsent(name) { _ -> FunctionType(argOptions, result) }
                 as FunctionType
             if (!valueTypes.containsKey(result)) {
                 valueTypes[result] = FunctionValueType(result)
@@ -158,9 +158,6 @@ abstract class Type : Twistable {
         val SolidType = simple("Solid")
         val BoundingRectType = simple("BoundingRect")
         val PolygonType = simple("Polygon")
-        val SliceType = simple("Slice")
-        val MeshType = simple("Mesh")
-        val SmoothnessType = simple("Smoothness")
         val NoneType = simple("None")
         val AnyType = simple("Any")
     }
@@ -176,7 +173,7 @@ abstract class Type : Twistable {
     val methods = HashMap<String, MethodType>()
 }
 
-data class SimpleType constructor(val name: String) : Type() {
+data class SimpleType(val name: String) : Type() {
     override fun twist(): Twist = Twist.obj("SimpleType", Twist.attr("name", name))
 
     override fun toString(): String {

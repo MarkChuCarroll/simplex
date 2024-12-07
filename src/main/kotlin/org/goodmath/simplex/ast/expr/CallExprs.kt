@@ -22,7 +22,6 @@ import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexAnalysisError
 import org.goodmath.simplex.runtime.SimplexEvaluationError
-import org.goodmath.simplex.runtime.SimplexParameterCountError
 import org.goodmath.simplex.runtime.SimplexUndefinedError
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.primitives.AbstractFunctionValue
@@ -102,10 +101,13 @@ class MethodCallExpr(val target: Expr, val name: String, val args: Arguments, lo
     }
 
     fun findMatchingArgumentSpec(args: Arguments, env: Env): ArgumentListSpec {
+        System.err.println("Searching for match for $name with args $args")
         val argSpecs = target.resultType(env).getMethod(name)?.argSets ?: throw SimplexAnalysisError("No matching method found", loc = loc)
-        return argSpecs.firstOrNull {
+        val result = argSpecs.firstOrNull {
             it.matchedBy(args, env)
-        } ?: throw SimplexAnalysisError("No matching parameter spec found", loc = loc)
+        }
+        System.err.println("-> search result = $result")
+        return result ?: throw SimplexAnalysisError("No matching parameter spec found", loc = loc)
     }
 
 
@@ -116,13 +118,13 @@ class MethodCallExpr(val target: Expr, val name: String, val args: Arguments, lo
     }
 
     override fun validate(env: Env) {
+        System.err.println("Validating method $name with args $args")
         val targetType = target.resultType(env)
-        val methodType =
-            targetType.getMethod(name)
-                ?: throw SimplexUndefinedError(name, "method of $targetType", loc = loc)
+        System.err.println("---> Methods available for $targetType = ${targetType.methods.keys}")
+        targetType.getMethod(name)
+            ?: throw SimplexUndefinedError(name, "method of $targetType", loc = loc)
         findMatchingArgumentSpec(args, env)
     }
-
 
     override fun twist(): Twist =
         Twist.obj(
