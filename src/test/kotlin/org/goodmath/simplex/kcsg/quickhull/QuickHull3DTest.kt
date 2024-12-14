@@ -1,10 +1,11 @@
 package org.goodmath.simplex.kcsg.quickhull
 
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.io.OutputStreamWriter
 import java.io.PrintWriter
 import java.util.Random
-import kotlin.system.exitProcess
 import kotlin.math.sin
 import kotlin.math.cos
 
@@ -309,10 +310,7 @@ class QuickHull3DTest {
             hull.triangulate()
         }
 
-        if (!hull.check(PrintWriter(OutputStreamWriter(System.err)))) {
-            Throwable().printStackTrace()
-            exitProcess(1)
-        }
+        assertTrue(hull.check(PrintWriter(OutputStreamWriter(System.err))))
         if (checkFaces != null) {
             explicitFaceCheck(hull, checkFaces)
         }
@@ -368,10 +366,7 @@ class QuickHull3DTest {
             if (triangulate) {
                 xhull.triangulate()
             }
-            if (!xhull.check(PrintWriter(OutputStreamWriter(System.out)))) {
-                (Throwable()).printStackTrace()
-                exitProcess(1)
-            }
+            assertTrue(xhull.check(PrintWriter(OutputStreamWriter(System.out))))
         } catch (e: Exception) {
             for (i in 0 until coordsx.size / 3) {
                 println(
@@ -379,12 +374,7 @@ class QuickHull3DTest {
                 )
             }
         }
-        if (xhull != null && !xhull.check(PrintWriter(OutputStreamWriter(System.out)))) {
-            (Throwable()).printStackTrace()
-            exitProcess(1)
-        }
-
-
+        assertTrue(xhull != null && xhull.check(PrintWriter(OutputStreamWriter(System.out))))
     }
 
     fun rotateCoords(
@@ -435,21 +425,7 @@ class QuickHull3DTest {
         } catch (e: Exception) {
             ex = e
         }
-        if (ex == null) {
-            println("Expected exception $msg")
-            println("Got no exception")
-            println("Input pnts:")
-            printCoords(coords)
-            exitProcess(1)
-        } else if (ex.message == null ||
-            !ex.message.equals(msg)
-        ) {
-            println("Expected exception $msg")
-            println("Got exception " + ex.message)
-            println("Input pnts:")
-            printCoords(coords)
-            exitProcess(1)
-        }
+        assertEquals(ex?.message, msg)
     }
 
     fun test(coords: ArrayList<Double>, checkFaces: ArrayList<ArrayList<Int>>?) {
@@ -486,90 +462,82 @@ class QuickHull3DTest {
      */
     @Test
     fun explicitAndRandomTests() {
-        try {
-            var coords: ArrayList<Double>? = null
-
-            println("Testing degenerate input ...")
-            for (dimen in 0 until 3) {
-                for (i in 0 until 10) {
-                    coords = randomDegeneratePoints(10, dimen)
-                    if (dimen == 0) {
-                        testException(coords, "Input points appear to be coincident")
-                    } else if (dimen == 1) {
-                        testException(coords, "Input points appear to be colinear")
-                    } else if (dimen == 2) {
-                        testException(coords, "Input points appear to be coplanar")
-                    }
+        var coords: ArrayList<Double>? = null
+        println("Testing degenerate input ...")
+        for (dimen in 0 until 3) {
+            for (i in 0 until 10) {
+                coords = randomDegeneratePoints(10, dimen)
+                if (dimen == 0) {
+                    testException(coords, "Input points appear to be coincident")
+                } else if (dimen == 1) {
+                    testException(coords, "Input points appear to be co-linear")
+                } else if (dimen == 2) {
+                    testException(coords, "Input points appear to be coplanar")
                 }
             }
-            println("Explicit tests ...")
+        }
+        println("Explicit tests ...")
+        // test cases furnished by Mariano Zelke, Berlin
+        coords = arrayListOf(
+            21.0, 0.0, 0.0,
+            0.0, 21.0, 0.0,
+            0.0, 0.0, 0.0,
+            18.0, 2.0, 6.0,
+            1.0, 18.0, 5.0,
+            2.0, 1.0, 3.0,
+            14.0, 3.0, 10.0,
+            4.0, 14.0, 14.0,
+            3.0, 4.0, 10.0,
+            10.0, 6.0, 12.0,
+            5.0, 10.0, 15.0
+        )
+        test(coords, null)
 
-            // test cases furnished by Mariano Zelke, Berlin
-            coords = arrayListOf(
-                21.0, 0.0, 0.0,
-                0.0, 21.0, 0.0,
-                0.0, 0.0, 0.0,
-                18.0, 2.0, 6.0,
-                1.0, 18.0, 5.0,
-                2.0, 1.0, 3.0,
-                14.0, 3.0, 10.0,
-                4.0, 14.0, 14.0,
-                3.0, 4.0, 10.0,
-                10.0, 6.0, 12.0,
-                5.0, 10.0, 15.0
-            )
-            test(coords, null)
+        coords = arrayListOf(
+            0.0, 0.0, 0.0,
+            21.0, 0.0, 0.0,
+            0.0, 21.0, 0.0,
+            2.0, 1.0, 2.0,
+            17.0, 2.0, 3.0,
+            1.0, 19.0, 6.0,
+            4.0, 3.0, 5.0,
+            13.0, 4.0, 5.0,
+            3.0, 15.0, 8.0,
+            6.0, 5.0, 6.0,
+            9.0, 6.0, 11.0,
+        )
+        test(coords, null)
 
-            coords = arrayListOf(
-                0.0, 0.0, 0.0,
-                21.0, 0.0, 0.0,
-                0.0, 21.0, 0.0,
-                2.0, 1.0, 2.0,
-                17.0, 2.0, 3.0,
-                1.0, 19.0, 6.0,
-                4.0, 3.0, 5.0,
-                13.0, 4.0, 5.0,
-                3.0, 15.0, 8.0,
-                6.0, 5.0, 6.0,
-                9.0, 6.0, 11.0,
-            )
-            test(coords, null)
-
-            println("Testing 20 to 200 random points ...")
-            for (n in 20 until 200 step 10) {
-                for (i in 0 until 10) {
-                    coords = randomPoints(n, 1.0)
-                    test(coords, null)
-                }
+        println("Testing 20 to 200 random points ...")
+        for (n in 20 until 200 step 10) {
+            for (i in 0 until 10) {
+                coords = randomPoints(n, 1.0)
+                test(coords, null)
             }
+        }
 
-            println("Testing 20 to 200 random points in a sphere ...")
-            for (n in 20 until 200 step 10) {
-                for (i in 0 until 10) {
-                    coords = randomSphericalPoints(n, 1.0)
-                    test(coords, null)
-                }
+        println("Testing 20 to 200 random points in a sphere ...")
+        for (n in 20 until 200 step 10) {
+            for (i in 0 until 10) {
+                coords = randomSphericalPoints(n, 1.0)
+                test(coords, null)
             }
+        }
 
-            println("Testing 20 to 200 random points clipped to a cube ...")
-            for (n in 20 until 200 step 10) {
-                for (i in 0 until 10) {
-                    coords = randomCubedPoints(n, 1.0, 0.5)
-                    test(coords, null)
-                }
+        println("Testing 20 to 200 random points clipped to a cube ...")
+        for (n in 20 until 200 step 10) {
+            for (i in 0 until 10) {
+                coords = randomCubedPoints(n, 1.0, 0.5)
+                test(coords, null)
             }
+        }
 
-            println("Testing 8 to 1000 randomly shuffled points on a grid ...")
-            for (n in 2 until 10) {
-                for (i in 0 until 10) {
-                    coords = randomGridPoints(n, 4.0)
-                    test(coords, null)
-                }
+        println("Testing 8 to 1000 randomly shuffled points on a grid ...")
+        for (n in 2 until 10) {
+            for (i in 0 until 10) {
+                coords = randomGridPoints(n, 4.0)
+                test(coords, null)
             }
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-            exitProcess(1)
         }
         println("\nPassed\n")
     }

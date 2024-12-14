@@ -4,20 +4,19 @@ import kotlin.math.absoluteValue
 import kotlin.math.sqrt
 
 // Based on quickhull - original copyright:
-    /*
-      * Copyright John E. Lloyd, 2003. All rights reserved. Permission
-      * to use, copy, and modify, without fee, is granted for non-commercial
-      * and research purposes, provided that this copyright notice appears
-      * in all copies.
-      *
-      * This  software is distributed "as is", without any warranty, including
-      * any implied warranty of merchantability or fitness for a particular
-      * use. The authors assume no responsibility for, and shall not be liable
-      * for, any special, indirect, or consequential damages, or any damages
-      * whatsoever, arising out of or in connection with the use of this
-      * software.
-      */
-
+/*
+ * Copyright John E. Lloyd, 2003. All rights reserved. Permission
+ * to use, copy, and modify, without fee, is granted for non-commercial
+ * and research purposes, provided that this copyright notice appears
+ * in all copies.
+ *
+ * This  software is distributed "as is", without any warranty, including
+ * any implied warranty of merchantability or fitness for a particular
+ * use. The authors assume no responsibility for, and shall not be liable
+ * for, any special, indirect, or consequential damages, or any damages
+ * whatsoever, arising out of or in connection with the use of this
+ * software.
+ */
 
 enum class FaceMark {
     VISIBLE,
@@ -43,14 +42,14 @@ class Face(var normal: Vector3d = Vector3d(), var centroid: Point3d = Point3d(),
     var index: Int = 0
     var numVerts: Int = 0
 
-    var _next: Face? = null
+    var storedNext: Face? = null
 
     fun getNext(): Face {
-        return _next!!
+        return storedNext!!
     }
 
     fun setNext(next: Face?) {
-        _next = next
+        storedNext = next
     }
 
 
@@ -82,7 +81,7 @@ class Face(var normal: Vector3d = Vector3d(), var centroid: Point3d = Point3d(),
                     hedgeMax = hedge
                     lenSqrMax = lenSqr
                 }
-                hedge = hedge._next!!
+                hedge = hedge.storedNext!!
             } while (hedge != he0)
 
             var p2 = hedgeMax!!.head().pnt
@@ -101,8 +100,8 @@ class Face(var normal: Vector3d = Vector3d(), var centroid: Point3d = Point3d(),
     }
 
     fun computeNormal(normal: Vector3d) {
-        var he1 = he0._next!!
-        var he2 = he1._next!!
+        var he1 = he0.storedNext!!
+        var he2 = he1.storedNext!!
 
         var p0 = he0.head().pnt
         var p2 = he1.head().pnt
@@ -141,15 +140,15 @@ class Face(var normal: Vector3d = Vector3d(), var centroid: Point3d = Point3d(),
         computeNormal(normal)
         computeCentroid(centroid)
         planeOffset = normal.dot(centroid)
-        var numv = 0
+        var numV = 0
         var he = he0
         do {
-            numv++
+            numV++
             he = he.getNext()
         } while (he != he0)
-        if (numv != numVerts) {
+        if (numV != numVerts) {
             throw InternalErrorException(
-                "face " + getVertexString() + " numVerts=" + numVerts + " should be " + numv
+                "face " + getVertexString() + " numVerts=" + numVerts + " should be " + numV
             )
         }
     }
@@ -164,7 +163,7 @@ class Face(var normal: Vector3d = Vector3d(), var centroid: Point3d = Point3d(),
     /**
      * Gets the i-th half-edge associated with the face.
      *
-     * @param i the half-edge index, in the range 0-2.
+     * @param number the half-edge index, in the range 0-2.
      * @return the half-edge
      */
     fun getEdge(number: Int): HalfEdge {
@@ -218,7 +217,7 @@ class Face(var normal: Vector3d = Vector3d(), var centroid: Point3d = Point3d(),
 
 
     fun getVertexString(): String {
-        var s: String = ""
+        var s = ""
         var he = he0
         do {
             if (s.isEmpty()) {
@@ -231,11 +230,11 @@ class Face(var normal: Vector3d = Vector3d(), var centroid: Point3d = Point3d(),
         return s
     }
 
-    fun getVertexIndices(idxs: IntArray) {
+    fun getVertexIndices(indexes: IntArray) {
         var he = he0
         var i = 0
         do {
-            idxs[i++] = he.head().index
+            indexes[i++] = he.head().index
             he = he.getNext()
         } while (he != he0)
     }
@@ -246,7 +245,7 @@ class Face(var normal: Vector3d = Vector3d(), var centroid: Point3d = Point3d(),
         var discardedFace: Face? = null
 
         if (hedgePrev.oppositeFace() == hedge.oppositeFace()) {
-            // then there is a redundant edge that we can get rid off
+            // then there is a redundant edge that we can get rid of
             val oppFace = hedge.oppositeFace()
             var hedgeOpp: HalfEdge
 
@@ -260,23 +259,23 @@ class Face(var normal: Vector3d = Vector3d(), var centroid: Point3d = Point3d(),
                 discardedFace = oppFace
             } else {
                 hedgeOpp = hedge.getOpposite().getNext()
-                if (oppFace.he0 == hedgeOpp._prev) {
+                if (oppFace.he0 == hedgeOpp.storedPrev) {
                     oppFace.he0 = hedgeOpp
                 }
-                hedgeOpp._prev = hedgeOpp.getPrev()._prev
-                hedgeOpp.getPrev()._next = hedgeOpp
+                hedgeOpp.storedPrev = hedgeOpp.getPrev().storedPrev
+                hedgeOpp.getPrev().storedNext = hedgeOpp
             }
-            hedge._prev = hedgePrev._prev
-            hedge.getPrev()._next = hedge
+            hedge.storedPrev = hedgePrev.storedPrev
+            hedge.getPrev().storedNext = hedge
 
-            hedge._opposite = hedgeOpp
-            hedgeOpp._opposite = hedge
+            hedge.storedOpposite = hedgeOpp
+            hedgeOpp.storedOpposite = hedge
 
             // oppFace was modified, so need to recompute
             oppFace.computeNormalAndCentroid()
         } else {
-            hedgePrev._next = hedge
-            hedge._prev = hedgePrev
+            hedgePrev.storedNext = hedge
+            hedge.storedPrev = hedgePrev
         }
         return discardedFace
     }
@@ -284,8 +283,8 @@ class Face(var normal: Vector3d = Vector3d(), var centroid: Point3d = Point3d(),
     fun checkConsistency() {
         // do a sanity check on the face
         var hedge = he0
-        var maxd = 0.0
-        var numv = 0
+        var maxD = 0.0
+        var numV = 0
 
         if (numVerts < 3) {
             throw InternalErrorException(
@@ -294,7 +293,7 @@ class Face(var normal: Vector3d = Vector3d(), var centroid: Point3d = Point3d(),
         }
 
         do {
-            val hedgeOpp = hedge._opposite
+            val hedgeOpp = hedge.storedOpposite
             if (hedgeOpp == null) {
                 throw InternalErrorException(
                     "face " + getVertexString() + ": " +
@@ -317,7 +316,7 @@ class Face(var normal: Vector3d = Vector3d(), var centroid: Point3d = Point3d(),
                             " reflected by " + hedgeOpp.getVertexString()
                 )
             }
-            var oppFace = hedgeOpp._face
+            var oppFace = hedgeOpp.storedFace
             if (oppFace == null) {
                 throw InternalErrorException(
                     "face " + getVertexString() + ": " +
@@ -331,16 +330,16 @@ class Face(var normal: Vector3d = Vector3d(), var centroid: Point3d = Point3d(),
                 )
             }
             val d = distanceToPlane(hedge.head().pnt).absoluteValue
-            if (d > maxd) {
-                maxd = d
+            if (d > maxD) {
+                maxD = d
             }
-            numv++
+            numV++
             hedge = hedge.getNext()
         } while (hedge != he0)
 
-        if (numv != numVerts) {
+        if (numV != numVerts) {
             throw InternalErrorException(
-                "face " + getVertexString() + " numVerts=" + numVerts + " should be " + numv
+                "face " + getVertexString() + " numVerts=" + numVerts + " should be " + numV
             )
         }
 
@@ -371,8 +370,8 @@ class Face(var normal: Vector3d = Vector3d(), var centroid: Point3d = Point3d(),
         }
 
         var hedge: HalfEdge = hedgeOppNext
-        while (hedge != hedgeOppPrev._next) {
-            hedge._face = this
+        while (hedge != hedgeOppPrev.storedNext) {
+            hedge.storedFace = this
             hedge = hedge.getNext()
         }
 
@@ -428,17 +427,16 @@ class Face(var normal: Vector3d = Vector3d(), var centroid: Point3d = Point3d(),
         }
 
         var v0 = he0.head()
-        var prevFace: Face? = null
 
         var hedge = he0.getNext()
-        var oppPrev = hedge._opposite
+        var oppPrev = hedge.storedOpposite
         var face0: Face? = null
 
         hedge = hedge.getNext()
         while (hedge != he0.getPrev()) {
             val face = createTriangle(v0, hedge.getPrev().head(), hedge.head(), minArea)
             face.he0.getNext().setOpposite(oppPrev!!)
-            face.he0.getPrev().setOpposite(hedge._opposite!!)
+            face.he0.getPrev().setOpposite(hedge.storedOpposite!!)
             oppPrev = face.he0
             newFaces.add(face)
             if (face0 == null) {
@@ -449,11 +447,11 @@ class Face(var normal: Vector3d = Vector3d(), var centroid: Point3d = Point3d(),
         hedge = HalfEdge(he0.getPrev().getPrev().head(), this)
         hedge.setOpposite(oppPrev!!)
 
-        hedge._prev = he0
-        hedge.getPrev()._next = hedge
+        hedge.storedPrev = he0
+        hedge.getPrev().storedNext = hedge
 
-        hedge._next = he0.getPrev()
-        hedge.getNext()._prev = hedge
+        hedge.storedNext = he0.getPrev()
+        hedge.getNext().storedPrev = hedge
 
         computeNormalAndCentroid(minArea)
         checkConsistency()
@@ -461,7 +459,7 @@ class Face(var normal: Vector3d = Vector3d(), var centroid: Point3d = Point3d(),
         var face: Face? = face0
         while (face != null) {
             face.checkConsistency()
-            face = face._next
+            face = face.storedNext
         }
     }
 
@@ -486,12 +484,12 @@ class Face(var normal: Vector3d = Vector3d(), var centroid: Point3d = Point3d(),
             val he1 = HalfEdge(v1, face)
             val he2 = HalfEdge(v2, face)
 
-            he0._prev = he2
-            he0._next = he1
-            he1._prev = he0
-            he1._next = he2
-            he2._prev = he1
-            he2._next = he0
+            he0.storedPrev = he2
+            he0.storedNext = he1
+            he1.storedPrev = he0
+            he1.storedNext = he2
+            he2.storedPrev = he1
+            he2.storedNext = he0
             face.he0 = he0
 
             // compute the normal and offset

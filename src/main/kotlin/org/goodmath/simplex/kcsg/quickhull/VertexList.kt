@@ -4,29 +4,29 @@ package org.goodmath.simplex.kcsg.quickhull
  * Maintains a double-linked list of vertices for use by QuickHull3D
  */
 class VertexList {
-    var _head: Vertex? = null
-    var _tail: Vertex? = null
+    var storedHead: Vertex? = null
+    var storedTail: Vertex? = null
 
     /**
      * Clears this list.
      */
     fun clear() {
-        _head = null
-        _tail = null
+        storedHead = null
+        storedTail = null
     }
 
     /**
      * Adds a vertex to the end of this list.
      */
     fun add(vtx: Vertex) {
-        if (_head == null) {
-            _head = vtx
+        if (storedHead == null) {
+            storedHead = vtx
         } else {
-            _tail!!._next = vtx
+            storedTail!!.storedNext = vtx
         }
-        vtx._prev = _tail
-        vtx._next = null
-        _tail = vtx
+        vtx.storedPrev = storedTail
+        vtx.storedNext = null
+        storedTail = vtx
     }
 
     /**
@@ -34,31 +34,31 @@ class VertexList {
      */
     fun addAll(inVtx: Vertex) {
         var vtx = inVtx
-        if (_head == null) {
-            _head = vtx
+        if (storedHead == null) {
+            storedHead = vtx
         } else {
-            _tail!!._next = vtx
+            storedTail!!.storedNext = vtx
         }
-        vtx._prev = _tail
-        while (vtx._next != null) {
-            vtx = vtx._next!!
+        vtx.storedPrev = storedTail
+        while (vtx.storedNext != null) {
+            vtx = vtx.storedNext!!
         }
-        _tail = vtx
+        storedTail = vtx
     }
 
     /**
      * Deletes a vertex from this list.
      */
     fun delete(vtx: Vertex) {
-        if (vtx._prev == null) {
-            _head = vtx._next
+        if (vtx.storedPrev == null) {
+            storedHead = vtx.storedNext
         } else {
-            vtx._prev!!._next = vtx._next
+            vtx.storedPrev!!.storedNext = vtx.storedNext
         }
-        if (vtx._next == null) {
-            _tail = vtx._prev
+        if (vtx.storedNext == null) {
+            storedTail = vtx.storedPrev
         } else {
-            vtx._next!!._prev = vtx._prev
+            vtx.storedNext!!.storedPrev = vtx.storedPrev
         }
     }
 
@@ -66,44 +66,44 @@ class VertexList {
      * Deletes a chain of vertices from this list.
      */
     fun delete(vtx1: Vertex, vtx2: Vertex) {
-        if (vtx1._prev == null) {
-            _head = vtx2._next
+        if (vtx1.storedPrev == null) {
+            storedHead = vtx2.storedNext
         } else {
-            vtx1._prev!!._next = vtx2._next
+            vtx1.storedPrev!!.storedNext = vtx2.storedNext
         }
-        if (vtx2._next == null) {
-            _tail = vtx1._prev
+        if (vtx2.storedNext == null) {
+            storedTail = vtx1.storedPrev
         } else {
-            vtx2._next!!._prev = vtx1._prev
+            vtx2.storedNext!!.storedPrev = vtx1.storedPrev
         }
     }
 
     /**
      * Inserts a vertex into this list before another
-     * specificed vertex.
+     * specified vertex.
      */
     fun insertBefore(vtx: Vertex, next: Vertex) {
-        vtx._prev = next._prev
-        if (next._prev == null) {
-            _head = vtx
+        vtx.storedPrev = next.storedPrev
+        if (next.storedPrev == null) {
+            storedHead = vtx
         } else {
-            next._prev!!._next = vtx
+            next.storedPrev!!.storedNext = vtx
         }
-        vtx._next = next
-        next._prev = vtx
+        vtx.storedNext = next
+        next.storedPrev = vtx
     }
 
     /**
      * Returns the first element in this list.
      */
     fun first(): Vertex? {
-        return _head
+        return storedHead
     }
 
     /**
      * Returns true if this list is empty.
      */
     fun isEmpty(): Boolean {
-        return _head == null
+        return storedHead == null
     }
 }

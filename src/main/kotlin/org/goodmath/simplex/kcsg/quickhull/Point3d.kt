@@ -1,5 +1,6 @@
 package org.goodmath.simplex.kcsg.quickhull
 
+
 /**
  * Copyright John E. Lloyd, 2004. All rights reserved. Permission to use,
  * copy, modify and redistribute is granted, provided that this copyright
@@ -25,6 +26,7 @@ package org.goodmath.simplex.kcsg.quickhull
  * @author John E. Lloyd, Fall 2004
  */
 class Point3d(x: Double, y: Double, z: Double): Vector3d(x, y, z) {
+
     /**
      * Creates a Point3d and initializes it to zero.
      */

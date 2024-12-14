@@ -24,9 +24,9 @@ class FaceList {
         if (_head == null) {
             _head = vtx
         } else {
-            _tail!!._next = vtx
+            _tail!!.storedNext = vtx
         }
-        vtx._next = null
+        vtx.storedNext = null
         _tail = vtx
     }
 

@@ -17,12 +17,12 @@ class Vertex(x: Double, y: Double, z: Double, var index: Int = -1): Vector3d(x, 
     /**
      * List forward link.
      */
-    var _next: Vertex? = null
+    var storedNext: Vertex? = null
 
     /**
      * List backward link.
      */
-    var _prev: Vertex? = null
+    var storedPrev: Vertex? = null
 
     /**
      * Current face that this vertex is outside
@@ -35,19 +35,19 @@ class Vertex(x: Double, y: Double, z: Double, var index: Int = -1): Vector3d(x, 
     constructor(): this(0.0, 0.0, 0.0, -1)
 
     fun getNext(): Vertex? {
-        return _next
+        return storedNext
     }
 
     fun setNext(next: Vertex?) {
-        _next = next
+        storedNext = next
     }
 
     fun getPrev(): Vertex? {
-        return _prev
+        return storedPrev
     }
 
     fun setPrev(prev: Vertex?) {
-        _prev = prev
+        storedPrev = prev
     }
 
 }

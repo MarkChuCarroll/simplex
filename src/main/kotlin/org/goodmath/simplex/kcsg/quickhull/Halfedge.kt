@@ -23,22 +23,22 @@ package org.goodmath.simplex.kcsg.quickhull
  *
  *
  * @author John E. Lloyd, Fall 2004 */
-class HalfEdge(var _vertex: Vertex? = null, var _face: Face? = null) {
+class HalfEdge(var storedVertex: Vertex? = null, var storedFace: Face? = null) {
     /**
      * Next half-edge in the triangle.
      */
-    var _next: HalfEdge? = null
+    var storedNext: HalfEdge? = null
 
     /**
      * Previous half-edge in the triangle.
      */
-    var _prev: HalfEdge? = null
+    var storedPrev: HalfEdge? = null
 
     /**
      * Half-edge associated with the opposite triangle
      * adjacent to this edge.
      */
-    var _opposite: HalfEdge? = null
+    var storedOpposite: HalfEdge? = null
 
 
     /**
@@ -47,7 +47,7 @@ class HalfEdge(var _vertex: Vertex? = null, var _face: Face? = null) {
      *
      * @param edge next adjacent edge */
     fun setNext(edge: HalfEdge) {
-        _next = edge
+        storedNext = edge
     }
 
     /**
@@ -56,7 +56,7 @@ class HalfEdge(var _vertex: Vertex? = null, var _face: Face? = null) {
      *
      * @return next adjacent edge */
     fun getNext(): HalfEdge {
-        return _next!!
+        return storedNext!!
     }
 
     /**
@@ -65,7 +65,7 @@ class HalfEdge(var _vertex: Vertex? = null, var _face: Face? = null) {
      *
      * @param edge previous adjacent edge */
     fun setPrev(edge: HalfEdge) {
-        _prev = edge
+        storedPrev = edge
     }
 
     /**
@@ -75,7 +75,7 @@ class HalfEdge(var _vertex: Vertex? = null, var _face: Face? = null) {
      * @return previous adjacent edge
      */
     fun getPrev(): HalfEdge {
-        return _prev!!
+        return storedPrev!!
     }
 
     /**
@@ -85,11 +85,11 @@ class HalfEdge(var _vertex: Vertex? = null, var _face: Face? = null) {
      * @return left-hand triangular face
      */
     fun getFace(): Face {
-        return _face!!
+        return storedFace!!
     }
 
     fun setFace(face: Face) {
-        _face = face
+        storedFace = face
     }
 
     /**
@@ -98,7 +98,7 @@ class HalfEdge(var _vertex: Vertex? = null, var _face: Face? = null) {
      * @return opposite half-edge
      */
     fun getOpposite(): HalfEdge {
-        return _opposite!!
+        return storedOpposite!!
     }
 
     /**
@@ -107,8 +107,8 @@ class HalfEdge(var _vertex: Vertex? = null, var _face: Face? = null) {
      * @param edge opposite half-edge
      */
     fun setOpposite(edge: HalfEdge) {
-        _opposite = edge
-        edge._opposite = this
+        storedOpposite = edge
+        edge.storedOpposite = this
     }
 
     /**
@@ -117,7 +117,7 @@ class HalfEdge(var _vertex: Vertex? = null, var _face: Face? = null) {
      * @return head vertex
      */
     fun head(): Vertex {
-        return _vertex!!
+        return storedVertex!!
     }
 
     /**
@@ -126,7 +126,7 @@ class HalfEdge(var _vertex: Vertex? = null, var _face: Face? = null) {
      * @return tail vertex
      */
     fun tail(): Vertex? {
-        return _prev?._vertex
+        return storedPrev?.storedVertex
     }
 
     /**
@@ -136,7 +136,7 @@ class HalfEdge(var _vertex: Vertex? = null, var _face: Face? = null) {
      * @return opposite triangular face
      */
     fun oppositeFace(): Face? {
-        return _opposite?._face
+        return storedOpposite?.storedFace
     }
 
     /**
@@ -147,12 +147,10 @@ class HalfEdge(var _vertex: Vertex? = null, var _face: Face? = null) {
      */
     fun getVertexString(): String {
         var t = tail()
-        if (t != null) {
-            return "" +
-                    t.index + "-" +
-                t.index
+        return if (t != null) {
+            "${t.index}-${t.index}"
         } else {
-            return "?-" + head().index
+            "?-${head().index}"
         }
     }
 
@@ -163,10 +161,10 @@ class HalfEdge(var _vertex: Vertex? = null, var _face: Face? = null) {
      */
     fun length(): Double {
         var t = tail()
-        if (t != null) {
-            return head().pnt.distance(t.pnt)
+        return if (t != null) {
+            head().pnt.distance(t.pnt)
         } else {
-            return -1.0
+            -1.0
         }
     }
 
@@ -177,22 +175,22 @@ class HalfEdge(var _vertex: Vertex? = null, var _face: Face? = null) {
      */
     fun lengthSquared(): Double {
         val t = tail()
-        if (t != null) {
-            return head().pnt.distanceSquared(t.pnt)
+        return if (t != null) {
+            head().pnt.distanceSquared(t.pnt)
         } else {
-            return -1.0
+            -1.0
         }
     }
 
 
 // 	/**
-// 	 * Computes nrml . (del0 X del1), where del0 and del1
+// 	 * Computes normal. (del0 X del1), where del0 and del1
 // 	 * are the direction vectors along this halfEdge, and the
 // 	 * halfEdge he1.
 // 	 *
 // 	 * A product > 0 indicates a left turn WRT the normal
 // 	 */
-// 	public double turnProduct (HalfEdge he1, Vector3d nrml)
+// 	public double turnProduct (HalfEdge he1, Vector3d normal)
 // 	 {
 // 	   Point3d pnt0 = tail().pnt;
 // 	   Point3d pnt1 = head().pnt;
@@ -206,9 +204,9 @@ class HalfEdge(var _vertex: Vertex? = null, var _face: Face? = null) {
 // 	   double del1y = pnt2.y - pnt1.y;
 // 	   double del1z = pnt2.z - pnt1.z;
 
-// 	   return (nrml.x*(del0y*del1z - del0z*del1y) +
-// 		   nrml.y*(del0z*del1x - del0x*del1z) +
-// 		   nrml.z*(del0x*del1y - del0y*del1x));
+// 	   return (normal.x*(del0y*del1z - del0z*del1y) +
+// 		   normal.y*(del0z*del1x - del0x*del1z) +
+// 		   normal.z*(del0x*del1y - del0y*del1x));
 // 	 }
 }
 

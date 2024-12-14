@@ -10,20 +10,20 @@ import kotlin.math.sqrt
 import kotlin.system.exitProcess
 
 /**
- * Computes the convex hull of a set of three dimensional points.
+ * Computes the convex hull of a set of three-dimensional points.
  *
- * <p>The algorithm is a three-dimensional implementation of Quickhull, as
+ * <p>The algorithm is a three-dimensional implementation of QuickHull, as
  * described in Barber, Dobkin, and Huhdanpaa, <a
  * href=http://citeseer.ist.psu.edu/barber96quickhull.html> ``The Quickhull
  * Algorithm for Convex Hulls''</a> (ACM Transactions on Mathematical Software,
  * Vol. 22, No. 4, December 1996), and has a complexity of O(n log(n)) with
  * respect to the number of points. A well-known C implementation of Quickhull
  * that works for arbitrary dimensions is provided by <a
- * href=http://www.qhull.org>qhull</a>.
+ * href=http://www.qhull.org>hull</a>.
  *
  * <p>A hull is constructed by providing a set of points
  * to either a constructor or a
- * {@link #build(Point3d[]) build} method. After
+ * {@link #build(build: Array<Point3d>)} method. After
  * the hull is built, its vertices and faces can be retrieved
  * using {@link #getVertices()
  * getVertices} and {@link #getFaces() getFaces}.
@@ -84,18 +84,18 @@ import kotlin.system.exitProcess
  * very close to the hull vertices and edges, and computing the convex
  * hull again. The hull is deemed correct if {@link #check check} returns
  * <code>true</code>.  These tests have been successful for a large number of
- * trials and so we are confident that QuickHull3D is reasonably robust.
+ * trials, and so we are confident that QuickHull3D is reasonably robust.
  *
  * <h3>Merged Faces</h3> The merging of faces means that the faces returned by
  * QuickHull3D may be convex polygons instead of triangles. If triangles are
- * desired, the application may {@link #triangulate triangulate} the faces, but
+ * desired, the application may {@link triangulate} the faces, but
  * it should be noted that this may result in triangles which are very small or
  * thin and hence difficult to perform reliable convexity tests on. In other
  * words, triangulating a merged face is likely to restore the numerical
- * problems which the merging process removed. Hence is it
- * possible that, after triangulation, {@link #check check} will fail (the same
+ * problems which the merging process removed. It is
+ * possible that, after triangulation, {@link check} will fail (the same
  * behavior is observed with triangulated output from <a
- * href=http://www.qhull.org>qhull</a>).
+ * href=http://www.qhull.org>qHull</a>).
  *
  * <h3>Degenerate Input</h3>It is assumed that the input points
  * are non-degenerate in that they are not coincident, co-linear, or
@@ -128,15 +128,15 @@ class QuickHull3D() {
     var maxVertexes: Array<Vertex> = Array<Vertex>(3) { Vertex() }
     var minVertexes: Array<Vertex> = Array<Vertex>(3) { Vertex() }
 
-    val _faces = ArrayList<Face>(16)
+    val storedFaces = ArrayList<Face>(16)
     val horizon = ArrayList<HalfEdge>(16)
 
     val newFaces = FaceList()
     val unclaimed = VertexList()
     val claimed =  VertexList()
 
-    var _numVertices: Int = 0
-    var _numFaces: Int = 0
+    var storedNumVertices: Int = 0
+    var storedNumFaces: Int = 0
     var numPoints: Int = 0
 
     var explicitTolerance = AUTOMATIC_TOLERANCE
@@ -172,7 +172,7 @@ class QuickHull3D() {
 
     fun removePointFromFace(vtx: Vertex, face: Face) {
         if (vtx == face.outside) {
-            if (vtx._next != null && vtx.getNext()!!.face == face) {
+            if (vtx.storedNext != null && vtx.getNext()!!.face == face) {
                 face.outside = vtx.getNext()
             } else {
                 face.outside = null
@@ -184,7 +184,7 @@ class QuickHull3D() {
     fun removeAllPointsFromFace(face: Face): Vertex? {
         if (face.outside != null) {
             var end = face.outside
-            while (end!!._next != null && end.getNext()!!.face == face) {
+            while (end!!.storedNext != null && end.getNext()!!.face == face) {
                 end = end.getNext()
             }
             claimed.delete(face.outside!!, end)
@@ -198,7 +198,7 @@ class QuickHull3D() {
 
     fun findHalfEdge(tail: Vertex, head: Vertex): HalfEdge? {
         // brute force ... OK, since setHull is not used much
-        for (it in _faces) {
+        for (it in storedFaces) {
             val he: HalfEdge? = it.findEdge(tail, head)
             if (he != null) {
                 return he
@@ -207,13 +207,13 @@ class QuickHull3D() {
         return null
     }
 
-    fun setHull(coords: List<Double>, nump: Int,
+    fun setHull(coords: List<Double>, numP: Int,
                 faceIndices: ArrayList<ArrayList<Int>>,
-                numf: Int) {
-        initBuffers(nump)
-        setPointsFromDoubleList(coords, nump)
+                numF: Int) {
+        initBuffers(numP)
+        setPointsFromDoubleList(coords, numP)
         computeMaxAndMin()
-        for (i in 0 until numf) {
+        for (i in 0 until numF) {
             val face = Face.create(pointBuffer, faceIndices[i])
             var he = face.he0
             do {
@@ -223,7 +223,7 @@ class QuickHull3D() {
                 }
                 he = he.getNext()
             } while (he != face.he0)
-            _faces.add(face)
+            storedFaces.add(face)
         }
     }
 
@@ -240,7 +240,7 @@ class QuickHull3D() {
         }
     }
 
-    fun setFromQHull(coords: List<Double>, nump: Int, triangulate: Boolean) {
+    fun setFromQHull(coords: List<Double>, numP: Int, triangulate: Boolean) {
         var cmd = arrayListOf("./qhull", "i")
         if (triangulate) {
             cmd.add(" -Qt")
@@ -248,46 +248,46 @@ class QuickHull3D() {
         try {
             val proc = Runtime.getRuntime().exec(cmd.toTypedArray())
             val ps = PrintWriter(OutputStreamWriter(proc.outputStream))
-            val stok = StreamTokenizer(
+            val sTok = StreamTokenizer(
                     InputStreamReader(proc.inputStream))
 
-            ps.println("3 $nump")
-            for (i in 0 until nump) {
+            ps.println("3 $numP")
+            for (i in 0 until numP) {
                 ps.println("${coords[i*3+0]} ${coords[i*3+1]} ${coords[i*3+2]}")
             }
             ps.flush()
             ps.close()
             val indexList = ArrayList<Int>(3)
-            stok.eolIsSignificant(true)
+            sTok.eolIsSignificant(true)
             printQHullErrors(proc)
             do {
-                stok.nextToken()
-            } while (stok.sval == null || !stok.sval.startsWith("MERGEexact"))
-            for (i in 0 until 4) {
-                stok.nextToken()
+                sTok.nextToken()
+            } while (sTok.sval == null || !sTok.sval.startsWith("MERGEexact"))
+            repeat(4) {
+                sTok.nextToken()
             }
-            if (stok.ttype != StreamTokenizer.TT_NUMBER) {
+            if (sTok.ttype != StreamTokenizer.TT_NUMBER) {
                 println("Expecting number of faces")
                 exitProcess(1)
             }
-            val numf = stok.nval.toInt()
-            stok.nextToken() // clear EOL
+            val numF = sTok.nval.toInt()
+            sTok.nextToken() // clear EOL
             val faceIndices = ArrayList<ArrayList<Int>>()
-            for (i in 0 until numf) {
+            for (i in 0 until numF) {
                 indexList.clear()
-                while (stok.nextToken() != StreamTokenizer.TT_EOL) {
-                    if (stok.ttype != StreamTokenizer.TT_NUMBER) {
+                while (sTok.nextToken() != StreamTokenizer.TT_EOL) {
+                    if (sTok.ttype != StreamTokenizer.TT_NUMBER) {
                         println("Expecting face index")
                         exitProcess(1)
                     }
-                    indexList.add(0,  stok.nval.toInt())
+                    indexList.add(0,  sTok.nval.toInt())
                 }
                 faceIndices[i] = ArrayList<Int>(indexList.size)
                 for (idx in indexList) {
                     faceIndices[i].add(idx)
                 }
             }
-            setHull(coords, nump, faceIndices, numf)
+            setHull(coords, numP, faceIndices, numF)
         } catch (e: Exception) {
             e.printStackTrace()
             exitProcess(1)
@@ -309,7 +309,7 @@ class QuickHull3D() {
      * point. The length of this array will be three times
      * the number of input points.
      * @throws IllegalArgumentException the number of input points is less
-     * than four, or the points appear to be coincident, colinear, or
+     * than four, or the points appear to be coincident, co-linear, or
      * coplanar.
      */
     fun buildFromDoubleList(coords: List<Double>) {
@@ -322,23 +322,23 @@ class QuickHull3D() {
      *
      * @param coords x, y, and z coordinates of each input
      * point. The length of this array must be at least three times
-     * <code>nump</code>.
-     * @param nump number of input points
+     * <code>numP</code>.
+     * @param numP number of input points
      * @throws IllegalArgumentException the number of input points is less
      * than four or greater than 1/3 the length of <code>coords</code>,
-     * or the points appear to be coincident, colinear, or
+     * or the points appear to be coincident, co-linear, or
      * coplanar.
      */
-    fun buildFromDoubleList(coords: List<Double>, nump: Int) {
-        if (nump < 4) {
+    fun buildFromDoubleList(coords: List<Double>, numP: Int) {
+        if (numP < 4) {
             throw IllegalArgumentException("Less than four input points specified")
         }
-        if (coords.size/3 < nump) {
+        if (coords.size/3 < numP) {
             throw IllegalArgumentException(
                 "Coordinate array too small for specified number of points")
         }
-        initBuffers(nump)
-        setPointsFromDoubleList(coords, nump)
+        initBuffers(numP)
+        setPointsFromDoubleList(coords, numP)
         buildHull()
     }
 
@@ -347,7 +347,7 @@ class QuickHull3D() {
      *
      * @param points input points
      * @throws IllegalArgumentException the number of input points is less
-     * than four, or the points appear to be coincident, colinear, or
+     * than four, or the points appear to be coincident, co-linear, or
      * coplanar.
      */
     fun build(points: List<Point3d>) {
@@ -358,21 +358,21 @@ class QuickHull3D() {
      * Constructs the convex hull of a set of points.
      *
      * @param points input points
-     * @param nump number of input points
+     * @param numP number of input points
      * @throws IllegalArgumentException the number of input points is less
      * than four or greater than the length of <code>points</code>, or the
-     * points appear to be coincident, colinear, or coplanar.
+     * points appear to be coincident, co-linear, or coplanar.
      */
-    fun build(points: List<Point3d>, nump: Int) {
-        if (nump < 4) {
+    fun build(points: List<Point3d>, numP: Int) {
+        if (numP < 4) {
             throw IllegalArgumentException("Less than four input points specified")
         }
-        if (points.size < nump) {
+        if (points.size < numP) {
             throw IllegalArgumentException(
                 "Point array too small for specified number of points")
         }
-        initBuffers(nump)
-        setPoints(points, nump)
+        initBuffers(numP)
+        setPoints(points, numP)
         buildHull()
     }
 
@@ -383,9 +383,9 @@ class QuickHull3D() {
      * in <a href=http://www.qhull.org>qhull</a>).
      */
     fun triangulate() {
-        val minArea = 1000 * charLength * DOUBLE_PREC
+        val minArea = 1000 * charLength * DOUBLE_PRECISION
         newFaces.clear()
-        for (face in _faces) {
+        for (face in storedFaces) {
             if (face.mark == FaceMark.VISIBLE) {
                 face.triangulate(newFaces, minArea)
                 // splitFace (face);
@@ -393,8 +393,8 @@ class QuickHull3D() {
         }
         var face: Face? = newFaces.first()
         while (face != null) {
-            _faces.add(face)
-            face = face._next
+            storedFaces.add(face)
+            face = face.storedNext
         }
     }
 
@@ -408,40 +408,40 @@ class QuickHull3D() {
 //  	    }
 // 	 }
 
-    fun initBuffers(nump: Int) {
-        if (pointBuffer.size < nump) {
+    fun initBuffers(numP: Int) {
+        if (pointBuffer.size < numP) {
             val newBuffer = ArrayList<Vertex>()
             vertexPointIndices.clear()
-            for (i in 0 until pointBuffer.size) {
+            repeat(pointBuffer.size) {
                 vertexPointIndices.add(0)
             }
             for (i in 0 until pointBuffer.size) {
                 newBuffer.add(pointBuffer[i])
             }
-            repeat(nump - pointBuffer.size) {
+            repeat(numP - pointBuffer.size) {
                 newBuffer.add(Vertex())
             }
             pointBuffer.clear()
             pointBuffer.addAll(newBuffer)
         }
-        _faces.clear()
+        storedFaces.clear()
         claimed.clear()
-        _numFaces = 0
-        numPoints = nump
+        storedNumFaces = 0
+        numPoints = numP
     }
 
-    fun setPointsFromDoubleList(coords: List<Double>, nump: Int) {
-        for (i in 0 until nump) {
+    fun setPointsFromDoubleList(coords: List<Double>, numP: Int) {
+        for (i in 0 until numP) {
             val vtx = pointBuffer[i]
             vtx.pnt.set(coords[i * 3 + 0], coords[i * 3 + 1], coords[i * 3 + 2])
             vtx.index = i
         }
     }
 
-    fun setPoints(pnts: List<Point3d>, nump: Int) {
-        for (i in 0 until nump) {
+    fun setPoints(points: List<Point3d>, numP: Int) {
+        for (i in 0 until numP) {
             val vtx = pointBuffer[i]
-            vtx.pnt.set (pnts[i])
+            vtx.pnt.set(points[i])
             vtx.index = i
         }
     }
@@ -487,7 +487,7 @@ class QuickHull3D() {
         charLength = max(max.x-min.x, max.y-min.y)
         charLength = max(max.z-min.z, charLength)
         tolerance = if (explicitTolerance == AUTOMATIC_TOLERANCE) {
-            3*DOUBLE_PREC*(max(max.x.absoluteValue, min.x.absoluteValue) +
+            3*DOUBLE_PRECISION*(max(max.x.absoluteValue, min.x.absoluteValue) +
                     max(max.y.absoluteValue, min.y.absoluteValue) +
                     max(max.z.absoluteValue, min.z.absoluteValue))
         } else {
@@ -526,33 +526,33 @@ class QuickHull3D() {
         // the line between vtx0 and vtx1
         val u01 = Vector3d()
         val diff02 = Vector3d()
-        val nrml = Vector3d()
-        val xprod = Vector3d()
+        val normal = Vector3d()
+        val xProd = Vector3d()
         var maxSqr = 0.0
         u01.sub(vtx[1].pnt, vtx[0].pnt)
         u01.normalize()
         for (i in 0 until numPoints) {
             diff02.sub(pointBuffer[i].pnt, vtx[0].pnt)
-            xprod.cross(u01, diff02)
-            val lenSqr = xprod.normSquared()
+            xProd.cross(u01, diff02)
+            val lenSqr = xProd.normSquared()
             if (lenSqr > maxSqr &&
                 pointBuffer[i] != vtx[0] &&  // paranoid
                 pointBuffer[i] != vtx[1]) {
                 maxSqr = lenSqr
                 vtx[2] = pointBuffer[i]
-                nrml.set(xprod)
+                normal.set(xProd)
             }
         }
         if (sqrt(maxSqr) <= 100*tolerance) {
-            throw IllegalArgumentException("Input points appear to be colinear")
+            throw IllegalArgumentException("Input points appear to be co-linear")
         }
-        nrml.normalize()
+        normal.normalize()
 
 
         var maxDist = 0.0
-        var d0 = vtx[2].pnt.dot(nrml)
+        var d0 = vtx[2].pnt.dot(normal)
         for (i in 0 until numPoints) {
-            val dist = (pointBuffer[i].pnt.dot(nrml) - d0).absoluteValue
+            val dist = (pointBuffer[i].pnt.dot(normal) - d0).absoluteValue
             if (dist > maxDist &&
                 pointBuffer[i] != vtx[0] &&  // paranoid
                 pointBuffer[i] != vtx[1] &&
@@ -575,7 +575,7 @@ class QuickHull3D() {
 
         val tris = ArrayList<Face>()
 
-        if (vtx[3].pnt.dot(nrml) - d0 < 0) {
+        if (vtx[3].pnt.dot(normal) - d0 < 0) {
             tris.add(Face.createTriangle(vtx[0], vtx[1], vtx[2]))
             tris.add(Face.createTriangle(vtx[3], vtx[1], vtx[0]))
             tris.add(Face.createTriangle(vtx[3], vtx[2], vtx[1]))
@@ -600,7 +600,7 @@ class QuickHull3D() {
 
 
         for (i in 0 until 4) {
-            _faces.add (tris[i])
+            storedFaces.add (tris[i])
         }
 
         for (i in 0 until numPoints) {
@@ -633,11 +633,11 @@ class QuickHull3D() {
      * @see QuickHull3D#getFaces()
      */
     fun getVertices(): List<Point3d> {
-        val vtxs = ArrayList<Point3d>()
-        for (i in 0 until _numVertices) {
-            vtxs.add(pointBuffer[vertexPointIndices[i]].pnt)
+        val vertexes = ArrayList<Point3d>()
+        for (i in 0 until storedNumVertices) {
+            vertexes.add(pointBuffer[vertexPointIndices[i]].pnt)
         }
-        return vtxs
+        return vertexes
     }
 
     /**
@@ -651,13 +651,13 @@ class QuickHull3D() {
      * @see QuickHull3D#getFaces()
      */
     fun getVertices(coords: ArrayList<Double>): Int {
-        for (i in 0 until _numVertices) {
+        for (i in 0 until storedNumVertices) {
             val pnt = pointBuffer[vertexPointIndices[i]].pnt
             coords.add(pnt.x)
             coords.add(pnt.y)
             coords.add(pnt.z)
         }
-        return _numVertices
+        return storedNumVertices
     }
 
     /**
@@ -668,7 +668,7 @@ class QuickHull3D() {
      */
     fun getVertexPointIndices(): List<Int> {
         val indices = ArrayList<Int>()
-        for (i in 0 until _numVertices) {
+        for (i in 0 until storedNumVertices) {
             indices.add(vertexPointIndices[i])
         }
         return indices
@@ -676,7 +676,7 @@ class QuickHull3D() {
 
 
     fun getNumFaces(): Int {
-        return _faces.size
+        return storedFaces.size
     }
 
     /**
@@ -718,7 +718,7 @@ class QuickHull3D() {
      */
     fun getFaces(indexFlags: Int): ArrayList<ArrayList<Int>?> {
         val allFaces = ArrayList<ArrayList<Int>?>()
-        for (face in _faces) {
+        for (face in storedFaces) {
             val indices = ArrayList<Int>()
             allFaces.add(indices)
             getFaceIndices(indices, face, indexFlags)
@@ -777,11 +777,11 @@ class QuickHull3D() {
         if ((indexFlags and INDEXED_FROM_ZERO) == 0) {
             indexFlags = indexFlags or INDEXED_FROM_ONE
         }
-        for (i in 0 until _numVertices) {
+        for (i in 0 until storedNumVertices) {
             val pnt = pointBuffer[vertexPointIndices[i]].pnt
             pw.println("v ${pnt.x} ${pnt.y} ${pnt.z}")
         }
-        for (face in _faces) {
+        for (face in storedFaces) {
             val indices = ArrayList<Int>()
             getFaceIndices(indices, face, indexFlags)
             pw.print("f")
@@ -819,7 +819,7 @@ class QuickHull3D() {
         var vtxNext: Vertex? = unclaimed.first()
         var vtx: Vertex? = vtxNext
         while (vtx != null) {
-            vtxNext = vtx._next
+            vtxNext = vtx.storedNext
             var maxDist = tolerance
             var maxFace: Face? = null
             var newFace: Face? = newFaces.first()
@@ -834,7 +834,7 @@ class QuickHull3D() {
                         break
                     }
                 }
-                newFace = newFace._next
+                newFace = newFace.storedNext
             }
             if (maxFace != null) {
                 addPointToFace(vtx, maxFace)
@@ -853,12 +853,12 @@ class QuickHull3D() {
     }
 
     fun deleteFacePoints(face: Face, absorbingFace: Face?) {
-        val faceVtxs = removeAllPointsFromFace(face)
-        if (faceVtxs != null) {
+        val faceVertexes = removeAllPointsFromFace(face)
+        if (faceVertexes != null) {
             if (absorbingFace == null) {
-                unclaimed.addAll(faceVtxs)
+                unclaimed.addAll(faceVertexes)
             } else {
-                var vtxNext: Vertex? = faceVtxs
+                var vtxNext: Vertex? = faceVertexes
                 var vtx = vtxNext
                 while (vtx != null) {
                     vtxNext = vtx.getNext()
@@ -894,7 +894,7 @@ class QuickHull3D() {
                     oppFaceDistance(hedge.getOpposite()) > -tolerance) {
                     merge = true
                 }
-            } else { // mergeType == NONCONVEX_WRT_LARGER_FACE
+            } else { // mergeType == NON_CONVEX_WRT_LARGER_FACE
                 // merge faces if they are parallel or non-convex
                 // wrt to the larger face; otherwise, just mark
                 // the face non-convex for the second pass.
@@ -918,8 +918,8 @@ class QuickHull3D() {
                 if (debug) {
                     println("merging ${face.getVertexString()} and ${oppFace?.getVertexString()}")
                 }
-                var numd = face.mergeAdjacentFace(hedge, discardedFaces)
-                for (i in 0 until numd) {
+                var numD = face.mergeAdjacentFace(hedge, discardedFaces)
+                for (i in 0 until numD) {
                     deleteFacePoints(discardedFaces[i]!!, face)
                 }
                 if (debug) {
@@ -973,7 +973,7 @@ class QuickHull3D() {
     fun addAdjoiningFace(eyeVtx: Vertex, he: HalfEdge): HalfEdge {
         val face = Face.createTriangle (
                 eyeVtx, he.tail()!!, he.head())
-        _faces.add (face)
+        storedFaces.add (face)
         face.getEdge(-1).setOpposite(he.getOpposite())
         return face.getEdge(0)
     }
@@ -1012,7 +1012,7 @@ class QuickHull3D() {
                     maxDist = dist
                     eyeVtx = vtx
                 }
-                vtx = vtx._next
+                vtx = vtx.storedNext
             }
             return eyeVtx
         } else {
@@ -1044,7 +1044,7 @@ class QuickHull3D() {
                     // do nothing
                 }
             }
-            face=face._next
+            face=face.storedNext
 
         }
         // second merge pass ... merge faces which are non-convex
@@ -1057,7 +1057,7 @@ class QuickHull3D() {
                     // nothing
                 }
             }
-            face = face._next
+            face = face.storedNext
         }
         resolveUnclaimedPoints(newFaces)
     }
@@ -1072,7 +1072,7 @@ class QuickHull3D() {
             addPointToHull(eyeVtx)
             cnt++
             if (debug) {
-                println("iteration ${cnt} done")
+                println("iteration $cnt done")
             }
             eyeVtx = nextPointToAdd()
         }
@@ -1096,24 +1096,24 @@ class QuickHull3D() {
             pointBuffer[i].index = -1
         }
         // remove inactive faces and mark active vertices
-        _numFaces = 0
+        storedNumFaces = 0
         val toRemove = ArrayList<Face>()
-        for (face in _faces) {
+        for (face in storedFaces) {
             if (face.mark != FaceMark.VISIBLE) {
                 toRemove.add(face)
             } else {
                 markFaceVertices(face, 0)
-                _numFaces++
+                storedNumFaces++
             }
         }
-        _faces.removeAll(toRemove)
+        storedFaces.removeAll(toRemove)
         // reindex vertices
-        _numVertices = 0
+        storedNumVertices = 0
         for (i in 0 until numPoints) {
             val vtx = pointBuffer[i]
             if (vtx.index == 0) {
                 vertexPointIndices.add(i)
-                vtx.index = _numVertices++
+                vtx.index = storedNumVertices++
             }
         }
     }
@@ -1126,7 +1126,7 @@ class QuickHull3D() {
             // make sure edge is convex
             dist = oppFaceDistance(he)
             if (dist > tol) {
-                pw?.println("Edge ${he.getVertexString()} non-convex by ${dist}")
+                pw?.println("Edge ${he.getVertexString()} non-convex by $dist")
                 return false
             }
             dist = oppFaceDistance(he.getOpposite())
@@ -1146,7 +1146,7 @@ class QuickHull3D() {
     fun checkFaces(tol: Double, pw: PrintWriter?): Boolean {
         // check edge convexity
         var convex = true
-        for (face in _faces) {
+        for (face in storedFaces) {
             if (face.mark == FaceMark.VISIBLE) {
                 if (!checkFaceConvexity (face, tol, pw)) {
                     convex = false
@@ -1205,7 +1205,7 @@ class QuickHull3D() {
         // check point inclusion
         for (i in 0 until numPoints) {
             val pnt = pointBuffer[i].pnt
-            for (face in _faces) {
+            for (face in storedFaces) {
                 if (face.mark == FaceMark.VISIBLE) {
                     dist = face.distanceToPlane(pnt)
                     if (dist > pointTol) {
@@ -1267,7 +1267,7 @@ class QuickHull3D() {
         /**
          * Precision of a double.
          */
-        const val DOUBLE_PREC: Double = 2.2204460492503131e-16
+        const val DOUBLE_PRECISION: Double = 2.2204460492503131e-16
 
 
         /**
@@ -1279,7 +1279,7 @@ class QuickHull3D() {
          * point. The length of this array will be three times
          * the the number of input points.
          * @throws IllegalArgumentException the number of input points is less
-         * than four, or the points appear to be coincident, colinear, or
+         * than four, or the points appear to be coincident, co-linear, or
          * coplanar.
          */
         fun fromDoubleList(coords: ArrayList<Double>) = QuickHull3D(doubleListToPoints(coords))

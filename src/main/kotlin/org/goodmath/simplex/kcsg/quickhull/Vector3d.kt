@@ -7,7 +7,7 @@ import kotlin.math.sqrt
 /**
  * A three-element vector. This class is actually a reduced version of the
  * Vector3d class contained in the author's matlib package (which was partly
- * inspired by javax.vecmath). Only a mininal number of methods
+ * inspired by javax.vvecmath). Only a minimal number of methods
  * which are relevant to convex hull generation are supplied here.
  *
  * @author John E. Lloyd, Fall 2004
@@ -36,17 +36,17 @@ open class Vector3d(var x: Double, var y: Double, var z: Double) {
      * Gets a single element of this vector.
      * Elements 0, 1, and 2 correspond to x, y, and z.
      *
-     * @param i element index
+     * @param idx element index
      * @return element value throws ArrayIndexOutOfBoundsException
-     * if i is not in the range 0 to 2.
+     * if idx is not in the range 0 to 2.
      */
-    fun get(i: Int): Double {
-        return when (i) {
+    fun get(idx: Int): Double {
+        return when (idx) {
             0 -> x
             1 -> y
             2 -> z
             else ->
-                throw ArrayIndexOutOfBoundsException(i)
+                throw ArrayIndexOutOfBoundsException(idx)
         }
     }
 
@@ -54,18 +54,18 @@ open class Vector3d(var x: Double, var y: Double, var z: Double) {
      * Sets a single element of this vector.
      * Elements 0, 1, and 2 correspond to x, y, and z.
      *
-     * @param i element index
+     * @param idx element index
      * @param value element value
      * @return element value throws ArrayIndexOutOfBoundsException
-     * if i is not in the range 0 to 2.
+     * if idx is not in the range 0 to 2.
      */
-    fun set(i: Int, value: Double) {
-        when (i) {
+    fun set(idx: Int, value: Double) {
+        when (idx) {
             0 -> x = value
             1 -> y = value
             2 -> z = value
             else ->
-                throw ArrayIndexOutOfBoundsException(i)
+                throw ArrayIndexOutOfBoundsException(idx)
         }
     }
 
@@ -184,7 +184,7 @@ open class Vector3d(var x: Double, var y: Double, var z: Double) {
     }
 
     /**
-     * Returns the squared of the Euclidean distance between this vector
+     * Returns the square of the Euclidean distance between this vector
      * and vector v.
      *
      * @return squared distance between this vector and v
@@ -252,13 +252,13 @@ open class Vector3d(var x: Double, var y: Double, var z: Double) {
      * @param v2 right-hand vector
      */
     fun cross(v1: Vector3d, v2: Vector3d) {
-        val tmpx = v1.y*v2.z - v1.z*v2.y
-        val tmpy = v1.z*v2.x - v1.x*v2.z
-        val tmpz = v1.x*v2.y - v1.y*v2.x
+        val tmpX = v1.y*v2.z - v1.z*v2.y
+        val tmpY = v1.z*v2.x - v1.x*v2.z
+        val tmpZ = v1.x*v2.y - v1.y*v2.x
 
-        x = tmpx
-        y = tmpy
-        z = tmpz
+        x = tmpX
+        y = tmpY
+        z = tmpZ
     }
 
     /**
