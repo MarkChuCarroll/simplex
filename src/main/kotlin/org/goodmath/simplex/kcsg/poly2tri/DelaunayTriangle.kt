@@ -164,25 +164,25 @@ class DelaunayTriangle(p1: TriangulationPoint, p2: TriangulationPoint, p3: Trian
     }
 
     // The neighbor clockwise to given point
-    fun neighborCW(point: TriangulationPoint): DelaunayTriangle {
+    fun neighborCW(point: TriangulationPoint): DelaunayTriangle? {
         return (if (point == points[0]) {
             neighbors[1]
         } else if (point == points[1]) {
             neighbors[2]
         } else {
             neighbors[0]
-        })!!
+        })
     }
 
     // The neighbor counter-clockwise to given point
-    fun neighborCCW(point: TriangulationPoint): DelaunayTriangle {
+    fun neighborCCW(point: TriangulationPoint): DelaunayTriangle? {
         return (if (point == points[0]) {
             neighbors[2]
         } else if (point == points[1]) {
             neighbors[0]
         } else {
             neighbors[1]
-        })!!
+        })
     }
 
     // The neighbor across to given point

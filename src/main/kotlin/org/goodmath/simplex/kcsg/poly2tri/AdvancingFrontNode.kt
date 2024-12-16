@@ -39,7 +39,19 @@ class AdvancingFrontNode(var point: TriangulationPoint) {
     val value: Double = point.x
     var key: Double = value
 
+    var hardNext: AdvancingFrontNode
+        get() = next!!
+        set(value) { next = value }
+
+    var hardPrev: AdvancingFrontNode
+        get() = prev!!
+        set(value) { prev = value }
+
     var triangle: DelaunayTriangle? = null
+
+    var hardTriangle: DelaunayTriangle
+        get() = triangle!!
+        set(value) { triangle = value }
 
 
     fun hasNext(): Boolean {

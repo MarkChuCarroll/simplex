@@ -117,30 +117,30 @@ object DTSweep {
             if (p1 == first) {
                 break
             }
-            t2 = t1.neighborCCW(p1)
+            t2 = t1.neighborCCW(p1)!!
             t1.clear()
             t1 = t2
         } while (true)
 
         // Lower left boundary
-        first = tcx.aFront!!.head.next!!.point
+        first = tcx.aFront!!.head.hardNext.point
         p1 = t1.pointCW(tcx.aFront!!.head.point)!!
-        t2 = t1.neighborCW(tcx.aFront!!.head.point)
+        t2 = t1.neighborCW(tcx.aFront!!.head.point)!!
         t1.clear()
         t1 = t2
         while (p1 != first) {
             tcx.removeFromList(t1)
             p1 = t1.pointCCW(p1)
-            t2 = t1.neighborCCW(p1)
+            t2 = t1.neighborCCW(p1)!!
             t1.clear()
             t1 = t2
         }
 
         // Remove current head and tail node now that we have removed all triangles attached
         // to them. Then set new head and tail node points
-        tcx.aFront!!.head = tcx.aFront!!.head.next!!
+        tcx.aFront!!.head = tcx.aFront!!.head.hardNext
         tcx.aFront!!.head.prev = null
-        tcx.aFront!!.tail = tcx.aFront!!.tail.prev!!
+        tcx.aFront!!.tail = tcx.aFront!!.tail.hardPrev
         tcx.aFront!!.tail.next = null
 
         tcx.finalizeTriangulation()
@@ -164,17 +164,17 @@ object DTSweep {
             if (orient2d(b.point, c.point, c.next!!.point) == Orientation.CCW) {
                 // [b,c,d] Concave - fill around c
                 fill(tcx, c)
-                c = c.next!!
+                c = c.hardNext
             } else {
                 // [b,c,d] Convex
                 if (b != first && orient2d(b.prev!!.point, b.point, c.point) == Orientation.CCW) {
                     // [a,b,c] Concave - fill around b
                     fill(tcx, b)
-                    b = b.prev!!
+                    b = b.hardPrev
                 } else {
                     // [a,b,c] Convex - nothing to fill
                     b = c
-                    c = c.next!!
+                    c = c.hardNext
                 }
             }
         }
@@ -185,7 +185,7 @@ object DTSweep {
         var t = tcx.aFront!!.head.next!!.triangle!!
         val p = tcx.aFront!!.head.next!!.point
         while (!t.getConstrainedEdgeCW(p)) {
-            t = t.neighborCCW(p)
+            t = t.neighborCCW(p)!!
         }
 
         // Collect interior triangles constrained by edges
@@ -521,9 +521,9 @@ object DTSweep {
             // Need to decide if we are rotating CW or CCW to get to a triangle
             // that will cross edge
             triangle = if (o1 == Orientation.CW) {
-                triangle.neighborCCW(point)
+                triangle.neighborCCW(point)!!
             } else {
-                triangle.neighborCW(point)
+                triangle.neighborCW(point)!!
             }
             edgeEvent(tcx, ep, eq, triangle, point)
         } else {

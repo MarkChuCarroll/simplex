@@ -34,7 +34,8 @@ package org.goodmath.simplex.kcsg.poly2tri
 /**
  * @author Thomas ??? (thahlen@gmail.com)
  */
-class AdvancingFront(var head: AdvancingFrontNode,
+class AdvancingFront(
+    var head: AdvancingFrontNode,
     var tail: AdvancingFrontNode,
     var search: AdvancingFrontNode? = head) {
     init {
@@ -116,9 +117,9 @@ class AdvancingFront(var head: AdvancingFrontNode,
         if (px == nx) {
             if (point != node.point) {
                 // We might have two nodes with same x value for a short time
-                node = if (point == node.prev!!.point) {
+                node = if (point == node.hardPrev.point) {
                     node.prev
-                } else if (point == node.next!!.point) {
+                } else if (point == node.hardNext.point) {
                     node.next
                 } else {
                     throw RuntimeException("Failed to find Node for given aFront point")
@@ -133,7 +134,7 @@ class AdvancingFront(var head: AdvancingFrontNode,
                 node = node.prev
             }
         } else {
-            node = node.next
+            node = node.hardNext
             while (node!!.next != null) {
                 if (point == node.point) {
                     break

@@ -469,10 +469,12 @@ class QuickHull3DTest {
                 coords = randomDegeneratePoints(10, dimen)
                 if (dimen == 0) {
                     testException(coords, "Input points appear to be coincident")
-                } else if (dimen == 1) {
-                    testException(coords, "Input points appear to be co-linear")
-                } else if (dimen == 2) {
-                    testException(coords, "Input points appear to be coplanar")
+                } else {
+                    if (dimen == 1) {
+                        testException(coords, "Input points appear to be co-linear")
+                    } else if (dimen == 2) {
+                        testException(coords, "Input points appear to be coplanar")
+                    }
                 }
             }
         }
