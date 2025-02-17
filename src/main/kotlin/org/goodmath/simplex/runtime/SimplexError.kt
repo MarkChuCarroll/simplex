@@ -26,6 +26,7 @@ open class SimplexError(
 ) : Exception(cause) {
     enum class Kind {
         UndefinedSymbol,
+        UndefinedVariable,
         UnsupportedOperation,
         InvalidParameter,
         InvalidIndex,
@@ -39,7 +40,8 @@ open class SimplexError(
 
         override fun toString(): String {
             return when (this) {
-                UndefinedSymbol -> "Undefined "
+                UndefinedSymbol -> "Undefined"
+                UndefinedVariable -> "Undefined variable"
                 UnsupportedOperation -> "Operation not supported by type"
                 InvalidParameter -> "Invalid parameter"
                 InvalidIndex -> "Invalid index"
@@ -59,14 +61,14 @@ open class SimplexError(
             val prefix =
                 if (location != null) {
                     val l = location!!
-                    "${l.file}(${l.line}, ${l.col}): "
+                    "At ${l.file}(${l.line}, ${l.col}): "
                 } else {
                     "Unknown location: "
                 }
             return if (cause != null) {
-                "$prefix $kind: $detail; caused by:\n $cause"
+                "$prefix $kind $detail; caused by:\n $cause"
             } else {
-                "$prefix $kind: $detail"
+                "$prefix $kind $detail"
             }
         }
 }
@@ -96,8 +98,11 @@ class SimplexInvalidParameterError(
         location = location,
     )
 
-class SimplexUndefinedError(val name: String, val symbolKind: String, loc: Location? = null) :
+open class SimplexUndefinedError(val name: String, val symbolKind: String, loc: Location? = null) :
     SimplexError(Kind.UndefinedSymbol, "symbol '$name' of kind $symbolKind", loc)
+
+class SimplexUndefinedVariableError(name: String, loc: Location? = null):
+        SimplexError(SimplexError.Kind.UndefinedVariable, name, loc)
 
 class SimplexUnsupportedOperation(val type: String, val op: String, loc: Location? = null) :
     SimplexError(Kind.UnsupportedOperation, "$op in type $type", location = loc)

@@ -39,7 +39,7 @@ class SolidTest {
 
    fun compoundShape(size: Float): Solid {
       let cyl: Solid = cylinder(size * 3.0, size, size)
-      let br: Solid = brick(size*2.0, size*3.0, size*4.0)->rotate(90.0, 45.0, 0.0)
+      let br: Solid = cuboid(size*2.0, size*3.0, size*4.0)->rotate(90.0, 45.0, 0.0)
       br + cyl + cone(size*2.0, size*3.0)->move(0.0, 20.0, 0.0) -
           cone(size, size)->move(30.0, 20.0, 10.0)->rotate(90.0, 90.0, 45.0)
    }
@@ -88,9 +88,9 @@ produce("shape") {
         val max = bounds.high
         assertEquals(-60.0, min.x,  0.1)
         assertEquals(-60.0, min.y, 0.1)
-        assertEquals(-53.0, min.z, 0.1)
+        assertEquals(-92.0, min.z, 0.1)
         assertEquals(60.0, max.x, 0.1)
         assertEquals(80.0, max.y, 0.1)
-        assertEquals(92.00, max.z, 0.1)
+        assertEquals(53.00, max.z, 0.1)
     }
 }

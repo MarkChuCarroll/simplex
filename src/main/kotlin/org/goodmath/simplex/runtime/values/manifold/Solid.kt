@@ -288,6 +288,18 @@ object SolidValueType : ValueType() {
                     return Solid(tet.scale(Vec3(scale, scale, scale).toDoubleVec3()))
                 }
             },
+            object: PrimitiveFunctionValue(
+                "union",
+                FunctionSignature.simple(listOf(Param("shapes",
+                                                      VectorValueType.of(this).asType)),
+                                                asType)
+                ) {
+                override fun execute(args: List<Value>): Value {
+                    val solids = ArrayList(VectorValueType.of(this@SolidValueType).assertIs(args[0]).elements.map { (it as Solid).manifold })
+                    val vec = ManifoldVector(solids)
+                    return Solid(Manifold.BatchBoolean(vec, ManifoldOpType.Add.opCode))
+                }
+            }
         )
     }
 

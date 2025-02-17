@@ -62,7 +62,7 @@ open class Env(defList: List<Definition>, val parentEnv: Env?) : Twistable {
         } else if (parentEnv != null) {
             parentEnv.getDeclaredTypeOf(name)
         } else {
-            throw SimplexUndefinedError(name, "variable")
+            throw SimplexUndefinedVariableError(name)
         }
     }
 
@@ -76,7 +76,7 @@ open class Env(defList: List<Definition>, val parentEnv: Env?) : Twistable {
         } else if (parentEnv != null) {
             parentEnv.getValue(name)
         } else {
-            throw SimplexUndefinedError(name, "variable")
+            throw SimplexUndefinedVariableError(name)
         }
     }
 
@@ -129,7 +129,7 @@ open class Env(defList: List<Definition>, val parentEnv: Env?) : Twistable {
         if (vars.containsKey(name)) {
             vars[name] = value
         } else {
-            throw SimplexUndefinedError(name, "variable")
+            throw SimplexUndefinedVariableError(name)
         }
     }
 
