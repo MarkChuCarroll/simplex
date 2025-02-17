@@ -81,6 +81,10 @@ class Vec2(val x: Double, val y: Double) : Value {
         return Vec3(x, y, z)
     }
 
+    override fun toString(): String {
+      return "v2($x, $y)"
+    }
+
     companion object {
         fun fromDoubleVec2(doubleVec2: DoubleVec2): Vec2 {
             return Vec2(doubleVec2.x(), doubleVec2.y())

@@ -64,7 +64,7 @@ abstract class ValueType : Twistable {
      * assertIs method.
      */
     fun throwTypeError(v: Value): Nothing {
-        throw SimplexTypeError(v.valueType.asType.toString(), this.toString())
+        throw SimplexTypeError(v.valueType.asType.toString() + "_G", this.toString())
     }
 
     /**
@@ -159,7 +159,7 @@ abstract class ValueType : Twistable {
      */
     fun assertIsString(v: Value): String {
         if (v !is StringValue) {
-            throw SimplexTypeError("String", v.valueType.name)
+            throw SimplexTypeError("String_H", v.valueType.name)
         } else {
             return v.s
         }
@@ -174,7 +174,7 @@ abstract class ValueType : Twistable {
      */
     fun assertIsInt(v: Value): Int {
         if (v !is IntegerValue) {
-            throw SimplexTypeError("Int", v.valueType.name)
+            throw SimplexTypeError("Int_I", v.valueType.name)
         } else {
             return v.i
         }
@@ -188,10 +188,13 @@ abstract class ValueType : Twistable {
      * exception.
      */
     fun assertIsFloat(v: Value): Double {
-        if (v !is FloatValue) {
-            throw SimplexTypeError("Float", v.valueType.name)
+        return if (v is FloatValue) {
+            v.d
+        } else if (v is IntegerValue) {
+            v.i.toDouble()
         } else {
-            return v.d
+            System.err.println("Invalid value $v")
+            throw SimplexTypeError("Float_FF", v.valueType.name)
         }
     }
 

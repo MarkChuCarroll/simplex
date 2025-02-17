@@ -227,6 +227,30 @@ object Vec3ValueType : ValueType() {
                     return FloatValue(self.dot(other))
                 }
             },
+            object: PrimitiveMethod(
+                "x",
+                MethodSignature.simple(asType, emptyList(), FloatValueType.asType)) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val self = assertIs(target)
+                    return FloatValue(self.x)
+                }
+            },
+            object: PrimitiveMethod(
+                "y",
+                MethodSignature.simple(asType, emptyList(), FloatValueType.asType)) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val self = assertIs(target)
+                    return FloatValue(self.y)
+                }
+            },
+            object: PrimitiveMethod(
+                "z",
+                MethodSignature.simple(asType, emptyList(), FloatValueType.asType)) {
+                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                    val self = assertIs(target)
+                    return FloatValue(self.z)
+                }
+            }
         )
     }
     override val providesVariables: Map<String, Value> by lazy {

@@ -48,7 +48,7 @@ sealed class InvokableDefinition(
         val actualReturnType = body.last().resultType(localEnv)
         if (!returnType.matchedBy(actualReturnType)) {
             throw SimplexTypeError(
-                returnType.toString(),
+                returnType.toString() + "_B",
                 actualReturnType.toString(),
                 location = loc,
             )

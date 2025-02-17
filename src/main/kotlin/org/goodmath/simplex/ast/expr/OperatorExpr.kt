@@ -88,6 +88,7 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location) : Expr
             if (methodName != null) {
                 if (methodName == "neg") {
                     return target.valueType.applyMethod(target, methodName, emptyList(), env)
+
                 }
                 return target.valueType.applyMethod(
                     target,
@@ -232,7 +233,7 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location) : Expr
             methodArgSet.zip(realArgs).forEach { (t, a) ->
                 if (!t.matchedBy(a.resultType(env))) {
                     throw SimplexTypeError(
-                        t.toString(),
+                        t.toString() + "_E",
                         a.resultType(env).toString(),
                         location = a.loc,
                     )

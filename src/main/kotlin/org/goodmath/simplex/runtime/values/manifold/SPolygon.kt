@@ -63,17 +63,14 @@ object SPolygonType : ValueType() {
                     FunctionSignature.simple(listOf(Param("points", Type.vector(Vec2ValueType.asType))), asType),
                 ) {
                 override fun execute(args: List<Value>): Value {
-                    val points = VectorValueType.of(Vec2ValueType).assertIs(args[0]).elements
-                    val floatArray =
-                        DoubleArray(
-                            points.size,
-                            { idx ->
-                                val halfIdx = idx / 2
-                                val mod = idx % 2
-                                assertIsFloat(points[halfIdx + mod])
-                            },
-                        )
-                    return SPolygon(SimplePolygon.FromArray(floatArray))
+                    val points = VectorValueType.of(Vec2ValueType).assertIs(args[0]).elements as List<Vec2>
+                    val floatArray = DoubleArray(points.size * 2)
+                    for (idx in points.indices) {
+                        floatArray[2*idx] = points[idx].x
+                        floatArray[2*idx + 1] = points[idx].y
+                    }
+                    val result = SPolygon(SimplePolygon.FromArray(floatArray))
+                    return result
                 }
             },
             object :

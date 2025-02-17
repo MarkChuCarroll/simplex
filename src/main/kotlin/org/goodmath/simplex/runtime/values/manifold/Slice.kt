@@ -119,6 +119,10 @@ class Slice(val cross: CrossSection) : Value {
             return Slice(CrossSection.Circle(x.toFloat(), facets).scale(
                 Vec2(1.0,  y/x).toDoubleVec2()))
         }
+
+        fun fromPolygon(p: SPolygon): Slice {
+            return Slice(CrossSection(p.poly, 0))
+        }
     }
 }
 
@@ -146,6 +150,15 @@ object SliceValueType : ValueType() {
 
     override val providesFunctions: List<PrimitiveFunctionValue> by lazy {
         listOf(
+            object: PrimitiveFunctionValue("polygon_to_slice",
+                                           FunctionSignature.simple(
+                                               listOf(Param("poly", SPolygonType.asType)),
+                                               asType)) {
+                override fun execute(args: List<Value>): Value {
+                    val poly = SPolygonType.assertIs(args[0])
+                    return Slice.fromPolygon(poly)
+                }
+            },
             object: PrimitiveFunctionValue("circle",
                 FunctionSignature.multi(
                     listOf(

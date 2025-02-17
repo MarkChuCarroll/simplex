@@ -1,6 +1,6 @@
 // Simple test of iteration.
 fun cubish(length: Float, width: Float, height: Float, x: Float): Solid {
-    brick(length, width, height)->move(x, x, x*2.0)
+    cuboid(length, width, height)->move(x, x, x*2.0)
 }
 
 fun make_a_bunch(): [Solid] {

@@ -116,7 +116,7 @@ class LetExpr(val name: String, val type: Type?, val value: Expr, loc: Location)
 
         if (type != null && !type.matchedBy(value.resultType(env))) {
             throw SimplexTypeError(
-                type.toString(),
+                type.toString()  + "_A",
                 value.resultType(env).toString(),
                 location = loc,
             )
@@ -174,7 +174,7 @@ class AssignmentExpr(val target: String, val expr: Expr, loc: Location) : Expr(l
         val expected = env.getDeclaredTypeOf(target)
         val actual = expr.resultType(env)
         if (!expected.matchedBy(actual)) {
-            throw SimplexTypeError(expected.toString(), actual.toString(), location = loc)
+            throw SimplexTypeError(expected.toString() + "_C", actual.toString(), location = loc)
         }
     }
 
@@ -232,7 +232,7 @@ class VectorExpr(val elements: List<Expr>, loc: Location) : Expr(loc) {
     override fun resultType(env: Env): Type {
         val elementTypes = elements.map { it.resultType(env) }.toSet()
         return if (elementTypes.size > 1) {
-            throw SimplexAnalysisError("No resolved type: [${elementTypes}]", loc = loc)
+            Type.vector(Type.AnyType)
         } else {
             Type.vector(elementTypes.first())
         }
@@ -335,7 +335,7 @@ class LambdaExpr(
         val actualResultType = body.last().resultType(localEnv)
         if (!declaredResultType.matchedBy(actualResultType)) {
             throw SimplexTypeError(
-                declaredResultType.toString(),
+                declaredResultType.toString() + "_D",
                 actualResultType.toString(),
                 location = body.last().loc,
             )

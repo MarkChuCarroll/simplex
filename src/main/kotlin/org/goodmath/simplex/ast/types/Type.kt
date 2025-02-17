@@ -186,7 +186,7 @@ data class SimpleType constructor(val name: String) : Type() {
 
     override fun matchedBy(t: Type): Boolean {
         return if (t is SimpleType) {
-            t.name == name
+            t.name == name || name == "Any"
         } else {
             false
         }

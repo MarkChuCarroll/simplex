@@ -67,6 +67,9 @@ class Simplex : CliktCommand(help = "Evaluate a Simplex model") {
             result.execute(products?.toSet(), pre, captiveEcho)
         } catch (e: SimplexError) {
             echo(e.message, err = true)
+            if (verbosity >= 2) {
+                e.printStackTrace()
+            }
         }
     }
 }

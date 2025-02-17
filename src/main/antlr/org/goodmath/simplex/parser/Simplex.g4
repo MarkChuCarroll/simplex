@@ -170,13 +170,14 @@ fragment UNICODE : 'u' HEX HEX HEX HEX ;
 fragment HEX : [0-9a-fA-F] ;
 
 LIT_INT : [0-9]+ ;
-
+s
 LIT_FLOAT
-    :    INT '.' INT EXP?   // 1.35, 1.35E-9, 0.3, -4.5
+    :    INT '.' DIG EXP?   // 1.35, 1.35E-9, 0.3, -4.5
     |    INT EXP            // 1e10 -3e4
     |    INT                // -3, 45
     ;
 
+fragment DIG: [0-9]*;
 fragment INT :   '0' | [1-9] [0-9]* ; // no leading zeros
 fragment EXP :   [Ee] [+\-]? INT ;
 
