@@ -225,8 +225,8 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location) : Expr
             val methodArgSet = methodType.argSets.firstOrNull { args -> args.size == realArgs.size }
             if (methodArgSet == null) {
                 throw SimplexParameterCountError(
-                    "Method $methodName", methodType.argSets.map { it.size},
-                    realArgs.size,
+                    "Method $methodName", methodType.argSets.joinToString(" | ") { it.toString() },
+                    realArgs.joinToString { it.resultType(env).toString() },
                     location = loc,
                 )
             }

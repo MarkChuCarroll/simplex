@@ -2,9 +2,9 @@
 
 * Solid
   * constructors:
-    * Brick(x, y, z)
-    * Blob(r|r,segments|x,y,z|x,y,z,segments)
-    * Cylinder(height, lowRadius, highRadiusL? segments?)
+    * cuboid(x, y, z)
+    * ovoid(r|r,segments|x,y,z|x,y,z,segments)
+    * cylinder(height, lowRadius, highRadiusL? segments?)
   * ops:
     * move(x, y, z)
     * rotate(x, y, z)

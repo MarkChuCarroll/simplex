@@ -20,6 +20,7 @@ import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.SimplexUndefinedError
+import org.goodmath.simplex.runtime.SimplexUndefinedMethodError
 import org.goodmath.simplex.runtime.SimplexUnsupportedOperation
 import org.goodmath.simplex.runtime.values.primitives.AbstractMethod
 import org.goodmath.simplex.runtime.values.primitives.BooleanValue
@@ -64,7 +65,7 @@ abstract class ValueType : Twistable {
      * assertIs method.
      */
     fun throwTypeError(v: Value): Nothing {
-        throw SimplexTypeError(v.valueType.asType.toString() + "_G", this.toString())
+        throw SimplexTypeError(v.toString(), v.valueType.asType.toString(), this.toString())
     }
 
     /**
@@ -130,7 +131,7 @@ abstract class ValueType : Twistable {
 
     /** Get a method for a value of this type, throwing an exception if no method with the name exists. */
     fun getMethod(name: String): AbstractMethod {
-        return methods[name] ?: throw SimplexUndefinedError(name, "method of type $asType")
+        return methods[name] ?: throw SimplexUndefinedMethodError(name, "$asType", null)
     }
 
     /** Register a method with the value type of the values that it should operate on. */
@@ -159,7 +160,7 @@ abstract class ValueType : Twistable {
      */
     fun assertIsString(v: Value): String {
         if (v !is StringValue) {
-            throw SimplexTypeError("String_H", v.valueType.name)
+            throw SimplexTypeError(v.toString(), "String", v.valueType.name)
         } else {
             return v.s
         }
@@ -174,7 +175,7 @@ abstract class ValueType : Twistable {
      */
     fun assertIsInt(v: Value): Int {
         if (v !is IntegerValue) {
-            throw SimplexTypeError("Int_I", v.valueType.name)
+            throw SimplexTypeError(v.toString(), "Int", v.valueType.name)
         } else {
             return v.i
         }
@@ -193,8 +194,7 @@ abstract class ValueType : Twistable {
         } else if (v is IntegerValue) {
             v.i.toDouble()
         } else {
-            System.err.println("Invalid value $v")
-            throw SimplexTypeError("Float_FF", v.valueType.name)
+            throw SimplexTypeError(v.toString(), "Float", v.valueType.name)
         }
     }
 
@@ -207,7 +207,7 @@ abstract class ValueType : Twistable {
      */
     fun assertIsBoolean(v: Value): Boolean {
         if (v !is BooleanValue) {
-            throw SimplexTypeError("Boolean", v.valueType.name)
+            throw SimplexTypeError(v.toString(), "Boolean", v.valueType.name)
         } else {
             return v.b
         }

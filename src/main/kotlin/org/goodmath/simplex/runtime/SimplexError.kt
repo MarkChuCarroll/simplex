@@ -16,6 +16,7 @@
 package org.goodmath.simplex.runtime
 
 import org.goodmath.simplex.ast.Location
+import org.goodmath.simplex.runtime.values.Signature
 import org.goodmath.simplex.runtime.values.ValueType
 
 open class SimplexError(
@@ -27,6 +28,7 @@ open class SimplexError(
     enum class Kind {
         UndefinedSymbol,
         UndefinedVariable,
+        UndefinedMethod,
         UnsupportedOperation,
         InvalidParameter,
         InvalidIndex,
@@ -42,11 +44,12 @@ open class SimplexError(
             return when (this) {
                 UndefinedSymbol -> "Undefined"
                 UndefinedVariable -> "Undefined variable"
+                UndefinedMethod -> "Undefined method"
                 UnsupportedOperation -> "Operation not supported by type"
                 InvalidParameter -> "Invalid parameter"
                 InvalidIndex -> "Invalid index"
                 IncorrectType -> "Incorrect type"
-                ParameterCount -> "Incorrect number of parameters"
+                ParameterCount -> "Incorrect number of parameters."
                 InvalidValue -> "Invalid value"
                 Internal -> "Internal execution error"
                 Evaluation -> "Evaluation error"
@@ -75,8 +78,8 @@ open class SimplexError(
 
 class SimplexParameterCountError(
     val callable: String,
-    val expected: List<Int>,
-    val actual: Int,
+    val expected: String,
+    val actual: String,
     location: Location? = null,
 ) :
     SimplexError(
@@ -90,16 +93,20 @@ class SimplexInvalidParameterError(
     val name: String,
     val expected: ValueType,
     val actual: ValueType,
+    val expr: String,
     location: Location? = null,
 ) :
     SimplexError(
         Kind.InvalidParameter,
-        "Parameter $name of $callable expects a value of type ${expected.name}, but received a ${actual.name}",
+        "Parameter $name of $callable expects a value of type ${expected.name}, but received $expr, which has type ${actual.name}",
         location = location,
     )
 
 open class SimplexUndefinedError(val name: String, val symbolKind: String, loc: Location? = null) :
     SimplexError(Kind.UndefinedSymbol, "symbol '$name' of kind $symbolKind", loc)
+
+class SimplexUndefinedMethodError(name: String, ofType: String, loc: Location?):
+        SimplexError(Kind.UndefinedMethod, "'$name' of type '$ofType'")
 
 class SimplexUndefinedVariableError(name: String, loc: Location? = null):
         SimplexError(SimplexError.Kind.UndefinedVariable, name, loc)
@@ -108,15 +115,16 @@ class SimplexUnsupportedOperation(val type: String, val op: String, loc: Locatio
     SimplexError(Kind.UnsupportedOperation, "$op in type $type", location = loc)
 
 class SimplexEvaluationError(msg: String, cause: Throwable? = null, loc: Location? = null) :
+
     SimplexError(Kind.Evaluation, msg, cause = cause, location = loc)
 
 class SimplexInternalError(msg: String, cause: Throwable? = null) :
     SimplexError(Kind.Internal, msg, cause = cause)
 
-class SimplexTypeError(expected: String, actual: String, location: Location? = null) :
+class SimplexTypeError(value: String, expected: String, actual: String, location: Location? = null) :
     SimplexError(
         Kind.IncorrectType,
-        "expected a $expected, but received a $actual",
+        "expected a $expected, but received '$value', which is type $actual",
         location = location,
     )
 

@@ -22,12 +22,11 @@ import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexAnalysisError
 import org.goodmath.simplex.runtime.SimplexEvaluationError
 import org.goodmath.simplex.runtime.SimplexParameterCountError
-import org.goodmath.simplex.runtime.SimplexTypeError
 import org.goodmath.simplex.runtime.SimplexUndefinedError
+import org.goodmath.simplex.runtime.SimplexUndefinedMethodError
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.primitives.AbstractFunctionValue
 import org.goodmath.simplex.twist.Twist
-import kotlin.math.exp
 
 class FunCallExpr(val funExpr: Expr, val argExprs: List<Expr>, loc: Location) : Expr(loc) {
     override fun twist(): Twist =
@@ -67,8 +66,8 @@ class FunCallExpr(val funExpr: Expr, val argExprs: List<Expr>, loc: Location) : 
         if (expectedArgs == null) {
             throw SimplexParameterCountError(
                 "Function call",
-                funType.argLists.map { it.size },
-                argExprs.size,
+                funType.argLists.joinToString(" | ") { args -> args.toString() },
+                        argExprs.map { it.resultType(env) }.joinToString(),
                 loc,
             )
         }
@@ -93,27 +92,35 @@ class MethodCallExpr(val target: Expr, val name: String, val args: List<Expr>, l
     override fun resultType(env: Env): Type {
         val targetType = target.resultType(env)
         return targetType.getMethod(name)?.returnType
-            ?: throw SimplexUndefinedError(name, "method of ${this.name}", loc = loc)
+            ?: throw SimplexUndefinedMethodError(name,  targetType.toString(), loc = loc)
     }
 
     override fun validate(env: Env) {
         val targetType = target.resultType(env)
         val methodType =
             targetType.getMethod(name)
-                ?: throw SimplexUndefinedError(name, "method of $targetType", loc = loc)
+                ?: throw SimplexUndefinedMethodError(name, targetType.toString(), loc = loc)
 
         val expectedArgs = methodType.argSets.firstOrNull { it.size == args.size }
         if (expectedArgs == null) {
             throw SimplexParameterCountError("Method $name",
-                methodType.argSets.map { it.size },
-                args.size,
+                methodType.argSets.joinToString(" | ") { args ->
+                    args.toString()
+                },
+                args.joinToString { it.resultType(env).toString() },
                 location = loc)
         }
 
         if (!expectedArgs.zip(args).all { (expected, expr) ->
                             expected.matchedBy(expr.resultType(env))
                         }) {
-            throw SimplexAnalysisError("Method $name does not accept an argument list of ${args.map { it.resultType(env).toString()}.joinToString(", ")}")
+            throw SimplexAnalysisError("Method $name does not accept an argument list of ${
+                args.joinToString(", ") {
+                    it.resultType(
+                        env
+                    ).toString()
+                }
+            }")
         }
     }
 

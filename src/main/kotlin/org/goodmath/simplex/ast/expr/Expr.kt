@@ -116,7 +116,8 @@ class LetExpr(val name: String, val type: Type?, val value: Expr, loc: Location)
 
         if (type != null && !type.matchedBy(value.resultType(env))) {
             throw SimplexTypeError(
-                type.toString()  + "_A",
+                value.toString(),
+                type.toString(),
                 value.resultType(env).toString(),
                 location = loc,
             )
@@ -174,7 +175,7 @@ class AssignmentExpr(val target: String, val expr: Expr, loc: Location) : Expr(l
         val expected = env.getDeclaredTypeOf(target)
         val actual = expr.resultType(env)
         if (!expected.matchedBy(actual)) {
-            throw SimplexTypeError(expected.toString() + "_C", actual.toString(), location = loc)
+            throw SimplexTypeError(expr.toString(), expected.toString(), actual.toString(), location = loc)
         }
     }
 
@@ -335,7 +336,8 @@ class LambdaExpr(
         val actualResultType = body.last().resultType(localEnv)
         if (!declaredResultType.matchedBy(actualResultType)) {
             throw SimplexTypeError(
-                declaredResultType.toString() + "_D",
+                body.last().toString(),
+                declaredResultType.toString(),
                 actualResultType.toString(),
                 location = body.last().loc,
             )

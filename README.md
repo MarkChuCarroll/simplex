@@ -6,7 +6,11 @@ the [LICENSE](./LICENSE) file for details.)
 
 ## What is it?
 
-Another language for building models for 3d printing.
+Another language for building models for 3d printing. There's an
+introduction to the language [here](docs/simplex-language.md).
+For a fairly complicated example model, you can look
+at my [tenor guitar](https://github.com/MarkChuCarroll/instruments/blob/main/tenor/mtenor.s3d).
+
 
 ## Why?
 

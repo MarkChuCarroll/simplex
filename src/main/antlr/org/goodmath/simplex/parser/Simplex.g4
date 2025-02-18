@@ -20,8 +20,7 @@ package org.goodmath.simplex.parser;
 }
 
 model:
-    d=def+
-    product+
+    (def | product)+
 ;
 
 def:

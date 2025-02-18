@@ -190,4 +190,9 @@ class StringValue(val s: String) : Value {
     override fun twist(): Twist {
         return Twist.obj("StringValue", Twist.attr("value", s))
     }
+
+    override fun toString(): String {
+        return s.toString()
+    }
+
 }
