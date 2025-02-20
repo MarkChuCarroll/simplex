@@ -85,7 +85,8 @@ open class FunctionValueType(val type: FunctionType) : ValueType() {
         if (v is FunctionValue) {
             return v
         } else {
-            throw SimplexTypeError(v.valueType.asType.toString(), this.toString())
+
+            throw SimplexTypeError(v.toString(), v.valueType.asType.toString(), this.toString())
         }
     }
 }
@@ -108,7 +109,7 @@ class PrimitiveFunctionValueType(ft: FunctionType) : FunctionValueType(ft) {
         if (v is PrimitiveFunctionValue) {
             return v
         } else {
-            throw SimplexTypeError(v.valueType.asType.toString(), this.toString())
+            throw SimplexTypeError(v.toString(), v.valueType.asType.toString(), this.toString())
         }
     }
 }

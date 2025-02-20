@@ -98,7 +98,7 @@ class DataValueType(val dataDef: DataDefinition) : ValueType() {
         if (v.valueType is DataValueType) {
             return v as DataValue
         } else {
-            throw SimplexTypeError(v.valueType.asType.toString(), this.toString())
+            throw SimplexTypeError(v.toString(), v.valueType.asType.toString(), this.toString())
         }
     }
 }

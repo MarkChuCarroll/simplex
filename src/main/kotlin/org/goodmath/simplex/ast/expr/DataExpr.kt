@@ -77,7 +77,7 @@ class DataExpr(val dataType: String, val args: List<Expr>, loc: Location) : Expr
         fieldTypes.zip(args).forEach { (t, a) ->
             val argType = a.resultType(env)
             if (!t.matchedBy(argType)) {
-                throw SimplexTypeError(t.toString(), argType.toString(), location = a.loc)
+                throw SimplexTypeError(a.toString(), t.toString(), argType.toString(), location = a.loc)
             }
         }
     }
@@ -183,6 +183,7 @@ class DataFieldUpdateExpr(val dataExpr: Expr, val field: String, val value: Expr
         val newValueType = value.resultType(env)
         if (!dataFieldDef.type.matchedBy(newValueType)) {
             throw SimplexTypeError(
+                value.toString(),
                 dataFieldDef.type.toString(),
                 newValueType.toString(),
                 location = value.loc,

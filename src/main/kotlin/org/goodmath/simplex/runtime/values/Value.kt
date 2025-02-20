@@ -256,6 +256,7 @@ object AnyValueType : ValueType() {
                     Param("args", VectorValueType.of(AnyValueType).asType)),
                     NoneValueType.asType)) {
                 override fun execute(args: List<Value>): Value {
+                    System.err.println("Called print")
                     val v = VectorValueType.of(AnyValueType).assertIsVector(args[0])
                     RootEnv.echo(0,
                         "${

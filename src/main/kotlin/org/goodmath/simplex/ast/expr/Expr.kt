@@ -254,7 +254,7 @@ class WithExpr(val focus: Expr, val body: List<Expr>, loc: Location) : Expr(loc)
     override fun evaluateIn(env: Env): Value {
         val focusVal = focus.evaluateIn(env)
         if (focusVal !is DataValue) {
-            throw SimplexTypeError("Data", focusVal.valueType.name, location = loc)
+            throw SimplexTypeError(focusVal.toString(), "Data", focusVal.valueType.name, location = loc)
         }
         val def = focusVal.valueType.dataDef
         val localEnv = Env(emptyList(), env)

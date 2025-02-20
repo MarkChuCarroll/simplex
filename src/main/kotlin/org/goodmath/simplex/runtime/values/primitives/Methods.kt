@@ -101,7 +101,7 @@ class MethodValueType(val methodType: MethodType) : ValueType() {
         if (v is AbstractMethod) {
             return v
         } else {
-            throw SimplexTypeError(v.valueType.asType.toString(), this.toString())
+            throw SimplexTypeError(v.toString(), v.valueType.asType.toString(), this.toString())
         }
     }
 }

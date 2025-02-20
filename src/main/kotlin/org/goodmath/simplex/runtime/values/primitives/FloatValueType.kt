@@ -177,16 +177,16 @@ object FloatValueType : ValueType() {
     }
 
     override fun assertIs(v: Value): FloatValue {
-        return if (v is FloatValue) {
-            v
-        } else {
-            throwTypeError(v)
-        }
+        return v as? FloatValue ?: throwTypeError(v)
     }
 }
 
 class FloatValue(val d: Double) : Value {
     override val valueType: ValueType = FloatValueType
+
+    override fun toString(): String {
+        return d.toString()
+    }
 
     override fun twist(): Twist = Twist.obj("FloatValue", Twist.attr("value", d.toString()))
 }

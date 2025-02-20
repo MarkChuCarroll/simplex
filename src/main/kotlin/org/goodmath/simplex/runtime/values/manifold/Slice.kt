@@ -19,6 +19,7 @@ import manifold3d.Manifold
 import manifold3d.glm.DoubleVec2
 import manifold3d.manifold.CrossSection
 import manifold3d.manifold.CrossSectionVector
+import manifold3d.pub.SimplePolygon
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.FunctionSignature
@@ -40,6 +41,7 @@ import org.goodmath.simplex.runtime.values.primitives.StringValueType
 import org.goodmath.simplex.runtime.values.primitives.Vec2
 import org.goodmath.simplex.runtime.values.primitives.Vec2ValueType
 import org.goodmath.simplex.twist.Twist
+import kotlin.math.pow
 
 /** The Simplex wrapper for the Manifold CrossSection type. */
 class Slice(val cross: CrossSection) : Value {
@@ -120,6 +122,12 @@ class Slice(val cross: CrossSection) : Value {
                 Vec2(1.0,  y/x).toDoubleVec2()))
         }
 
+        fun triangle(width: Double, height: Double): Slice {
+            val points = listOf(-width/2.0, 0.0, width/2.0, 0.0,0.0, height)
+            val pointArray = DoubleArray(6, { idx-> points[idx] })
+            return Slice(CrossSection(SimplePolygon.FromArray(pointArray), 0))
+        }
+
         fun fromPolygon(p: SPolygon): Slice {
             return Slice(CrossSection(p.poly, 0))
         }
@@ -158,6 +166,18 @@ object SliceValueType : ValueType() {
                     val poly = SPolygonType.assertIs(args[0])
                     return Slice.fromPolygon(poly)
                 }
+            },
+            object: PrimitiveFunctionValue("triangle",
+                FunctionSignature.simple(listOf(
+                    Param("width", FloatValueType.asType),
+                    Param("height", FloatValueType.asType)),
+                    asType)) {
+                override fun execute(args: List<Value>): Value {
+                    val width = assertIsFloat(args[0])
+                    val height = assertIsFloat(args[1])
+                    return Slice.triangle(width, height)
+                }
+
             },
             object: PrimitiveFunctionValue("circle",
                 FunctionSignature.multi(

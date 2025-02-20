@@ -63,7 +63,7 @@ class VariableDefinition(name: String, val type: Type?, val initialValue: Expr, 
         initialValue.validate(env)
         val actualType = initialValue.resultType(env)
         if (type != null && !type.matchedBy(actualType)) {
-            throw SimplexTypeError(type.toString(), actualType.toString(), location = loc)
+            throw SimplexTypeError(initialValue.toString(), type.toString(), actualType.toString(), location = loc)
         }
     }
 }

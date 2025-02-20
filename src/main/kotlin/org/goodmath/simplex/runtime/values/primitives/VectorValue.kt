@@ -46,7 +46,7 @@ class VectorValueType(val elementType: ValueType) : ValueType() {
         if (v is VectorValue) {
             return v.elements
         } else {
-            throw SimplexTypeError("Vector", v.valueType.name)
+            throw SimplexTypeError(v.toString(), "Vector", v.valueType.name)
         }
     }
     override val supportsText: Boolean = elementType.supportsText
@@ -54,15 +54,13 @@ class VectorValueType(val elementType: ValueType) : ValueType() {
     override fun toText(v: Value): String {
         val vec = assertIs(v).elements
         val rendered =
-            vec
-                .map {
-                    if (it.valueType.supportsText) {
-                        it.valueType.toText(it)
-                    } else {
-                        "<<${it.valueType.name}>>"
-                    }
+            vec.joinToString(", ") {
+                if (it.valueType.supportsText) {
+                    it.valueType.toText(it)
+                } else {
+                    "<<${it.valueType.name}>>"
                 }
-                .joinToString(", ")
+            }
         return "[$rendered]"
     }
 

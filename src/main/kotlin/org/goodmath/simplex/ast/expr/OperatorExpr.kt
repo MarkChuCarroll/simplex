@@ -22,7 +22,6 @@ import kotlin.let
 import org.goodmath.simplex.ast.Location
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
-import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.SimplexError
 import org.goodmath.simplex.runtime.SimplexEvaluationError
 import org.goodmath.simplex.runtime.SimplexParameterCountError
@@ -233,7 +232,8 @@ class OperatorExpr(val op: Operator, val args: List<Expr>, loc: Location) : Expr
             methodArgSet.zip(realArgs).forEach { (t, a) ->
                 if (!t.matchedBy(a.resultType(env))) {
                     throw SimplexTypeError(
-                        t.toString() + "_E",
+                        a.toString(),
+                        t.toString(),
                         a.resultType(env).toString(),
                         location = a.loc,
                     )
