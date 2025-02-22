@@ -86,7 +86,8 @@ class TypeTests {
             )
         assertTrue(same1.matchedBy(same2))
         assertFalse(same1.matchedBy(diff1))
-        assertFalse(same1.matchedBy(diff2))
+        // An int isn't a float, but we do autoconversion, so it should match.
+        assertTrue(same1.matchedBy(diff2))
         assertFalse(same1.matchedBy(diff3))
     }
 }

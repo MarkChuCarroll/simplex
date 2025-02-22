@@ -186,7 +186,13 @@ data class SimpleType constructor(val name: String) : Type() {
 
     override fun matchedBy(t: Type): Boolean {
         return if (t is SimpleType) {
-            t.name == name || name == "Any"
+            if (t.name == "Any") {
+                true
+            } else if (this == FloatType && t == IntType) {
+                true
+            } else {
+                t.name == name
+            }
         } else {
             false
         }

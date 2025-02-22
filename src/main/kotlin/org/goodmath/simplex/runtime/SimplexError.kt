@@ -29,6 +29,7 @@ open class SimplexError(
         UndefinedSymbol,
         UndefinedVariable,
         UndefinedMethod,
+        InvalidMethodSignature,
         UnsupportedOperation,
         InvalidParameter,
         InvalidIndex,
@@ -46,6 +47,7 @@ open class SimplexError(
                 UndefinedVariable -> "Undefined variable"
                 UndefinedMethod -> "Undefined method"
                 UnsupportedOperation -> "Operation not supported by type"
+                InvalidMethodSignature -> "Invalid parameter error:"
                 InvalidParameter -> "Invalid parameter"
                 InvalidIndex -> "Invalid index"
                 IncorrectType -> "Incorrect type"
@@ -64,7 +66,7 @@ open class SimplexError(
             val prefix =
                 if (location != null) {
                     val l = location!!
-                    "At ${l.file}(${l.line}, ${l.col}): "
+                    "At ${l.file}(${l.line}, ${l.col-1}): "
                 } else {
                     "Unknown location: "
                 }
@@ -87,6 +89,18 @@ class SimplexParameterCountError(
         "$callable expected one of $expected, but received $actual",
         location,
     )
+
+class SimplexInvalidMethodSignature(
+    val type: String,
+    val method: String,
+    val methodSig: String,
+    val argTypes: String,
+    loc: Location? = null
+): SimplexError(
+    Kind.InvalidMethodSignature,
+    "method $method of type $type can take one of $methodSig as a parameter list, but received ${argTypes}",
+    loc
+)
 
 class SimplexInvalidParameterError(
     val callable: String,
