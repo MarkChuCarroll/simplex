@@ -15,13 +15,13 @@ a few key goals in mind:
 
 ## Syntactic Basics
 
-A Simplex program has two sections: a collection of definitions, and a collection
-of products.
+A Simplex program consists of a bunch of code that creates 3d objects,
+and a set of _products_, which define how to write the generated object
+out into STL files.
 
-Definitions are where you define the functions, data types, and values that you'll
-use to write your model. Products are where you define what objects you want to
-output. A given model (source file) can have many different products, and you can
-choose which ones to generate when you run simplex on your model.
+In the code, Simplex allows you to write both simple expressions, and
+definitions of functions, data types, and values that you'll use to write
+your model.
 
 ### Definitions
 
@@ -35,10 +35,11 @@ A function definition looks like:
 fun name(arg: type, ...): type {
   expr...
 }
-
 ```
 
-A function returns the value of its last expression.
+A function returns the value of its last expression. A function must define the types of
+its parameters, and the type of value that it returns. Every function returns some
+value; if there's no reasonable value, it will return a special "none" value.
 
 #### Data Type Definitions
 
@@ -49,18 +50,41 @@ type is a typed tuple of values.
 data TypeName {
   field: type...
 }
+```
 
+For example, if you wanted to represent a cylinder using its height and radii, you could
+do that with:
+```
+data Cylinder {
+   height: Float
+   lowerRadius: Float
+   upperRadius: Float
+}
 ```
 
 
 #### Variable Definitions
 
 ```
-var name = expr
-var name: Type = expr
-
+let name = expr
+let name: Type = expr
 ```
 
+A "let" expression defines a new variable in a scope. It can be used either at the
+top-level of a program, or inside a function or product. A let expression
+can declare the type of its value; or it can omit the value type, and Simplex
+will use type inference. One subtlety of "let" is that it's an expression,
+which returns the value assigned to the new variable.
+
+So, for example, the following is perfectly valid code:
+```
+  foo(let x = 3, 7)
+```
+The main place where this can be confusing is inside a product block. A
+product outputs the union of all the solid objects produced by expressions
+within its block. So if there's a let expression in a product block, it
+will define a new local variable, and _also_ add its value to the set of
+things that will be output by the product.
 
 #### Method Definitions
 
@@ -120,16 +144,13 @@ You can define a new method on _any_ type, not just new data types that you defi
 
 ### Products
 
-A simplex model can generate  multiple results,
-and you can select the results you want it to generate
-from the command line.
+A single simplex model can generate  multiple outputs. When you run simplex,
+it can either generate all the outputs  defined in the program, or you can
+specify on the command line which products you want to generate.
 
-The way that this is done is by using product
-statements. A product statement provides a
-name for a collection of values. When you specify
-that you want to produce a product, Simplex will
-evaluate the model to get the values specified in the product,
-and then output those.
+The way that this is done is by using product statements. A product statement provides a
+name for a collection of values. When you specify that you want to produce a product, Simplex will
+evaluate the model to get the values specified in the product, and then output those.
 
 A product look like:
 
@@ -149,6 +170,13 @@ The way that outputs work is:
   be output into a text file.
 * All other values in the product will be rendered
   as twists into a twist file.
+
+The output files are named as "prefix-productname.suffix". For example, if you
+ran a simple program called "model.s3d", and specified "mout" as the prefix,
+then a product "prod" would generate files:
+* `mout-prod.stl` for the STL of the solids defined in the product;
+* `mout-prod.twist` for the twist text of any complex values defined in the product;
+* `mout-prod.txt` for text renderings of any text objects produced in the product.
 
 
 ### Expressions
@@ -486,7 +514,7 @@ Details about the arguments:
   starting with the prefix. For a product named "p", it will output
   the solid in a file named `prefix-p.stl`. If no prefix is
   specified, then it will use "modelname-out".
-* `renders`: a comma-separated list of the products to generate. If
+* `products`: a comma-separated list of the products to generate. If
   no value is specified, then all products will be generated.
 * `verbosity`: a setting for how much output it should generate on stdout while
   evaluating the model. THe default value is 1; 2 and 3 will each produce

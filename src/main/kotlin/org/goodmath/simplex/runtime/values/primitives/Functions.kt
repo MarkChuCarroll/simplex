@@ -55,8 +55,17 @@ class FunctionValue(
                 "Incorrect number of args: expected ${params.size}, but found ${args.size}"
             )
         }
-        params.zip(args).forEach { (param, value) -> localEnv.addVariable(param.name, value) }
-        var result: Value = IntegerValue(0)
+        params.zip(args).forEach { (param, value) ->
+            if (!param.type.matchedBy(value.valueType.asType)) {
+                throw SimplexTypeError(value.toString(), param.type.toString(), value.valueType.asType.toString())
+            }
+            if (param.type == FloatValueType.asType && value is IntegerValue) {
+                localEnv.addVariable(param.name, FloatValue(value.i.toDouble()))
+            } else {
+                localEnv.addVariable(param.name, value)
+            }
+        }
+        var result: Value = NoneValue
         for (b in body) {
             result = b.evaluateIn(localEnv)
         }

@@ -21,6 +21,8 @@ import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.SimplexAnalysisError
 import org.goodmath.simplex.runtime.SimplexEvaluationError
+import org.goodmath.simplex.runtime.SimplexInvalidMethodSignature
+import org.goodmath.simplex.runtime.SimplexInvalidParameterError
 import org.goodmath.simplex.runtime.SimplexParameterCountError
 import org.goodmath.simplex.runtime.SimplexUndefinedError
 import org.goodmath.simplex.runtime.SimplexUndefinedMethodError
@@ -74,8 +76,13 @@ class FunCallExpr(val funExpr: Expr, val argExprs: List<Expr>, loc: Location) : 
         if (!expectedArgs.zip(argExprs).all { (type, expr) ->
                     type.matchedBy(expr.resultType(env))
                 }) {
-
-            throw SimplexAnalysisError("No function signatures matched", loc = loc)
+            val expected = funType.argLists.joinToString(" | ") {
+                paramList -> "(${paramList.joinToString(", ") { it.toString() }})"
+            }
+            val actual = "(${argExprs.joinToString(", ") {
+                it.resultType(env).toString()
+            }})"
+            throw SimplexAnalysisError("Function expected one of $expected as arguments, but received $actual", loc = loc)
         }
     }
 }
@@ -114,13 +121,12 @@ class MethodCallExpr(val target: Expr, val name: String, val args: List<Expr>, l
         if (!expectedArgs.zip(args).all { (expected, expr) ->
                             expected.matchedBy(expr.resultType(env))
                         }) {
-            throw SimplexAnalysisError("Method $name does not accept an argument list of ${
-                args.joinToString(", ") {
-                    it.resultType(
-                        env
-                    ).toString()
-                }
-            }")
+            throw SimplexInvalidMethodSignature(targetType.toString(),
+                name, methodType.argSets.joinToString(" | ") { argList ->
+                    "(${argList.joinToString(", ") {  arg -> arg.toString()}})" },
+                "(${args.map { it.resultType(env)}.joinToString(", ")})",
+                loc=loc
+            )
         }
     }
 
