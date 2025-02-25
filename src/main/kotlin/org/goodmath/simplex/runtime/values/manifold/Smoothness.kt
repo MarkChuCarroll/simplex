@@ -10,7 +10,6 @@ import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
 import org.goodmath.simplex.runtime.values.primitives.FloatValueType
-import org.goodmath.simplex.runtime.values.primitives.IntegerValue
 import org.goodmath.simplex.runtime.values.primitives.IntegerValueType
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveMethod
@@ -121,13 +120,8 @@ object SSmoothnessType: ValueType() {
 
     override val providesVariables: Map<String, Value> = emptyMap()
 
-
     override fun assertIs(v: Value): SSmoothness {
-        return if (v is SSmoothness){
-            v
-        } else {
-            throwTypeError(v)
-        }
+        return v as? SSmoothness ?: throwTypeError(v)
     }
 
 }

@@ -27,6 +27,7 @@ import org.goodmath.simplex.ast.types.SimpleType
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.ast.types.TypedName
 import org.goodmath.simplex.runtime.Env
+import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.SimplexAnalysisError
 import org.goodmath.simplex.runtime.SimplexError
 import org.goodmath.simplex.runtime.SimplexEvaluationError
@@ -212,6 +213,38 @@ class VarRefExpr(val name: String, loc: Location) : Expr(loc) {
 
     override fun validate(env: Env) {
         env.getDeclaredTypeOf(name)
+    }
+}
+
+class ScopedRefExpr(val scope: String, val name: String, loc: Location) : Expr(loc) {
+    override fun twist(): Twist = Twist.obj("VariableExpr", Twist.attr("name", name))
+
+    override fun evaluateIn(env: Env): Value {
+        try {
+            return RootEnv.getValueOfScopedName(scope, name)
+        } catch (e: SimplexError) {
+            e.location = loc
+            throw e
+        }
+    }
+
+    override fun resultType(env: Env): Type {
+        try {
+            return RootEnv.getDeclaredTypeOfScopedName(scope, name)
+        } catch (e: Throwable) {
+            if (e is SimplexError) {
+                if (e.location == null) {
+                    e.location = loc
+                }
+                throw e
+            } else {
+                throw SimplexAnalysisError("Internal error", cause = e, loc = loc)
+            }
+        }
+    }
+
+    override fun validate(env: Env) {
+        RootEnv.getDeclaredTypeOfScopedName(scope, name)
     }
 }
 

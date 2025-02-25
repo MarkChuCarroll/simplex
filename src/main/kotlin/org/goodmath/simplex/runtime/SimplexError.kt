@@ -16,7 +16,6 @@
 package org.goodmath.simplex.runtime
 
 import org.goodmath.simplex.ast.Location
-import org.goodmath.simplex.runtime.values.Signature
 import org.goodmath.simplex.runtime.values.ValueType
 
 open class SimplexError(
@@ -98,7 +97,7 @@ class SimplexInvalidMethodSignature(
     loc: Location? = null
 ): SimplexError(
     Kind.InvalidMethodSignature,
-    "method $method of type $type can take one of $methodSig as a parameter list, but received ${argTypes}",
+    detail = "method $method of type $type can take one of $methodSig as a parameter list, but received $argTypes",
     loc
 )
 
@@ -123,7 +122,7 @@ class SimplexUndefinedMethodError(name: String, ofType: String, loc: Location?):
         SimplexError(Kind.UndefinedMethod, "'$name' of type '$ofType'")
 
 class SimplexUndefinedVariableError(name: String, loc: Location? = null):
-        SimplexError(SimplexError.Kind.UndefinedVariable, name, loc)
+        SimplexError(Kind.UndefinedVariable, name, loc)
 
 class SimplexUnsupportedOperation(val type: String, val op: String, loc: Location? = null) :
     SimplexError(Kind.UnsupportedOperation, "$op in type $type", location = loc)

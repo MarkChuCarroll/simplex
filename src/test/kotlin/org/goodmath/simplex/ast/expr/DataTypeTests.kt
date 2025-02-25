@@ -73,7 +73,7 @@ class DataTypeTests {
     }
 
     @Test
-    fun testCreatedata() {
+    fun testCreateData() {
         val createOne =
             DataExpr(
                 "TestDataOne",

@@ -174,11 +174,7 @@ object IntegerValueType : ValueType() {
     }
 
     override fun assertIs(v: Value): IntegerValue {
-        return if (v is IntegerValue) {
-            v
-        } else {
-            throwTypeError(v)
-        }
+        return v as? IntegerValue ?: throwTypeError(v)
     }
 }
 

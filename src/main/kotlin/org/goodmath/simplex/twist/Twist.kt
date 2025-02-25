@@ -113,7 +113,7 @@ class TwistObj(val name: String, val children: List<Twist>) : Twist() {
         var result = "   ".repeat(indent)
         result += "(obj $name\n"
         result +=
-            children.map { c -> c.cons(indent + 1) }.filterNotNull().joinToString(("\n")) + ")"
+            children.mapNotNull { c -> c.cons(indent + 1) }.joinToString(("\n")) + ")"
         return result
     }
 }
@@ -151,7 +151,7 @@ class TwistArray(val name: String, val children: List<Twist>) : Twist() {
         } else {
             var result = "   ".repeat(indent)
             result += "[array $name\n"
-            result += children.map { it.cons(indent + 1) }.filterNotNull().joinToString("\n")
+            result += children.mapNotNull { it.cons(indent + 1) }.joinToString("\n")
             result += "]"
             return result
         }

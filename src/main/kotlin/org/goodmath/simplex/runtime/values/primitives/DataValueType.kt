@@ -42,16 +42,14 @@ class DataValueType(val dataDef: DataDefinition) : ValueType() {
         sb.append("#${tup.valueType.name}(")
 
         sb.append(
-            tup.valueType.dataDef.fields
-                .map { field ->
-                    val fieldValue = tup.fields[tup.valueType.dataDef.indexOf(field.name)]
-                    if (fieldValue.valueType.supportsText) {
-                        "${field.name}=${fieldValue.valueType.toText(fieldValue)}"
-                    } else {
-                        "${field.name}:${fieldValue.valueType.name}"
-                    }
+            tup.valueType.dataDef.fields.joinToString(", ") { field ->
+                val fieldValue = tup.fields[tup.valueType.dataDef.indexOf(field.name)]
+                if (fieldValue.valueType.supportsText) {
+                    "${field.name}=${fieldValue.valueType.toText(fieldValue)}"
+                } else {
+                    "${field.name}:${fieldValue.valueType.name}"
                 }
-                .joinToString(", ")
+            }
         )
         sb.append(")")
         return sb.toString()

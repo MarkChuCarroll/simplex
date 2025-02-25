@@ -304,10 +304,6 @@ object SMaterialValueType : ValueType() {
     }
 
     override fun assertIs(v: Value): SMaterial {
-        return if (v is SMaterial) {
-            v
-        } else {
-            throwTypeError(v)
-        }
+        return v as? SMaterial ?: throwTypeError(v)
     }
 }

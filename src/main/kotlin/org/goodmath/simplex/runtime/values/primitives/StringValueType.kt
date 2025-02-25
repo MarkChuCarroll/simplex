@@ -42,11 +42,7 @@ object StringValueType : ValueType() {
     }
 
     override fun assertIs(v: Value): StringValue {
-        return if (v is StringValue) {
-            v
-        } else {
-            throwTypeError(v)
-        }
+        return v as? StringValue ?: throwTypeError(v)
     }
 
     override val providesFunctions: List<PrimitiveFunctionValue> = emptyList()

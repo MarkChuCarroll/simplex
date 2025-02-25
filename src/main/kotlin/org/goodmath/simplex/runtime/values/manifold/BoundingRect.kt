@@ -198,10 +198,6 @@ object BoundingRectValueType : ValueType() {
     override val providesVariables: Map<String, Value> = emptyMap()
 
     override fun assertIs(v: Value): BoundingRect {
-        return if (v is BoundingRect) {
-            v
-        } else {
-            throwTypeError(v)
-        }
+        return v as? BoundingRect ?: throwTypeError(v)
     }
 }

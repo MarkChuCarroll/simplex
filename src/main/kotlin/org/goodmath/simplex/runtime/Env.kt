@@ -20,6 +20,7 @@ import java.util.UUID
 import org.goodmath.simplex.ast.def.Definition
 import org.goodmath.simplex.ast.types.VectorType
 import org.goodmath.simplex.ast.types.Type
+import org.goodmath.simplex.parser.SimplexParseListener
 import org.goodmath.simplex.runtime.values.AnyValueType
 import org.goodmath.simplex.runtime.values.FunctionSignature
 import org.goodmath.simplex.runtime.values.Param
@@ -30,6 +31,7 @@ import org.goodmath.simplex.runtime.values.primitives.StringValue
 import org.goodmath.simplex.runtime.values.primitives.StringValueType
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
+import java.nio.file.Path
 
 /**
  * An environment, which contains the definitions, types, variables, functions, and methods
@@ -50,7 +52,7 @@ open class Env(defList: List<Definition>, val parentEnv: Env?) : Twistable {
     /** Declare the static type of a new variable name in the scope. */
     fun declareTypeOf(name: String, t: Type) {
         if (declaredTypes.containsKey(name) && declaredTypes[name] != t) {
-            throw SimplexAnalysisError("Type of $name is already defined as ${declaredTypes[name]}, not ${t}")
+            throw SimplexAnalysisError("Type of $name is already defined as ${declaredTypes[name]}, not $t")
         }
         declaredTypes[name] = t
     }
@@ -59,11 +61,7 @@ open class Env(defList: List<Definition>, val parentEnv: Env?) : Twistable {
     fun getDeclaredTypeOf(name: String): Type {
         return if (declaredTypes.containsKey(name)) {
             declaredTypes[name]!!
-        } else if (parentEnv != null) {
-            parentEnv.getDeclaredTypeOf(name)
-        } else {
-            throw SimplexUndefinedVariableError(name)
-        }
+        } else parentEnv?.getDeclaredTypeOf(name) ?: throw SimplexUndefinedVariableError(name)
     }
 
     /**
@@ -73,11 +71,7 @@ open class Env(defList: List<Definition>, val parentEnv: Env?) : Twistable {
     fun getValue(name: String): Value {
         return if (vars.containsKey(name)) {
             vars[name]!!
-        } else if (parentEnv != null) {
-            parentEnv.getValue(name)
-        } else {
-            throw SimplexUndefinedVariableError(name)
-        }
+        } else parentEnv?.getValue(name) ?: throw SimplexUndefinedVariableError(name)
     }
 
     /** Get a definition declared within the scope. */
@@ -157,14 +151,13 @@ open class Env(defList: List<Definition>, val parentEnv: Env?) : Twistable {
                     override fun execute(args: List<Value>): Value {
                         val arr = VectorValueType.of(AnyValueType).assertIsVector(args[0])
                         val result =
-                            arr.map {
-                                    if (it.valueType.supportsText) {
-                                        it.valueType.toText(it)
-                                    } else {
-                                        it.valueType.name
-                                    }
+                            arr.joinToString("") {
+                                if (it.valueType.supportsText) {
+                                    it.valueType.toText(it)
+                                } else {
+                                    it.valueType.name
                                 }
-                                .joinToString("")
+                            }
                         RootEnv.echo(0, brightWhite(result), false)
                         return StringValue(result)
                     }
@@ -178,6 +171,10 @@ open class Env(defList: List<Definition>, val parentEnv: Env?) : Twistable {
             for (f in rootFunctions) {
                 RootEnv.addVariable(f.name, f)
             }
+            for (e in RootEnv.importedScopes.values) {
+                e.installStaticDefinitions()
+                e.installDefinitionValues()
+            }
             return RootEnv
         }
     }
@@ -185,6 +182,31 @@ open class Env(defList: List<Definition>, val parentEnv: Env?) : Twistable {
 
 /** The root scope of a model. This is the scope where builtins are defined and installed. */
 object RootEnv : Env(emptyList(), null) {
+
+    val importedScopes = HashMap<String, Env>()
+
+    fun addImportedLibrary(name: String,
+                           defs: List<Definition>) {
+        val env = Env(defs, this)
+        importedScopes[name] = env
+    }
+
+    fun getScope(name: String): Env {
+        return importedScopes[name] ?: throw SimplexAnalysisError("Accessed unknown scope $name")
+    }
+
+    fun getDefOfScopedName(scope: String, name: String): Definition {
+        return getScope(scope).getDef(name)
+    }
+
+    fun getDeclaredTypeOfScopedName(scope: String, name: String): Type {
+        return getScope(scope).getDeclaredTypeOf(name)
+    }
+
+    fun getValueOfScopedName(scope: String, name: String): Value {
+        return getScope(scope).getValue(name)
+    }
+
     fun addDefinition(def: Definition) {
         defs[def.name] = def
     }
@@ -195,7 +217,7 @@ object RootEnv : Env(emptyList(), null) {
         if (e) {
             System.err.println(o)
         } else {
-            System.out.println(o)
+            println(o)
         }
     }
 

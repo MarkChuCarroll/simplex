@@ -178,10 +178,6 @@ object RGBAValueType : ValueType() {
     }
 
     override fun assertIs(v: Value): RGBA {
-        return if (v is RGBA) {
-            v
-        } else {
-            throwTypeError(v)
-        }
+        return v as? RGBA ?: throwTypeError(v)
     }
 }

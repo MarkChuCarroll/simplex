@@ -19,7 +19,6 @@ import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.SimplexTypeError
-import org.goodmath.simplex.runtime.SimplexUndefinedError
 import org.goodmath.simplex.runtime.SimplexUndefinedMethodError
 import org.goodmath.simplex.runtime.SimplexUnsupportedOperation
 import org.goodmath.simplex.runtime.values.primitives.AbstractMethod
@@ -31,7 +30,6 @@ import org.goodmath.simplex.runtime.values.primitives.NoneValueType
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveMethod
 import org.goodmath.simplex.runtime.values.primitives.StringValue
-import org.goodmath.simplex.runtime.values.primitives.VectorValue
 import org.goodmath.simplex.runtime.values.primitives.VectorValueType
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
@@ -260,13 +258,13 @@ object AnyValueType : ValueType() {
                     val v = VectorValueType.of(AnyValueType).assertIsVector(args[0])
                     RootEnv.echo(0,
                         "${
-                            v.map {
+                            v.joinToString {
                                 if (it.valueType.supportsText) {
                                     it.valueType.toText(it)
                                 } else {
                                     it.toString()
                                 }
-                            }.joinToString()
+                            }
                         }\n",
                         false
                     )

@@ -258,10 +258,6 @@ object Vec3ValueType : ValueType() {
     }
 
     override fun assertIs(v: Value): Vec3 {
-        return if (v is Vec3) {
-            v
-        } else {
-            throwTypeError(v)
-        }
+        return v as? Vec3 ?: throwTypeError(v)
     }
 }

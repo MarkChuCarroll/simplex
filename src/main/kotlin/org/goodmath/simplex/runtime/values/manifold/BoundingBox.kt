@@ -296,10 +296,6 @@ object BoundingBoxValueType : ValueType() {
     override val providesVariables: Map<String, Value> = emptyMap()
 
     override fun assertIs(v: Value): BoundingBox {
-        return if (v is BoundingBox) {
-            v
-        } else {
-            throwTypeError(v)
-        }
+        return v as? BoundingBox ?: throwTypeError(v)
     }
 }

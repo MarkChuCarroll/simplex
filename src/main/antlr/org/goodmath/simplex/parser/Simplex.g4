@@ -20,7 +20,16 @@ package org.goodmath.simplex.parser;
 }
 
 model:
+    importLibrary*
     (def | product)+
+;
+
+libraryModule:
+   def+
+;
+
+importLibrary:
+  'import' path=LIT_STRING 'as' id=ID
 ;
 
 def:
@@ -103,6 +112,7 @@ complex:
 
 primary:
   ID (':=' expr)? #optIdExpr
+| scope=ID '::' name=ID #optScopedId
 | '['  exprs   ']' #optVecExpr
 | '#' ID '(' exprs ')' #optDataExpr
 | LIT_INT #optLitInt

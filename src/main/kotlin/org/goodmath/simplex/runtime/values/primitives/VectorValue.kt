@@ -15,7 +15,6 @@
  */
 package org.goodmath.simplex.runtime.values.primitives
 
-import org.goodmath.simplex.ast.types.FunctionType
 import kotlin.collections.all
 import kotlin.collections.isNotEmpty
 import kotlin.collections.map

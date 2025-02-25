@@ -67,7 +67,6 @@ class ExecutionTest {
         }
 
         fun run() {
-            System.out.println("Testing script '$name.s3d'")
             val cmd = Simplex()
             val tmpDir = Files.createTempDirectory("test-$name")
             val out = cmd.test("--prefix=$tmpDir/$name-out", "--verbosity=2", program().toString())
@@ -89,16 +88,16 @@ class ExecutionTest {
     @ParameterizedTest
     @MethodSource("scripts")
     fun runScriptTest(scriptDir: String) {
-        val tc = TestScript(prefix, scriptDir)
+        val tc = TestScript(PREFIX, scriptDir)
         tc.run()
     }
 
     companion object {
-        val prefix = "./src/test/resources/scripts"
+        const val PREFIX = "./src/test/resources/scripts"
 
         @JvmStatic
         fun scripts(): Stream<String> {
-            return (File(prefix).listFiles()!!.map { it.name }).stream()
+            return (File(PREFIX).listFiles()!!.map { it.name }).stream()
         }
     }
 }

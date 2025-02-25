@@ -225,20 +225,20 @@ object SolidValueType : ValueType() {
                     ),
                 ) {
                 override fun execute(args: List<Value>): Value {
-                    if (args.size == 1) {
-                        return Solid.cuboid(Vec3ValueType.assertIs(args[0]), true)
+                    return if (args.size == 1) {
+                        Solid.cuboid(Vec3ValueType.assertIs(args[0]), true)
                     } else if (args.size == 2) {
-                        return Solid.cuboid(Vec3ValueType.assertIs(args[0]), assertIsBoolean(args[1]))
+                        Solid.cuboid(Vec3ValueType.assertIs(args[0]), assertIsBoolean(args[1]))
                     } else if (args.size == 3) {
-                        return Solid.cuboid(
+                        Solid.cuboid(
                             assertIsFloat(args[0]), assertIsFloat(args[1]),
                             assertIsFloat(args[2]), true
                         )
                     } else {
-                            return Solid.cuboid(
-                                assertIsFloat(args[0]), assertIsFloat(args[1]),
-                                assertIsFloat(args[2]), assertIsBoolean(args[3]))
-                        }
+                        Solid.cuboid(
+                            assertIsFloat(args[0]), assertIsFloat(args[1]),
+                            assertIsFloat(args[2]), assertIsBoolean(args[3]))
+                    }
                 }
             },
             object :
@@ -743,10 +743,6 @@ object SolidValueType : ValueType() {
     override val providesVariables: Map<String, Value> by lazy { emptyMap() }
 
     override fun assertIs(v: Value): Solid {
-        return if (v is Solid) {
-            v
-        } else {
-            throwTypeError(v)
-        }
+        return v as? Solid ?: throwTypeError(v)
     }
 }

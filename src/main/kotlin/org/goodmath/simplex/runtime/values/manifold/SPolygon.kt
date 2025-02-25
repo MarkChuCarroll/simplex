@@ -63,6 +63,7 @@ object SPolygonType : ValueType() {
                     FunctionSignature.simple(listOf(Param("points", Type.vector(Vec2ValueType.asType))), asType),
                 ) {
                 override fun execute(args: List<Value>): Value {
+                    @Suppress("UNCHECKED_CAST")
                     val points = VectorValueType.of(Vec2ValueType).assertIs(args[0]).elements as List<Vec2>
                     val floatArray = DoubleArray(points.size * 2)
                     for (idx in points.indices) {

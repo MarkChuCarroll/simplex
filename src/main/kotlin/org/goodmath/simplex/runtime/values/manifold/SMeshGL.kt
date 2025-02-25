@@ -128,10 +128,6 @@ object SMeshGLType : ValueType() {
     override val providesVariables: Map<String, Value> = emptyMap()
 
     override fun assertIs(v: Value): SMeshGL {
-        return if (v is SMeshGL) {
-            v
-        } else {
-            throwTypeError(v)
-        }
+        return v as? SMeshGL ?: throwTypeError(v)
     }
 }

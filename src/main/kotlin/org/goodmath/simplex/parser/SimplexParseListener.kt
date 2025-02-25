@@ -16,6 +16,7 @@
 package org.goodmath.simplex.parser
 
 import org.antlr.v4.runtime.CharStream
+import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.ErrorNode
@@ -48,11 +49,15 @@ import org.goodmath.simplex.ast.expr.Operator
 import org.goodmath.simplex.ast.expr.OperatorExpr
 import org.goodmath.simplex.ast.expr.DataExpr
 import org.goodmath.simplex.ast.expr.DataFieldUpdateExpr
+import org.goodmath.simplex.ast.expr.ScopedRefExpr
 import org.goodmath.simplex.ast.expr.VarRefExpr
 import org.goodmath.simplex.ast.expr.WhileExpr
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.ast.types.TypedName
+import org.goodmath.simplex.runtime.RootEnv
 import org.goodmath.simplex.runtime.SimplexError
+import java.io.FileReader
+import java.nio.file.Path
 
 @Suppress("UNCHECKED_CAST")
 class SimplexParseListener : SimplexListener {
@@ -76,7 +81,47 @@ class SimplexParseListener : SimplexListener {
             throw SimplexError(SimplexError.Kind.Parser, "See error log above for details")
         }
         walker.walk(this, tree)
+        while (importSet.isNotEmpty()) {
+            val lib = importSet.removeFirst()
+            if (!RootEnv.importedScopes.containsKey(lib.name)) {
+                parseLibraryFile(lib.name, lib.path,
+                    echo)
+            }
+        }
         return getValueFor(tree) as Model
+
+    }
+
+    data class LibraryImport(
+        val name: String,
+        val path: Path
+    )
+
+    val importSet = ArrayList<LibraryImport>()
+
+    fun parseLibraryFile(moduleName: String,
+                         path: Path,
+                         echo: (Int, Any?, Boolean) -> Unit) {
+        System.err.println("Reading library '$path'")
+        val input = CharStreams.fromPath(path)
+        val libLexer = SimplexLexer(input)
+        val tokenStream = CommonTokenStream(libLexer)
+        val walker = ParseTreeWalker()
+        val parser = SimplexParser(tokenStream)
+        parser.removeErrorListeners()
+        val errorListener = SimplexErrorListener()
+        parser.addErrorListener(errorListener)
+        val tree = parser.libraryModule()
+        val t = Type
+        if (errorListener.errorCount > 0) {
+            for (e in errorListener.getLoggedErrors()) {
+                echo(0, e, true)
+            }
+            throw SimplexError(SimplexError.Kind.Parser, "See error log above for details")
+        }
+        walker.walk(this, tree)
+        val defs = getValueFor(tree) as List<Definition>
+        RootEnv.addImportedLibrary(moduleName, defs)
     }
 
     private var values: ParseTreeProperty<Any> = ParseTreeProperty()
@@ -99,6 +144,24 @@ class SimplexParseListener : SimplexListener {
         val defs = ctx.def().map { getValueFor(it) as Definition }
         val products = ctx.product().map { getValueFor(it) as Product }
         setValueFor(ctx, Model(defs, products, loc(ctx)))
+    }
+
+    override fun enterLibraryModule(ctx: SimplexParser.LibraryModuleContext) {
+    }
+
+    override fun exitLibraryModule(ctx: SimplexParser.LibraryModuleContext) {
+        val defs = ctx.def().map { getValueFor(it) as Definition }
+        setValueFor(ctx, defs)
+    }
+
+    override fun enterImportLibrary(ctx: SimplexParser.ImportLibraryContext) {
+    }
+
+    override fun exitImportLibrary(ctx: SimplexParser.ImportLibraryContext) {
+        val libPathStr = ctx.path.text
+        val path = Path.of(libPathStr.substring(1, libPathStr.length - 1))
+        val id = ctx.id.text
+        importSet.add(LibraryImport(id, path))
     }
 
     override fun enterProduct(ctx: SimplexParser.ProductContext) {}
@@ -413,6 +476,15 @@ class SimplexParseListener : SimplexListener {
         } else {
             setValueFor(ctx, AssignmentExpr(id, v, loc(ctx)))
         }
+    }
+
+    override fun enterOptScopedId(ctx: SimplexParser.OptScopedIdContext) {
+    }
+
+    override fun exitOptScopedId(ctx: SimplexParser.OptScopedIdContext) {
+        val scope = ctx.scope.text
+        val name = ctx.name.text
+        setValueFor(ctx, ScopedRefExpr(scope, name, loc(ctx)))
     }
 
     override fun enterOptVecExpr(ctx: SimplexParser.OptVecExprContext) {}

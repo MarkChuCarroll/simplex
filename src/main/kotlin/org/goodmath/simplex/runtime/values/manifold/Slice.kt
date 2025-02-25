@@ -41,7 +41,6 @@ import org.goodmath.simplex.runtime.values.primitives.StringValueType
 import org.goodmath.simplex.runtime.values.primitives.Vec2
 import org.goodmath.simplex.runtime.values.primitives.Vec2ValueType
 import org.goodmath.simplex.twist.Twist
-import kotlin.math.pow
 
 /** The Simplex wrapper for the Manifold CrossSection type. */
 class Slice(val cross: CrossSection) : Value {
@@ -124,7 +123,7 @@ class Slice(val cross: CrossSection) : Value {
 
         fun triangle(width: Double, height: Double): Slice {
             val points = listOf(-width/2.0, 0.0, width/2.0, 0.0,0.0, height)
-            val pointArray = DoubleArray(6, { idx-> points[idx] })
+            val pointArray = DoubleArray(6) { idx-> points[idx] }
             return Slice(CrossSection(SimplePolygon.FromArray(pointArray), 0))
         }
 
@@ -613,10 +612,6 @@ object SliceValueType : ValueType() {
     }
 
     override fun assertIs(v: Value): Slice {
-        return if (v is Slice) {
-            v
-        } else {
-            throwTypeError(v)
-        }
+        return v as? Slice ?: throwTypeError(v)
     }
 }

@@ -13,7 +13,6 @@ class TypeTests {
     @BeforeEach
     fun initRootEnvironment() {
         Env.createRootEnv()
-        val t = Type
     }
 
     @Test
@@ -86,7 +85,7 @@ class TypeTests {
             )
         assertTrue(same1.matchedBy(same2))
         assertFalse(same1.matchedBy(diff1))
-        // An int isn't a float, but we do autoconversion, so it should match.
+        // An int isn't a float, but we do auto-conversion, so it should match.
         assertTrue(same1.matchedBy(diff2))
         assertFalse(same1.matchedBy(diff3))
     }
