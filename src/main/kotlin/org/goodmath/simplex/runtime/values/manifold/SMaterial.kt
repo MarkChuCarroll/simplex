@@ -15,7 +15,7 @@
  */
 package org.goodmath.simplex.runtime.values.manifold
 
-import manifold3d.glm.DoubleVec4Vector
+import manifold3d.linalg.DoubleVec4Vector
 import manifold3d.manifold.Material
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
@@ -36,13 +36,16 @@ import org.goodmath.simplex.runtime.values.primitives.StringValue
 import org.goodmath.simplex.runtime.values.primitives.StringValueType
 import org.goodmath.simplex.twist.Twist
 
+// TODO: update color handling to current manifold, and uncomment setcolors.
 class SMaterial(val name: String, val material: Material) : Value {
     override val valueType = SMaterialValueType
 
     override fun twist(): Twist = Twist.obj("Material", Twist.attr("name", name))
 
     fun setColor(color: RGBA) {
-        material.color(color.toDVec4())
+        material.color(color.toDVec3())
+        material.alpha(color.alpha)
+
     }
 
     fun setMetalness(factor: Double) {
@@ -56,29 +59,29 @@ class SMaterial(val name: String, val material: Material) : Value {
     companion object {
         val smoothGray by lazy {
             val m = SMaterial("plain_gray", Material())
-            m.setColor(RGBA.gray)
+//            m.setColor(RGBA.gray)
             m
         }
 
         val smoothBlue by lazy {
             val m = SMaterial("smooth_blue", Material())
-            m.setColor(RGBA.blue)
+//            m.setColor(RGBA.blue)
             m
         }
         val smoothGreen by lazy {
             val m = SMaterial("smooth_green", Material())
-            m.setColor(RGBA.gray)
+//            m.setColor(RGBA.gray)
             m
         }
         val smoothAqua by lazy {
             val m = SMaterial("smooth_aqua", Material())
-            m.setColor(RGBA.gray)
+//            m.setColor(RGBA.gray)
             m
         }
 
         val roughGray by lazy {
             val m = SMaterial("rough_gray", Material())
-            m.setColor(RGBA.gray)
+//            m.setColor(RGBA.gray)
             m.setRoughness(1.0)
             m
         }
@@ -130,7 +133,7 @@ class SMaterial(val name: String, val material: Material) : Value {
         }
         val metalGold by lazy {
             val m = SMaterial("metal_gold", Material())
-            m.setColor(RGBA(0.7, 0.7, 0.7, 1.0))
+            m.setColor(RGBA(0.7, 0.7, 0.7, 1))
             m.setMetalness(1.0)
             m
         }
@@ -199,35 +202,13 @@ object SMaterialValueType : ValueType() {
             },
             object :
                 PrimitiveMethod(
-                    "set_vert_colors",
-                    MethodSignature.simple(
-                        asType,
-                        listOf(Param("colors", Type.vector(RGBAValueType.asType))),
-                        NoneValueType.asType,
-                    ),
-                ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
-                    val self = assertIs(target)
-                    val colorList =
-                        VectorValueType.of(RGBAValueType).assertIs(args[0]).elements.map {
-                            RGBAValueType.assertIs(it).toDVec4()
-                        }
-                    val colorVec = DoubleVec4Vector()
-                    colorVec.resize(colorList.size.toLong())
-                    colorList.forEach { color -> colorVec.pushBack(color) }
-                    self.material.vertColor(colorVec)
-                    return NoneValue
-                }
-            },
-            object :
-                PrimitiveMethod(
                     "set_color",
                     MethodSignature.simple(asType, listOf(Param("color", RGBAValueType.asType)), NoneValueType.asType),
                 ) {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
                     val color = RGBAValueType.assertIs(args[0])
-                    self.material.color(color.toDVec4())
+//                    self.material.color(color.toDVec4())
                     return NoneValue
                 }
             },
@@ -239,20 +220,10 @@ object SMaterialValueType : ValueType() {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target).material
                     val color = self.color()
-                    return RGBA.fromDVec4(color)
+                    return RGBA(color.x(), color.y(), color.z(), self.alpha())
                 }
             },
-            object :
-                PrimitiveMethod(
-                    "get_vert_colors",
-                    MethodSignature.simple(asType, emptyList<Param>(), Type.vector(RGBAValueType.asType)),
-                ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
-                    val self = assertIs(target)
-                    val colorVec = self.material.vertColor().map { RGBA.fromDVec4(it) }
-                    return VectorValue(RGBAValueType, colorVec)
-                }
-            },
+
             object :
                 PrimitiveMethod(
                     "metalness",

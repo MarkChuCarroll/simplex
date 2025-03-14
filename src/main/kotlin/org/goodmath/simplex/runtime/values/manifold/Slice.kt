@@ -16,9 +16,11 @@
 package org.goodmath.simplex.runtime.values.manifold
 
 import manifold3d.Manifold
-import manifold3d.glm.DoubleVec2
+import manifold3d.linalg.DoubleVec2
 import manifold3d.manifold.CrossSection
+import manifold3d.manifold.CrossSection.FillRule
 import manifold3d.manifold.CrossSectionVector
+import manifold3d.pub.Polygons
 import manifold3d.pub.SimplePolygon
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
@@ -42,13 +44,15 @@ import org.goodmath.simplex.runtime.values.primitives.Vec2
 import org.goodmath.simplex.runtime.values.primitives.Vec2ValueType
 import org.goodmath.simplex.twist.Twist
 
-/** The Simplex wrapper for the Manifold CrossSection type. */
+/** The Simplex wrapper for the Manifold Polygons type. */
 class Slice(val cross: CrossSection) : Value {
+    constructor(polys: Polygons) : this(CrossSection(polys, FillRule.Positive.ordinal))
+
     override val valueType: ValueType = SliceValueType
 
     override fun twist(): Twist =
         Twist.obj(
-            "CrossSection",
+            "Slice",
             Twist.array("points", toPoints())
         )
 
@@ -97,12 +101,12 @@ class Slice(val cross: CrossSection) : Value {
 
     fun extrude(height: Double, steps: Int, scale: Vec2, twist: Double): Solid {
         return Solid(
-            Manifold.Extrude(cross, height.toFloat(), steps, twist.toFloat(), scale.toDoubleVec2())
+            Manifold.Extrude(cross.toPolygons(), height.toFloat(), steps, twist.toFloat(), scale.toDoubleVec2())
         )
     }
 
     fun revolve(segments: Int, degrees: Float): Solid =
-        Solid(Manifold.Revolve(cross, segments, degrees))
+        Solid(Manifold.Revolve(cross.toPolygons(), segments, degrees))
 
     fun toPoints(): List<Vec2> {
         return cross.toPolygons().flatMap { it.toList() }.map { Vec2.fromDoubleVec2(it)}

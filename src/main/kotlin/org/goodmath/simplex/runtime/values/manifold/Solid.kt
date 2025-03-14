@@ -20,6 +20,7 @@ import manifold3d.ManifoldVector
 import manifold3d.manifold.ExportOptions
 import manifold3d.manifold.MeshIO
 import manifold3d.pub.OpType
+import manifold3d.pub.Polygons
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.FunctionSignature
@@ -87,9 +88,10 @@ class Solid(val manifold: Manifold) : Value {
 
     fun genus(): IntegerValue = IntegerValue(manifold.genus())
 
-    fun surfaceArea(): FloatValue = FloatValue(manifold.properties.surfaceArea().toDouble())
+    fun surfaceArea(): FloatValue = FloatValue(manifold.surfaceArea().toDouble())
 
-    fun volume(): FloatValue = FloatValue(manifold.properties.surfaceArea().toDouble())
+    fun volume(): FloatValue = FloatValue(manifold.volume().toDouble())
+
     fun splitByPlane(norm: Vec3, offset: Double): VectorValue {
         val mPair = manifold.splitByPlane(norm.toDoubleVec3(), offset.toFloat())
         val mList = listOf(Solid(mPair.first()), Solid(mPair.second()))
@@ -102,7 +104,7 @@ class Solid(val manifold: Manifold) : Value {
         return VectorValue(SolidValueType, mList)
     }
 
-    fun slice(height: Double): Slice = Slice(manifold.slice(height.toFloat()))
+    fun slice(height: Double): Polygons = manifold.slice(height.toFloat())
 
     fun slices(low: Double, high: Double, count: Int): VectorValue {
         val slices = manifold.slices(low.toFloat(), high.toFloat(), count)
@@ -632,7 +634,7 @@ object SolidValueType : ValueType() {
                 override fun execute(target: Value, args: List<Value>, env: Env): Value {
                     val self = assertIs(target)
                     val height = assertIsFloat(args[0])
-                    return self.slice(height)
+                    return Slice(self.slice(height))
                 }
             },
             object :

@@ -29,7 +29,7 @@ class PolygonTest {
         val r = rect.execute(listOf(FloatValue(20.0),FloatValue(10.0), BooleanValue(true)))
         r as Slice
         assertEquals(
-            """(obj CrossSection
+            """(obj Slice
                |   [array points
                |      (obj Vec2
                |         (x '0.0')

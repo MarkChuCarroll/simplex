@@ -15,8 +15,8 @@
  */
 package org.goodmath.simplex.runtime.values.primitives
 
+import manifold3d.linalg.DoubleVec2
 import kotlin.math.sqrt
-import manifold3d.glm.DoubleVec2
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.FunctionSignature

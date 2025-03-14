@@ -15,7 +15,8 @@
  */
 package org.goodmath.simplex.runtime.values.manifold
 
-import manifold3d.glm.DoubleVec4
+import manifold3d.linalg.DoubleVec3
+import manifold3d.linalg.DoubleVec4
 import org.goodmath.simplex.ast.types.Type
 import org.goodmath.simplex.runtime.Env
 import org.goodmath.simplex.runtime.values.FunctionSignature
@@ -28,8 +29,8 @@ import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveMethod
 import org.goodmath.simplex.twist.Twist
 
-class RGBA(val r: Double, val g: Double, val b: Double, val a: Double) : Value {
-    constructor(r: Double, g: Double, b: Double) : this(r, g, b, 1.0)
+class RGBA(val r: Double, val g: Double, val b: Double, val a: Int) : Value {
+    constructor(r: Double, g: Double, b: Double) : this(r, g, b, 1)
 
     override val valueType: ValueType = RGBAValueType
 
@@ -42,17 +43,17 @@ class RGBA(val r: Double, val g: Double, val b: Double, val a: Double) : Value {
             Twist.attr("alpha", g.toString()),
         )
 
-    fun toDVec4(): DoubleVec4 = DoubleVec4(r, b, g, a)
+    fun toDVec3(): DoubleVec3 = DoubleVec3(r, g, b)
+
+    val alpha: Int = a
 
     fun dim(factor: Double): RGBA = RGBA(r * factor, g * factor, b * factor, a)
 
     fun blend(other: RGBA): RGBA = RGBA((r + other.r) / 2.0, (g + other.g) / 2.0, b + other.b, a)
 
-    fun fade(factor: Double): RGBA = RGBA(r, g, b, a * factor)
+    fun fade(factor: Double): RGBA = RGBA(r, g, b, (a * factor).toInt())
 
     companion object {
-        fun fromDVec4(dv: DoubleVec4): RGBA = RGBA(dv[0], dv[1], dv[2], dv[3])
-
         val red = RGBA(1.0, 0.0, 0.0)
         val green = RGBA(0.0, 1.0, 0.0)
         val blue = RGBA(0.0, 0.0, 1.0)

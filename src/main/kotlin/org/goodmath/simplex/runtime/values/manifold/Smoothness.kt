@@ -21,7 +21,7 @@ class SSmoothness(var smoothness: Float, var halfEdge: Int): Value {
     fun toSmoothness(): Smoothness {
         val result = Smoothness()
         result.smoothness(smoothness)
-        result.halfedge(halfEdge)
+        result.halfedge(halfEdge.toFloat())
         return result
     }
 

@@ -39,8 +39,8 @@ repositories {
 }
 
 dependencies {
+    implementation("org.bytedeco:javacpp:1.5.11")
     implementation(files("src/main/resources/manifold3d-1.0.39.jar"))
-    implementation("org.bytedeco:javacpp:1.5.10")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     antlr("org.antlr:antlr4:$antlrVersion") // use ANTLR version 4
     implementation("org.jcommander:jcommander:1.83")
@@ -50,6 +50,8 @@ dependencies {
     implementation("com.github.ajalt.clikt:clikt:$cliktVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
+
+
 
     testImplementation(kotlin("test"))
     implementation("eu.mihosoft.vrl.jcsg:jcsg:0.5.7")
@@ -70,9 +72,10 @@ tasks.compileKotlin {
 tasks.compileTestKotlin {
     dependsOn(tasks.generateTestGrammarSource)
 }
+
 tasks.test {
     useJUnitPlatform()
-    systemProperty("java.library.path", "/usr/local/lib:/usr/lib")
+    systemProperty("java.library.path", "/usr/local/lib")
 }
 
 kotlin {
