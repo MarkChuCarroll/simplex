@@ -21,7 +21,7 @@ import org.goodmath.simplex.runtime.values.AnyValueType
 import org.goodmath.simplex.runtime.values.ValueType
 import org.goodmath.simplex.runtime.values.manifold.BoundingBoxValueType
 import org.goodmath.simplex.runtime.values.manifold.BoundingRectValueType
-import org.goodmath.simplex.runtime.values.manifold.RGBAValueType
+import org.goodmath.simplex.runtime.values.manifold.ColorValueType
 import org.goodmath.simplex.runtime.values.manifold.SMaterialValueType
 import org.goodmath.simplex.runtime.values.manifold.SMeshGLType
 import org.goodmath.simplex.runtime.values.manifold.SPolygonType
@@ -65,7 +65,7 @@ abstract class Type : Twistable {
             BooleanValueType,
             Vec2ValueType, Vec3ValueType,
             BoundingBoxValueType,
-            RGBAValueType,
+            ColorValueType,
             SolidValueType,
             BoundingRectValueType,
             SPolygonType,
