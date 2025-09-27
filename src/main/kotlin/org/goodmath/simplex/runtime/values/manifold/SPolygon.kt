@@ -25,12 +25,7 @@ import org.goodmath.simplex.runtime.values.MethodSignature
 import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
-import org.goodmath.simplex.runtime.values.primitives.VectorValue
-import org.goodmath.simplex.runtime.values.primitives.VectorValueType
-import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
-import org.goodmath.simplex.runtime.values.primitives.PrimitiveMethod
-import org.goodmath.simplex.runtime.values.primitives.Vec2
-import org.goodmath.simplex.runtime.values.primitives.Vec2ValueType
+import org.goodmath.simplex.runtime.values.primitives.*
 import org.goodmath.simplex.twist.Twist
 
 class SPolygon(val poly: SimplePolygon) : Value {
@@ -42,6 +37,18 @@ class SPolygon(val poly: SimplePolygon) : Value {
             Twist.attr("position", poly.position().toString()),
             Twist.attr("size", poly.size().toString()),
         )
+
+    companion object {
+        fun fromPoints(points: List<Vec2>): SPolygon {
+            val floatArray = DoubleArray(points.size * 2)
+            for (idx in points.indices) {
+                floatArray[2*idx] = points[idx].x
+                floatArray[2*idx + 1] = points[idx].y
+            }
+            return SPolygon(SimplePolygon.FromArray(floatArray))
+
+        }
+    }
 }
 
 object SPolygonType : ValueType() {
@@ -57,6 +64,32 @@ object SPolygonType : ValueType() {
 
     override val providesFunctions: List<PrimitiveFunctionValue> by lazy {
         listOf(
+            object: PrimitiveFunctionValue("iso_triangle",
+                FunctionSignature.simple(listOf(Param("width", FloatValueType.asType),
+                    Param("height", FloatValueType.asType)),
+                    asType)) {
+                override fun execute(args: List<Value>): Value {
+                    val w = assertIsFloat(args[0])
+                    val h = assertIsFloat(args[1])
+                    val p0 = Vec2(-w/2.0, 0.0)
+                    val p1 = Vec2(w/2.0, 0.0)
+                    val p2 = Vec2(0.0, h)
+                    return SPolygon.fromPoints(listOf(p0, p1, p2))
+                }
+            },
+            object: PrimitiveFunctionValue("rt_triangle",
+                FunctionSignature.simple(listOf(Param("width", FloatValueType.asType),
+                    Param("height", FloatValueType.asType)),
+                    asType)) {
+                override fun execute(args: List<Value>): Value {
+                    val w = assertIsFloat(args[0])
+                    val h = assertIsFloat(args[1])
+                    val p0 = Vec2(0.0, 0.0)
+                    val p1 = Vec2(w, 0.0)
+                    val p2 = Vec2(w, h)
+                    return SPolygon.fromPoints(listOf(p0, p1, p2))
+                }
+            },
             object :
                 PrimitiveFunctionValue(
                     "polygon",

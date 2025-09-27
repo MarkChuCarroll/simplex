@@ -1,0 +1,17 @@
+{
+  "name": "simp",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@ohm-js/cli": "^2.0.1",
+    "manifold": "^3.2.0",
+    "manifold-3d": "^3.2.1"
+  }
+}

@@ -1,0 +1,215 @@
+Simplex {
+   Model = Import* ( Def | Product )+
+
+
+  Import = kwImport stringLiteral kwAs id
+
+   Product = kwProduce stringLiteral lcurly
+              Expr+
+             rcurly
+
+   Def = VarDef | FunDef | DataDef | MethDef
+
+   VarDef = kwLet id (colon Type)? eq Expr
+
+   FunDef = kwFun id lpar Params  rpar colon Type lcurly
+       Expr+
+       rcurly
+
+    MethDef = kwMeth Type arrow id  lpar  Params rpar colon Type lcurly Expr+ rcurly
+
+    DataDef = kwData id lcurly Params rcurly
+
+    Param = id colon Type
+
+    Params = listOf<Param, comma>
+
+
+    Type =
+        id -- simple
+        | lsquare Type rsquare -- vector
+        | lpar  Types  rpar colon Type -- funType
+        | Type arrow lpar Types rpar colon Type -- opType
+
+   Types = listOf<Type, comma>
+
+
+    Expr =
+       lpar Expr rpar -- parenExpr
+      | Expr arrow id lpar Arguments? rpar -- methCallExpr
+      | Expr lpar Arguments? rpar -- funCallExpr
+      | Expr lsquare Expr rsquare -- subscriptExpr
+      | UnaryOp Expr  -- unaryExpr
+      | kwWhile Expr lcurly Expr+ rcurly -- whileExpr
+      | kwIf CondClause ( kwElif CondClause )* kwElse Expr -- ifExpr
+      | kwFor id kwIn Expr lcurly Expr+ rcurly -- forExpr
+      | kwLambda lpar Params rpar colon Type lcurly  Expr+ rcurly -- lambdaExpr
+      | lcurly Expr+ rcurly -- blockExpr
+      | kwLet id ( colon Type )? eq Expr -- letExpr
+      | Binary -- binaryExpr
+      | Primary -- primaryExpr
+
+
+    CondClause = lpar Expr rpar Expr
+
+    LogicOp = kwAnd | kwOr
+
+    Binary =
+         Binary LogicOp Compare -- binaryLogic
+       | Compare  -- logicFallthrough
+
+    CompareOp = eqeq | neq | le | lt | ge | gt
+
+    Compare =
+         Compare CompareOp Add -- binaryCompare
+        | Add   -- compareFallthrough
+
+    AddOp = plus | minus
+
+    Add =
+        Add AddOp Mult -- binaryAdd
+      | Mult  -- addFallthrough
+
+    MultOp = times | slash | mod 
+
+    Mult =
+       Mult MultOp Exponent -- binaryMult
+     | Exponent  -- multFallthrough
+
+    ExpOp = exp 
+
+    Exponent =
+       Exponent ExpOp Unary -- binaryExp
+    | Unary -- ExpFallthrough
+
+    UnaryOp = minus | kwNot
+
+    Unary =
+       UnaryOp Unary -- unaryOp
+    |  Postfix -- unaryFallthrough
+
+   Arguments = listOf<Expr, comma>
+
+    Postfix =
+         Postfix arrow id lpar   Arguments rpar  -- opCall
+      |  Postfix lpar Arguments rpar -- funCall
+      | Primary -- pfFallthrough
+
+
+    Primary =
+        LVal -- lvalExpr
+      | integerLiteral -- intlit
+      | floatLiteral -- floatlit
+      | stringLiteral -- strlit
+      | kwTrue -- bintrue
+      | kwFalse -- binfalse
+      | lsquare Arguments rsquare -- vectorlit
+      | lcurly id colon Arguments rcurly -- datalit
+
+    LVal = Expr dot id -- fieldExpr
+         | Expr lsquare Expr rsquare -- subscriptExpr
+         | id -- idExpr
+
+
+    stringLiteral = "\"" (nonQuoteOrBackslashChar | escapeSequence)* "\""
+
+    nonQuoteOrBackslashChar = ~("\"" | "\\") any
+
+    escapeSequence = "\\\\" -- backslash
+                   | "\\\"" -- doubleQuote
+                   | "\\n" -- newline
+                   | "\\r" -- carriageReturn
+                   | "\\t" -- tab
+                   | "\\v" -- verticalTab
+                   | "\\b" -- backspace
+                   | "\\f" -- formFeed
+                   | "\\u{" hexDigit hexDigit? hexDigit? hexDigit? hexDigit? hexDigit? rcurly -- unicodeCodePoint
+                   | "\\u" hexDigit hexDigit hexDigit hexDigit -- unicodeEscape
+                   | "\\x" hexDigit hexDigit -- hexEscape
+
+
+
+   eq = "=" ~("=")
+   colon  = ":" ~("=")
+   neq = "!="
+   eqeq = "=="
+   ge = ">="
+   gt = ">"
+   le = "<="
+   lt = "<"
+   plus = "+"
+   comma = ","
+   minus = "-"
+   mod = "%"
+   exp = "^"
+   times = "*"
+   arrow = "->"
+   slash = "/" ~( "*" )
+   lcurly = "{"
+   rcurly = "}"
+   lsquare = "["
+   rsquare = "]"
+   lpar = "("
+   rpar = ")"
+   dot = "."
+
+
+
+   kwAnd = "and"
+   kwAs = "as"
+   kwData = "data"
+   kwDo = "do"
+   kwElif = "elif"
+   kwElse = "else"
+   kwEnd = "end"
+   kwFalse = "false"
+   kwFor = "for"
+   kwFun = "fun"
+   kwIf = "if"
+   kwImport = "import"
+   kwIn = "in"
+   kwLambda = "lambda"
+   kwLet = "let"
+   kwMeth = "meth"
+   kwNot = "not"
+   kwOr = "or"
+   kwProduce = "produce"
+   kwTrue = "true"
+   kwWhile = "while"
+   kwWith = "with"
+
+   keyword = kwAnd | kwData | kwDo | kwElif | kwEnd | kwElse | kwFalse | kwFor | kwFun
+      | kwIf | kwIn | kwLambda | kwLet | kwMeth | kwNot | kwOr | kwProduce | kwWhile | kwWith
+      | kwImport | kwAs | kwTrue
+
+   id_leader = letter | "_"
+
+   id_char = id_leader | digit
+
+    id = ~keyword (id_leader id_char*)
+
+    digits = digit+
+
+    decimalPart = "." digit*
+
+    expPart = "e" minus? digits
+
+    integerLiteral = minus? digits ~(decimalPart | expPart)
+
+    floatLiteral = "minus"? digits decimalPart? expPart?
+
+    // Comments
+    whiteSpace = "\t" | " " | lineTerminator
+
+    space += comment | lineTerminator
+
+    comment = multiLineComment | singleLineComment
+
+    lineTerminator = "\n" | "\r" | "\u2028" | "\u2029"
+
+    multiLineComment = "/*" (~"*/" any)* "*/"
+
+    singleLineComment = "//" (~lineTerminator any)*
+
+}
+

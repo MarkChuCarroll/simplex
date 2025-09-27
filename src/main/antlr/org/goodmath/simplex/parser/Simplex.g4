@@ -108,7 +108,7 @@ complex:
 | '{' expr+ '}'  #complexDoExpr
 | 'lambda'  '(' params ')' ':' type '{' expr+ '}' #complexLambdaExpr
 | 'while' expr '{' expr+ '}' #complexWhileExpr
-;
+
 
 primary:
   ID (':=' expr)? #optIdExpr
