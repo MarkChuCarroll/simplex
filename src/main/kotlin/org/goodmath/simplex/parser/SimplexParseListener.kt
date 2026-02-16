@@ -299,14 +299,6 @@ class SimplexParseListener : SimplexListener {
         setValueFor(ctx, exprs)
     }
 
-    override fun enterExprUpdate(ctx: SimplexParser.ExprUpdateContext) {}
-
-    override fun exitExprUpdate(ctx: SimplexParser.ExprUpdateContext) {
-        val target = getValueFor(ctx.target) as Expr
-        val field = ctx.ID().text
-        val value = getValueFor(ctx.value) as Expr
-        setValueFor(ctx, DataFieldUpdateExpr(target, field, value, loc(ctx)))
-    }
 
     override fun enterExprParen(ctx: SimplexParser.ExprParenContext) {}
 

@@ -20,7 +20,6 @@ import java.util.UUID
 import org.goodmath.simplex.ast.def.Definition
 import org.goodmath.simplex.ast.types.VectorType
 import org.goodmath.simplex.ast.types.Type
-import org.goodmath.simplex.parser.SimplexParseListener
 import org.goodmath.simplex.runtime.values.AnyValueType
 import org.goodmath.simplex.runtime.values.FunctionSignature
 import org.goodmath.simplex.runtime.values.Param
@@ -31,7 +30,6 @@ import org.goodmath.simplex.runtime.values.primitives.StringValue
 import org.goodmath.simplex.runtime.values.primitives.StringValueType
 import org.goodmath.simplex.twist.Twist
 import org.goodmath.simplex.twist.Twistable
-import java.nio.file.Path
 
 /**
  * An environment, which contains the definitions, types, variables, functions, and methods
@@ -49,7 +47,7 @@ open class Env(defList: List<Definition>, val parentEnv: Env?) : Twistable {
     /** A unique identifier for a scope. Used only for debugging purposes. */
     open val id: String = UUID.randomUUID().toString()
 
-    /** Declare the static type of a new variable name in the scope. */
+    /** Declare the static type of the variable `name` in the scope. */
     fun declareTypeOf(name: String, t: Type) {
         if (declaredTypes.containsKey(name) && declaredTypes[name] != t) {
             throw SimplexAnalysisError("Type of $name is already defined as ${declaredTypes[name]}, not $t")
@@ -57,7 +55,7 @@ open class Env(defList: List<Definition>, val parentEnv: Env?) : Twistable {
         declaredTypes[name] = t
     }
 
-    /** Get the statically declared type of a name in the scope, or any of its parent scopes. */
+    /** Get the statically declared type of name in the scope, or any of its parent scopes. */
     fun getDeclaredTypeOf(name: String): Type {
         return if (declaredTypes.containsKey(name)) {
             declaredTypes[name]!!

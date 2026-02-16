@@ -100,6 +100,10 @@ abstract class Type : Twistable {
                     RootEnv.declareTypeOf(f.name, f.valueType.asType)
                     RootEnv.addVariable(f.name, f)
                 }
+                for ((vname, vval) in valueType.providesVariables.entries) {
+                    RootEnv.declareTypeOf(vname, vval.valueType.asType)
+                    RootEnv.addVariable(vname, vval)
+                }
             }
         }
 

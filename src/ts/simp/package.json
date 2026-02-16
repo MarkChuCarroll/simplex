@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "@ohm-js/cli": "^2.0.1",
+    "cmd-ts": "^0.14.3",
     "manifold": "^3.2.0",
-    "manifold-3d": "^3.2.1"
+    "manifold-3d": "^3.2.1",
+    "ohm-js": "^17.2.1"
   }
 }

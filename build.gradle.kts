@@ -23,10 +23,11 @@ val kotlinVersion: String by project
 val mockkVersion: String by project
 
 plugins {
-    kotlin("jvm")  version "2.0.0"
+    kotlin("jvm") version "2.0.0"
     antlr
     application
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+
+    id("com.gradleup.shadow") version "9.3.0"
     id("org.openjfx.javafxplugin") version "0.1.0"
     kotlin("plugin.serialization") version "2.0.0"
 }
@@ -50,8 +51,6 @@ dependencies {
     implementation("com.github.ajalt.clikt:clikt:$cliktVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
-
-
 
     testImplementation(kotlin("test"))
     implementation("eu.mihosoft.vrl.jcsg:jcsg:0.5.7")
@@ -87,17 +86,12 @@ kotlin {
 // Needed by jcsg
 javafx {
     modules("javafx.controls", "javafx.fxml")
-
 }
 
-tasks {
-    named<ShadowJar>("shadowJar") {
-        archiveBaseName.set("simplex")
-        archiveClassifier.set("")
-        archiveVersion.set("0.0.1")
-        mergeServiceFiles()
-        manifest {
-            attributes(mapOf("Main-Class" to "org.goodmath.simplex.SimplexKt"))
-        }
+tasks.shadowJar {
+    archiveBaseName = "simplex"
+    archiveVersion = "0.0.1"
+    manifest {
+        attributes(mapOf("Main-Class" to "org.goodmath.simplex.SimplexKt"))
     }
 }

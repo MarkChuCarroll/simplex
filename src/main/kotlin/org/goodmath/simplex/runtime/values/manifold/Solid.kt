@@ -28,8 +28,6 @@ import org.goodmath.simplex.runtime.values.MethodSignature
 import org.goodmath.simplex.runtime.values.Param
 import org.goodmath.simplex.runtime.values.Value
 import org.goodmath.simplex.runtime.values.ValueType
-import org.goodmath.simplex.runtime.values.primitives.VectorValue
-import org.goodmath.simplex.runtime.values.primitives.VectorValueType
 import org.goodmath.simplex.runtime.values.primitives.BooleanValueType
 import org.goodmath.simplex.runtime.values.primitives.FloatValue
 import org.goodmath.simplex.runtime.values.primitives.FloatValueType
@@ -37,12 +35,17 @@ import org.goodmath.simplex.runtime.values.primitives.IntegerValue
 import org.goodmath.simplex.runtime.values.primitives.IntegerValueType
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveFunctionValue
 import org.goodmath.simplex.runtime.values.primitives.PrimitiveMethod
+import org.goodmath.simplex.runtime.values.primitives.Vec2
 import org.goodmath.simplex.runtime.values.primitives.Vec3
 import org.goodmath.simplex.runtime.values.primitives.Vec3ValueType
+import org.goodmath.simplex.runtime.values.primitives.VectorValue
+import org.goodmath.simplex.runtime.values.primitives.VectorValueType
 import org.goodmath.simplex.twist.Twist
 
 /** The Simplex wrapper for Manifold's Manifold type. */
-class Solid(val manifold: Manifold) : Value {
+open class Solid(
+    val manifold: Manifold,
+) : Value {
     override val valueType: ValueType = SolidValueType
     var material: SMaterial = SMaterial.smoothGray
 
@@ -53,7 +56,10 @@ class Solid(val manifold: Manifold) : Value {
             Twist.attr("numVert", manifold.numVert().toString()),
         )
 
-    fun export(path: String, material: SMaterial? = null) {
+    fun export(
+        path: String,
+        material: SMaterial? = null,
+    ) {
         val exportOptions = ExportOptions()
         if (material != null) {
             exportOptions.material(material.material)
@@ -65,16 +71,27 @@ class Solid(val manifold: Manifold) : Value {
 
     fun move(v: Vec3): Solid = move(v.x, v.y, v.z)
 
-    fun move(x: Double, y: Double, z: Double): Solid = Solid(manifold.translate(x, y, z))
+    fun move(
+        x: Double,
+        y: Double,
+        z: Double,
+    ): Solid = Solid(manifold.translate(x, y, z))
 
     fun rotate(v: Vec3): Solid = rotate(v.x, v.y, v.z)
 
-    fun rotate(x: Double, y: Double, z: Double): Solid =
-        Solid(manifold.rotate(x.toFloat(), y.toFloat(), z.toFloat()))
+    fun rotate(
+        x: Double,
+        y: Double,
+        z: Double,
+    ): Solid = Solid(manifold.rotate(x.toFloat(), y.toFloat(), z.toFloat()))
 
     fun scale(v: Vec3): Solid = scale(v.x, v.y, v.z)
 
-    fun scale(x: Double, y: Double, z: Double): Solid = Solid(manifold.scale(x, y, z))
+    fun scale(
+        x: Double,
+        y: Double,
+        z: Double,
+    ): Solid = Solid(manifold.scale(x, y, z))
 
     fun mirror(norm: Vec3): Solid = Solid(manifold.mirror(norm.toDoubleVec3()))
 
@@ -92,12 +109,15 @@ class Solid(val manifold: Manifold) : Value {
 
     fun volume(): FloatValue = FloatValue(manifold.volume().toDouble())
 
-    fun splitByPlane(norm: Vec3, offset: Double): VectorValue {
+    fun splitByPlane(
+        norm: Vec3,
+        offset: Double,
+    ): VectorValue {
         val mPair = manifold.splitByPlane(norm.toDoubleVec3(), offset.toFloat())
         val mList = listOf(Solid(mPair.first()), Solid(mPair.second()))
         return VectorValue(SolidValueType, mList)
     }
-    
+
     fun split(other: Solid): VectorValue {
         val mPair = manifold.split(other.manifold)
         val mList = listOf(Solid(mPair.first()), Solid(mPair.second()))
@@ -106,7 +126,11 @@ class Solid(val manifold: Manifold) : Value {
 
     fun slice(height: Double): Polygons = manifold.slice(height.toFloat())
 
-    fun slices(low: Double, high: Double, count: Int): VectorValue {
+    fun slices(
+        low: Double,
+        high: Double,
+        count: Int,
+    ): VectorValue {
         val slices = manifold.slices(low.toFloat(), high.toFloat(), count)
         val result = ArrayList<Value>()
         for (slice in slices) {
@@ -115,45 +139,98 @@ class Solid(val manifold: Manifold) : Value {
         return VectorValue(SliceValueType, result)
     }
 
-    fun normals(idx: Int, minSharpAngle: Double): Solid =
-        Solid(manifold.calculateNormals(idx, minSharpAngle.toFloat()))
+    fun normals(
+        idx: Int,
+        minSharpAngle: Double,
+    ): Solid = Solid(manifold.calculateNormals(idx, minSharpAngle.toFloat()))
 
     fun smoothByNormals(idx: Int): Solid = Solid(manifold.smoothByNormals(idx))
 
-    fun smoothOut(minSharpAngle: Double, minSmoothness: Double): Solid =
-        Solid(manifold.smoothOut(minSharpAngle.toFloat(), minSmoothness.toFloat()))
-
+    fun smoothOut(
+        minSharpAngle: Double,
+        minSmoothness: Double,
+    ): Solid = Solid(manifold.smoothOut(minSharpAngle.toFloat(), minSmoothness.toFloat()))
 
     fun project(): Slice = Slice(manifold.project())
 
     fun refineToLength(length: Double): Solid = Solid(manifold.refineToLength(length.toFloat()))
 
-    fun hull(): Solid {
-        return Solid(manifold.convexHull())
-    }
+    fun hull(): Solid = Solid(manifold.convexHull())
 
     companion object {
-        fun union(bodies: List<Solid>): Solid =
-            Solid(Manifold.BatchBoolean(SolidValueType.listToVec(bodies), OpType.Add))
+        fun union(bodies: List<Solid>): Solid = Solid(Manifold.BatchBoolean(SolidValueType.listToVec(bodies), OpType.Add))
 
-        fun cuboid(width: Double, height: Double, depth: Double,
-                   center: Boolean): Solid =
-            cuboid(Vec3(width, height, depth), center)
+        fun cuboid(
+            width: Double,
+            height: Double,
+            depth: Double,
+            center: Boolean,
+        ): Solid = cuboid(Vec3(width, height, depth), center)
 
-        fun cuboid(v: Vec3, center: Boolean): Solid =
-            Solid(Manifold.Cube(v.toDoubleVec3(), center))
+        fun cuboid(
+            v: Vec3,
+            center: Boolean,
+        ): Solid = Solid(Manifold.Cube(v.toDoubleVec3(), center))
 
-        fun cylinder(height: Double, lowRadius: Double): Solid =
-            Solid(Manifold.Cylinder(height.toFloat(), lowRadius.toFloat(), lowRadius.toFloat(), 0)).move(0.0, 0.0, -height)
+        fun cylinder(
+            height: Double,
+            lowRadius: Double,
+        ): Solid = Solid(Manifold.Cylinder(height.toFloat(), lowRadius.toFloat(), lowRadius.toFloat(), 0)).move(0.0, 0.0, -height)
 
-        fun cylinder(height: Double, lowRadius: Double, highRadius: Double): Solid =
-            Solid(Manifold.Cylinder(height.toFloat(), lowRadius.toFloat(), highRadius.toFloat(), 0)).move(0.0, 0.0, -height)
+        fun cylinder(
+            height: Double,
+            lowRadius: Double,
+            highRadius: Double,
+        ): Solid = Solid(Manifold.Cylinder(height.toFloat(), lowRadius.toFloat(), highRadius.toFloat(), 0)).move(0.0, 0.0, -height)
 
-        fun cylinder(height: Double, lowRadius: Double, highRadius: Double, facets: Int): Solid =
-            Solid(Manifold.Cylinder(height.toFloat(), lowRadius.toFloat(), highRadius.toFloat(), facets)).move(0.0, 0.0, -height)
+        fun cylinder(
+            height: Double,
+            lowRadius: Double,
+            highRadius: Double,
+            facets: Int,
+        ): Solid = Solid(Manifold.Cylinder(height.toFloat(), lowRadius.toFloat(), highRadius.toFloat(), facets)).move(0.0, 0.0, -height)
 
-        fun spheroid(x: Double, y: Double, z: Double, segments: Int): Solid =
-            Solid(Manifold.Sphere(x.toFloat(), segments).scale(1.0, y, z))
+        fun spheroid(
+            x: Double,
+            y: Double,
+            z: Double,
+            segments: Int,
+        ): Solid {
+            val yFactor = y / x
+            val zFactor = z / x
+            return Solid(Manifold.Sphere(x.toFloat(), segments).scale(1.0, yFactor, zFactor))
+        }
+
+        fun rtri(
+            height: Double,
+            width: Double,
+            thickness: Double,
+        ): Solid {
+            val slice =
+                Slice.fromPolygon(
+                    SPolygon.fromPoints(
+                        listOf(
+                            Vec2(0.0, 0.0),
+                            Vec2(width, 0.0),
+                            Vec2(width, height),
+                        ),
+                    ),
+                )
+            return slice.extrude(thickness, 20, Vec2(1.0, 1.0), 0.0)
+        }
+
+        fun tri(
+            pt1: Vec2,
+            pt2: Vec2,
+            pt3: Vec2,
+            thickness: Double,
+        ): Solid =
+            Slice.fromPolygon(SPolygon.fromPoints(listOf(pt1, pt2, pt3))).extrude(
+                thickness,
+                20,
+                Vec2(1.0, 1.0),
+                0.0,
+            )
     }
 }
 
@@ -163,13 +240,9 @@ object SolidValueType : ValueType() {
         Type.simple(name)
     }
 
-    fun listToVec(solids: List<Solid>): ManifoldVector {
-        return ManifoldVector(solids.map { it.manifold }.toTypedArray())
-    }
+    fun listToVec(solids: List<Solid>): ManifoldVector = ManifoldVector(solids.map { it.manifold }.toTypedArray())
 
-    override fun isTruthy(v: Value): Boolean {
-        return true
-    }
+    override fun isTruthy(v: Value): Boolean = true
 
     override val providesFunctions: List<PrimitiveFunctionValue> by lazy {
         listOf(
@@ -180,10 +253,12 @@ object SolidValueType : ValueType() {
                         listOf(
                             listOf(Param("radius", FloatValueType.asType)),
                             listOf(Param("radius", FloatValueType.asType), Param("segments", IntegerValueType.asType)),
-                            listOf(Param("x", FloatValueType.asType),
+                            listOf(
+                                Param("x", FloatValueType.asType),
                                 Param("y", FloatValueType.asType),
                                 Param("z", FloatValueType.asType),
-                                Param("segments", IntegerValueType.asType))
+                                Param("segments", IntegerValueType.asType),
+                            ),
                         ),
                         asType,
                     ),
@@ -200,11 +275,12 @@ object SolidValueType : ValueType() {
                         val x = assertIsFloat(args[0])
                         val y = assertIsFloat(args[1])
                         val z = assertIsFloat(args[2])
-                        val segments = if (args.size > 3) {
-                            assertIsInt(args[3])
-                        } else {
-                            0
-                        }
+                        val segments =
+                            if (args.size > 3) {
+                                assertIsInt(args[3])
+                            } else {
+                                0
+                            }
                         return Solid.spheroid(x, y, z, segments)
                     }
                 }
@@ -216,32 +292,41 @@ object SolidValueType : ValueType() {
                         listOf(
                             listOf(Param("v", Vec3ValueType.asType)),
                             listOf(Param("v", Vec3ValueType.asType), Param("center", BooleanValueType.asType)),
-                            listOf(Param("x", FloatValueType.asType),
-                                Param("y", FloatValueType.asType),
-                                Param("z", FloatValueType.asType)),
-                            listOf(Param("x", FloatValueType.asType),
+                            listOf(
+                                Param("x", FloatValueType.asType),
                                 Param("y", FloatValueType.asType),
                                 Param("z", FloatValueType.asType),
-                                Param("centered", BooleanValueType.asType))),
+                            ),
+                            listOf(
+                                Param("x", FloatValueType.asType),
+                                Param("y", FloatValueType.asType),
+                                Param("z", FloatValueType.asType),
+                                Param("centered", BooleanValueType.asType),
+                            ),
+                        ),
                         asType,
-                    ),
+                    )
                 ) {
-                override fun execute(args: List<Value>): Value {
-                    return if (args.size == 1) {
+                override fun execute(args: List<Value>): Value =
+                    if (args.size == 1) {
                         Solid.cuboid(Vec3ValueType.assertIs(args[0]), true)
                     } else if (args.size == 2) {
                         Solid.cuboid(Vec3ValueType.assertIs(args[0]), assertIsBoolean(args[1]))
                     } else if (args.size == 3) {
                         Solid.cuboid(
-                            assertIsFloat(args[0]), assertIsFloat(args[1]),
-                            assertIsFloat(args[2]), true
+                            assertIsFloat(args[0]),
+                            assertIsFloat(args[1]),
+                            assertIsFloat(args[2]),
+                            true,
                         )
                     } else {
                         Solid.cuboid(
-                            assertIsFloat(args[0]), assertIsFloat(args[1]),
-                            assertIsFloat(args[2]), assertIsBoolean(args[3]))
+                            assertIsFloat(args[0]),
+                            assertIsFloat(args[1]),
+                            assertIsFloat(args[2]),
+                            assertIsBoolean(args[3]),
+                        )
                     }
-                }
             },
             object :
                 PrimitiveFunctionValue(
@@ -250,32 +335,38 @@ object SolidValueType : ValueType() {
                         listOf(
                             listOf(
                                 Param("height", FloatValueType.asType),
-                                Param("radiusLow", FloatValueType.asType)),
-                            listOf(
-                                Param("height", FloatValueType.asType),
                                 Param("radiusLow", FloatValueType.asType),
-                                Param("radiusHigh", FloatValueType.asType)),
+                            ),
                             listOf(
                                 Param("height", FloatValueType.asType),
                                 Param("radiusLow", FloatValueType.asType),
                                 Param("radiusHigh", FloatValueType.asType),
-                                Param("facets", IntegerValueType.asType))),
+                            ),
+                            listOf(
+                                Param("height", FloatValueType.asType),
+                                Param("radiusLow", FloatValueType.asType),
+                                Param("radiusHigh", FloatValueType.asType),
+                                Param("facets", IntegerValueType.asType),
+                            ),
+                        ),
                         asType,
                     ),
                 ) {
                 override fun execute(args: List<Value>): Value {
                     val height = assertIsFloat(args[0])
                     val radiusLow = assertIsFloat(args[1])
-                    val radiusHigh = if (args.size > 2) {
-                        assertIsFloat(args[2])
-                    } else {
-                        radiusLow
-                    }
-                    val facets = if (args.size > 3) {
-                        assertIsInt(args[3])
-                    } else {
-                        0
-                    }
+                    val radiusHigh =
+                        if (args.size > 2) {
+                            assertIsFloat(args[2])
+                        } else {
+                            radiusLow
+                        }
+                    val facets =
+                        if (args.size > 3) {
+                            assertIsInt(args[3])
+                        } else {
+                            0
+                        }
                     return Solid.cylinder(height, radiusLow, radiusHigh, facets)
                 }
             },
@@ -290,37 +381,71 @@ object SolidValueType : ValueType() {
                     return Solid(tet.scale(Vec3(scale, scale, scale).toDoubleVec3()))
                 }
             },
-            object: PrimitiveFunctionValue(
-                "union",
-                FunctionSignature.simple(listOf(Param("shapes",
-                                                      VectorValueType.of(this).asType)),
-                                                asType)
-                ) {
+            object : PrimitiveFunctionValue(
+                "rtriprism",
+                FunctionSignature.simple(
+                    listOf(
+                        Param("height", FloatValueType.asType),
+                        Param("width", FloatValueType.asType),
+                        Param("height", FloatValueType.asType),
+                    ),
+                    SolidValueType.asType,
+                ),
+            ) {
                 override fun execute(args: List<Value>): Value {
-                    val solids = ArrayList(VectorValueType.of(this@SolidValueType).assertIs(args[0]).elements.map { (it as Solid).manifold })
+                    val height = assertIsFloat(args[0])
+                    val width = assertIsFloat(args[1])
+                    val thickness = assertIsFloat(args[2])
+                    return Solid.rtri(height, width, thickness)
+                }
+            },
+            object : PrimitiveFunctionValue(
+                "union",
+                FunctionSignature.simple(
+                    listOf(
+                        Param(
+                            "shapes",
+                            VectorValueType.of(this).asType,
+                        ),
+                    ),
+                    asType,
+                ),
+            ) {
+                override fun execute(args: List<Value>): Value {
+                    val solids =
+                        ArrayList(
+                            VectorValueType
+                                .of(this@SolidValueType)
+                                .assertIs(args[0])
+                                .elements
+                                .map { (it as Solid).manifold },
+                        )
                     val vec = ManifoldVector(solids)
                     return Solid(Manifold.BatchBoolean(vec, ManifoldOpType.Add.opCode))
                 }
-            }
+            },
         )
     }
 
     override val providesPrimitiveMethods: List<PrimitiveMethod> by lazy {
         listOf(
-            object: PrimitiveMethod(
+            object : PrimitiveMethod(
                 "bounds",
-                MethodSignature.simple(asType, emptyList<Param>(),
-                                       BoundingBoxValueType.asType)
+                MethodSignature.simple(
+                    asType,
+                    emptyList<Param>(),
+                    BoundingBoxValueType.asType,
+                ),
             ) {
                 override fun execute(
                     target: Value,
                     args: List<Value>,
-                    env: Env
+                    env: Env,
                 ): Value {
                     val self = assertIs(target)
                     return self.boundingBox()
                 }
-              },
+            },
             object :
                 PrimitiveMethod(
                     "move",
@@ -331,80 +456,132 @@ object SolidValueType : ValueType() {
                                 Param("x", FloatValueType.asType),
                                 Param("y", FloatValueType.asType),
                                 Param("z", FloatValueType.asType),
-                                ),
-                            listOf(Param("v", Vec3ValueType.asType)),
                             ),
-                        asType
+                            listOf(Param("v", Vec3ValueType.asType)),
+                        ),
+                        asType,
                     ),
-                    ) {
-                    override fun execute(target: Value, args: List<Value>, env: Env): Value {
-                        val self: Solid = assertIs(target)
-                        if (args.size == 1) {
-                            val v = Vec3ValueType.assertIs(args[0])
-                            return self.move(v)
-                        } else {
-                            val x = assertIsFloat(args[0])
-                            val y = assertIsFloat(args[1])
-                            val z = assertIsFloat(args[2])
-                            return self.move(x, y, z)
-                        }
+                ) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
+                    val self: Solid = assertIs(target)
+                    if (args.size == 1) {
+                        val v = Vec3ValueType.assertIs(args[0])
+                        return self.move(v)
+                    } else {
+                        val x = assertIsFloat(args[0])
+                        val y = assertIsFloat(args[1])
+                        val z = assertIsFloat(args[2])
+                        return self.move(x, y, z)
                     }
-                      },
-            object: PrimitiveMethod(
+                }
+            },
+            object : PrimitiveMethod(
                 "left",
-                MethodSignature.simple(asType, listOf(Param("distance", FloatValueType.asType)),
-                                       asType)) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                MethodSignature.simple(
+                    asType,
+                    listOf(Param("distance", FloatValueType.asType)),
+                    asType,
+                ),
+            ) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
                     val self = assertIs(target)
                     val dist = assertIsFloat(args[0])
                     return self.move(-dist, 0.0, 0.0)
                 }
             },
-            object: PrimitiveMethod(
+            object : PrimitiveMethod(
                 "right",
-                MethodSignature.simple(asType, listOf(Param("distance", FloatValueType.asType)),
-                                       asType)) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                MethodSignature.simple(
+                    asType,
+                    listOf(Param("distance", FloatValueType.asType)),
+                    asType,
+                ),
+            ) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
                     val self = assertIs(target)
                     val dist = assertIsFloat(args[0])
                     return self.move(dist, 0.0, 0.0)
                 }
             },
-            object: PrimitiveMethod(
+            object : PrimitiveMethod(
                 "forward",
-                MethodSignature.simple(asType, listOf(Param("distance", FloatValueType.asType)),
-                                       asType)) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                MethodSignature.simple(
+                    asType,
+                    listOf(Param("distance", FloatValueType.asType)),
+                    asType,
+                ),
+            ) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
                     val self = assertIs(target)
                     val dist = assertIsFloat(args[0])
                     return self.move(0.0, dist, 0.0)
                 }
             },
-            object: PrimitiveMethod(
+            object : PrimitiveMethod(
                 "backward",
-                MethodSignature.simple(asType, listOf(Param("distance", FloatValueType.asType)),
-                                       asType)) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                MethodSignature.simple(
+                    asType,
+                    listOf(Param("distance", FloatValueType.asType)),
+                    asType,
+                ),
+            ) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
                     val self = assertIs(target)
                     val dist = assertIsFloat(args[0])
                     return self.move(0.0, -dist, 0.0)
                 }
             },
-            object: PrimitiveMethod(
+            object : PrimitiveMethod(
                 "up",
-                MethodSignature.simple(asType, listOf(Param("distance", FloatValueType.asType)),
-                                       asType)) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                MethodSignature.simple(
+                    asType,
+                    listOf(Param("distance", FloatValueType.asType)),
+                    asType,
+                ),
+            ) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
                     val self = assertIs(target)
                     val dist = assertIsFloat(args[0])
                     return self.move(0.0, 0.0, dist)
                 }
             },
-            object: PrimitiveMethod(
+            object : PrimitiveMethod(
                 "down",
-                MethodSignature.simple(asType, listOf(Param("distance", FloatValueType.asType)),
-                                       asType)) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                MethodSignature.simple(
+                    asType,
+                    listOf(Param("distance", FloatValueType.asType)),
+                    asType,
+                ),
+            ) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
                     val self = assertIs(target)
                     val dist = assertIsFloat(args[0])
                     return self.move(0.0, 0.0, -dist)
@@ -420,25 +597,29 @@ object SolidValueType : ValueType() {
                                 Param("x", FloatValueType.asType),
                                 Param("y", FloatValueType.asType),
                                 Param("z", FloatValueType.asType),
-                                ),
-                            listOf(Param("v", Vec3ValueType.asType)),
                             ),
-                        asType,
+                            listOf(Param("v", Vec3ValueType.asType)),
                         ),
-                    ) {
-                    override fun execute(target: Value, args: List<Value>, env: Env): Value {
-                        val self = assertIs(target)
-                        if (args.size == 1) {
-                            val v = Vec3ValueType.assertIs(args[0])
-                            return self.scale(v)
-                        } else {
-                            val x = assertIsFloat(args[0])
-                            val y = assertIsFloat(args[1])
-                            val z = assertIsFloat(args[2])
-                            return self.scale(x, y, z)
-                        }
+                        asType,
+                    ),
+                ) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
+                    val self = assertIs(target)
+                    if (args.size == 1) {
+                        val v = Vec3ValueType.assertIs(args[0])
+                        return self.scale(v)
+                    } else {
+                        val x = assertIsFloat(args[0])
+                        val y = assertIsFloat(args[1])
+                        val z = assertIsFloat(args[2])
+                        return self.scale(x, y, z)
                     }
-                      },
+                }
+            },
             object :
                 PrimitiveMethod(
                     "rotate",
@@ -449,47 +630,66 @@ object SolidValueType : ValueType() {
                                 Param("x", FloatValueType.asType),
                                 Param("y", FloatValueType.asType),
                                 Param("z", FloatValueType.asType),
-                                ),
-                            listOf(Param("v", Vec3ValueType.asType)),
                             ),
-                        asType,
+                            listOf(Param("v", Vec3ValueType.asType)),
                         ),
-                    ) {
-                    override fun execute(target: Value, args: List<Value>, env: Env): Value {
-                        val self = assertIs(target)
-                        if (args.size == 1) {
-                            val v = Vec3ValueType.assertIs(args[0])
-                            return self.rotate(v)
-                        } else {
-                            val x = assertIsFloat(args[0])
-                            val y = assertIsFloat(args[1])
-                            val z = assertIsFloat(args[2])
-                            return self.rotate(x, y, z)
-                        }
+                        asType,
+                    ),
+                ) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
+                    val self = assertIs(target)
+                    if (args.size == 1) {
+                        val v = Vec3ValueType.assertIs(args[0])
+                        return self.rotate(v)
+                    } else {
+                        val x = assertIsFloat(args[0])
+                        val y = assertIsFloat(args[1])
+                        val z = assertIsFloat(args[2])
+                        return self.rotate(x, y, z)
                     }
-                      },
-            object: PrimitiveMethod(
+                }
+            },
+            object : PrimitiveMethod(
                 "rotx",
-                MethodSignature.simple(asType, listOf(Param("angle", FloatValueType.asType)), asType)) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                MethodSignature.simple(asType, listOf(Param("angle", FloatValueType.asType)), asType),
+            ) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
                     val self = assertIs(target)
                     val angle = assertIsFloat(args[0])
                     return self.rotate(angle, 0.0, 0.0)
                 }
             },
-            object: PrimitiveMethod(
+            object : PrimitiveMethod(
                 "roty",
-                MethodSignature.simple(asType, listOf(Param("angle", FloatValueType.asType)), asType)) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                MethodSignature.simple(asType, listOf(Param("angle", FloatValueType.asType)), asType),
+            ) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
                     val self = assertIs(target)
                     val angle = assertIsFloat(args[0])
                     return self.rotate(0.0, angle, 0.0)
                 }
             },
-            object: PrimitiveMethod(
+            object : PrimitiveMethod(
                 "rotz",
-                MethodSignature.simple(asType, listOf(Param("angle", FloatValueType.asType)), asType)) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                MethodSignature.simple(asType, listOf(Param("angle", FloatValueType.asType)), asType),
+            ) {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
                     val self = assertIs(target)
                     val angle = assertIsFloat(args[0])
                     return self.rotate(0.0, 0.0, angle)
@@ -500,7 +700,11 @@ object SolidValueType : ValueType() {
                     "mirror",
                     MethodSignature.simple(asType, listOf(Param("norm", FloatValueType.asType)), asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
                     val self = assertIs(target)
                     val norm = Vec3ValueType.assertIs(args[0])
                     return self.mirror(norm)
@@ -511,7 +715,11 @@ object SolidValueType : ValueType() {
                     "refine",
                     MethodSignature.simple(asType, listOf(Param("factor", IntegerValueType.asType)), asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
                     val self = assertIs(target)
                     val n = assertIsInt(args[0])
                     return self.refine(n)
@@ -522,7 +730,11 @@ object SolidValueType : ValueType() {
                     "plus",
                     MethodSignature.simple(asType, listOf(Param("other", asType)), asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
                     val self = assertIs(target)
                     val other = assertIs(args[0])
                     return self + other
@@ -533,7 +745,11 @@ object SolidValueType : ValueType() {
                     "minus",
                     MethodSignature.simple(asType, listOf(Param("other", asType)), asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
                     val self = assertIs(target)
                     val other = assertIs(args[0])
                     return self - other
@@ -544,7 +760,11 @@ object SolidValueType : ValueType() {
                     "intersect",
                     MethodSignature.simple(asType, listOf(Param("other", asType)), asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
                     val self = assertIs(target)
                     val other = assertIs(args[0])
                     return self.intersect(other)
@@ -555,7 +775,11 @@ object SolidValueType : ValueType() {
                     "genus",
                     MethodSignature.simple(asType, emptyList<Param>(), IntegerValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
                     val self = assertIs(target)
                     return self.genus()
                 }
@@ -565,7 +789,11 @@ object SolidValueType : ValueType() {
                     "surface_area",
                     MethodSignature.simple(asType, emptyList<Param>(), FloatValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
                     val self = assertIs(target)
                     return self.surfaceArea()
                 }
@@ -575,7 +803,11 @@ object SolidValueType : ValueType() {
                     "volume",
                     MethodSignature.simple(asType, emptyList<Param>(), FloatValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
                     val self = assertIs(target)
                     return self.volume()
                 }
@@ -589,10 +821,14 @@ object SolidValueType : ValueType() {
                             Param("normal", Vec3ValueType.asType),
                             Param("origin_offset", FloatValueType.asType),
                         ),
-                        VectorValueType(this).asType
+                        VectorValueType(this).asType,
                     ),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
                     val self = assertIs(target)
                     val norm = Vec3ValueType.assertIs(args[0])
                     val offset = assertIsFloat(args[1])
@@ -604,19 +840,28 @@ object SolidValueType : ValueType() {
                     "split",
                     MethodSignature.simple(asType, listOf(Param("other", asType)), FloatValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
                     val self = assertIs(target)
                     val other = assertIs(args[0])
                     return self.split(other)
                 }
             },
-            object: PrimitiveMethod("hull",
-                MethodSignature.simple(asType,
-                    emptyList<Param>(), asType)) {
+            object : PrimitiveMethod(
+                "hull",
+                MethodSignature.simple(
+                    asType,
+                    emptyList<Param>(),
+                    asType,
+                ),
+            ) {
                 override fun execute(
                     target: Value,
                     args: List<Value>,
-                    env: Env
+                    env: Env,
                 ): Value {
                     val self = assertIs(target)
                     return self.hull()
@@ -628,10 +873,14 @@ object SolidValueType : ValueType() {
                     MethodSignature.simple(
                         asType,
                         listOf(Param("height", FloatValueType.asType)),
-                        SliceValueType.asType
+                        SliceValueType.asType,
                     ),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
                     val self = assertIs(target)
                     val height = assertIsFloat(args[0])
                     return Slice(self.slice(height))
@@ -647,10 +896,14 @@ object SolidValueType : ValueType() {
                             Param("top_z", FloatValueType.asType),
                             Param("count", IntegerValueType.asType),
                         ),
-                        SliceValueType.asType
+                        SliceValueType.asType,
                     ),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
                     val self = assertIs(target)
                     val lowZ = assertIsFloat(args[0])
                     val highZ = assertIsFloat(args[1])
@@ -667,7 +920,11 @@ object SolidValueType : ValueType() {
                         asType,
                     ),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
                     val self = assertIs(target)
                     val idx = assertIsInt(args[0])
                     val minSharpAngle = assertIsFloat(args[1])
@@ -679,7 +936,11 @@ object SolidValueType : ValueType() {
                     "smooth_by_normals",
                     MethodSignature.simple(asType, listOf(Param("normal_idx", IntegerValueType.asType)), asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
                     val self = assertIs(target)
                     val idx = assertIsInt(args[0])
                     return self.smoothByNormals(idx)
@@ -697,7 +958,11 @@ object SolidValueType : ValueType() {
                         asType,
                     ),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
                     val self = assertIs(target)
                     val minSharpAngle = assertIsFloat(args[0])
                     val minSmoothness = assertIsFloat(args[1])
@@ -709,7 +974,11 @@ object SolidValueType : ValueType() {
                     "project",
                     MethodSignature.simple(asType, emptyList<Param>(), SliceValueType.asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
                     val self = assertIs(target)
                     return self.project()
                 }
@@ -719,32 +988,38 @@ object SolidValueType : ValueType() {
                     "refine_to_length",
                     MethodSignature.simple(asType, listOf(Param("length", FloatValueType.asType)), asType),
                 ) {
-                override fun execute(target: Value, args: List<Value>, env: Env): Value {
+                override fun execute(
+                    target: Value,
+                    args: List<Value>,
+                    env: Env,
+                ): Value {
                     val self = assertIs(target)
                     val length = assertIsFloat(args[0])
                     return self.refineToLength(length)
                 }
             },
-            object: PrimitiveMethod("set_material",
-                MethodSignature.simple(asType,
+            object : PrimitiveMethod(
+                "set_material",
+                MethodSignature.simple(
+                    asType,
                     listOf(Param("material", SMaterialValueType.asType)),
-                    asType)) {
+                    asType,
+                ),
+            ) {
                 override fun execute(
                     target: Value,
                     args: List<Value>,
-                    env: Env
+                    env: Env,
                 ): Value {
                     val self = assertIs(target)
                     val material = SMaterialValueType.assertIs(args[0])
                     self.material = material
                     return self
                 }
-            }
+            },
         )
     }
     override val providesVariables: Map<String, Value> by lazy { emptyMap() }
 
-    override fun assertIs(v: Value): Solid {
-        return v as? Solid ?: throwTypeError(v)
-    }
+    override fun assertIs(v: Value): Solid = v as? Solid ?: throwTypeError(v)
 }

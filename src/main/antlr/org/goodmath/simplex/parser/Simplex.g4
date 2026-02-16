@@ -92,7 +92,6 @@ expr:
 | expr '(' exprs? ')' #exprCall
 | expr '[' expr ']' #exprSubscript
 | expr '.' ID  #exprField
-| target=expr '.' ID ':=' value=expr #exprUpdate
 | unaryOp  expr #exprUnary
 | l=expr expOp r=expr #exprPow
 | l=expr multOp r=expr #exprMult
@@ -108,7 +107,7 @@ complex:
 | '{' expr+ '}'  #complexDoExpr
 | 'lambda'  '(' params ')' ':' type '{' expr+ '}' #complexLambdaExpr
 | 'while' expr '{' expr+ '}' #complexWhileExpr
-
+;
 
 primary:
   ID (':=' expr)? #optIdExpr
